@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B1F33">
+  <title>Relatórios - AMZ App</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logoamz.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <a href="../pages/dashboard.html" class="navbar-brand">
+      <div class="navbar-brand-icon">
+		  <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
+	  </div>
+      <span class="navbar-brand-text"><span>App</span></span>
+    </a>
+    <div class="navbar-actions">
+      <button type="button" id="menuToggle" class="btn btn-secondary btn-sm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar">
+    <nav>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <nav class="bottom-nav">
+    <a href="../pages/dashboard.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
+    <a href="../pages/monitoramento.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
+    <a href="../pages/relatorios.html" class="bottom-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
+    <a href="../pages/clientes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
+    <a href="../pages/configuracoes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h1 class="page-title">Relatórios</h1>
+      <p class="page-subtitle">Análise e exportação de dados</p>
+    </header>
+
+    <div style="padding: 0 var(--space-4);">
+      <!-- Report Types -->
+      <div class="grid grid-cols-2 grid-cols-md-4" style="margin-bottom: var(--space-6);">
+        <div class="card stat-card" style="cursor: pointer;" onclick="selectReport('performance')">
+          <div class="stat-icon info">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path>
+            </svg>
+          </div>
+          <div class="stat-value" style="font-size: var(--text-xl);">Performance</div>
+          <div class="stat-label">Eficiência dos geradores</div>
+        </div>
+        <div class="card stat-card" style="cursor: pointer;" onclick="selectReport('maintenance')">
+          <div class="stat-icon warning">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+          </div>
+          <div class="stat-value" style="font-size: var(--text-xl);">Manutenção</div>
+          <div class="stat-label">Histórico e agendamentos</div>
+        </div>
+        <div class="card stat-card" style="cursor: pointer;" onclick="selectReport('alerts')">
+          <div class="stat-icon error">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            </svg>
+          </div>
+          <div class="stat-value" style="font-size: var(--text-xl);">Alertas</div>
+          <div class="stat-label">Ocorrências e incidentes</div>
+        </div>
+        <div class="card stat-card" style="cursor: pointer;" onclick="selectReport('fuel')">
+          <div class="stat-icon success">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+            </svg>
+          </div>
+          <div class="stat-value" style="font-size: var(--text-xl);">Combustível</div>
+          <div class="stat-label">Consumo e abastecimento</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-header">
+          <div class="card-title">Filtros</div>
+        </div>
+        <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+          <select class="form-select" style="min-width: 150px;">
+            <option value="7">Últimos 7 dias</option>
+            <option value="30">Últimos 30 dias</option>
+            <option value="90">Últimos 3 meses</option>
+            <option value="365">Último ano</option>
+          </select>
+          <select class="form-select" style="min-width: 150px;">
+            <option value="">Todos os geradores</option>
+            <option value="G-001">G-001 - Principal Alfa</option>
+            <option value="G-002">G-002 - Secundário Beta</option>
+            <option value="G-003">G-003 - Backup Gama</option>
+          </select>
+          <select class="form-select" style="min-width: 150px;">
+            <option value="">Todos os clientes</option>
+            <option value="1">Indústria XYZ</option>
+            <option value="2">Comércio ABC</option>
+          </select>
+          <button class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Gerar
+          </button>
+        </div>
+      </div>
+
+      <!-- Report Preview -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Visualização do Relatório</div>
+          <div style="display: flex; gap: var(--space-2);">
+            <button class="btn btn-secondary btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Exportar PDF
+            </button>
+            <button class="btn btn-secondary btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              Excel
+            </button>
+          </div>
+        </div>
+        <div id="reportContent">
+          <div style="text-align: center; padding: var(--space-12) var(--space-4);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--text-muted); margin-bottom: var(--space-4);">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <p style="color: var(--text-muted);">Selecione um tipo de relatório e clique em "Gerar" para visualizar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/utils/helpers.js"></script>
+  <script src="../js/services/mock.service.js"></script>
+  <script src="../js/services/api.service.js"></script>
+  <script src="../js/services/auth.service.js"></script>
+  <script src="../js/app.js"></script>
+
+  <script>
+    (function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('open');
+      });
+
+      sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      });
+
+      window.selectReport = function(type) {
+        const reportContent = document.getElementById('reportContent');
+        
+        const reports = {
+          performance: {
+            title: 'Relatório de Performance',
+            data: [
+              { generator: 'G-001 - Principal Alfa', efficiency: '94%', uptime: '168h', avgPower: '82%' },
+              { generator: 'G-002 - Secundário Beta', efficiency: '89%', uptime: '156h', avgPower: '58%' },
+              { generator: 'G-006 - Reserva Zeta', efficiency: '96%', uptime: '142h', avgPower: '43%' }
+            ]
+          },
+          maintenance: {
+            title: 'Relatório de Manutenção',
+            data: [
+              { generator: 'G-001', lastMaint: '15/01/2024', nextMaint: '15/04/2024', status: 'Em dia' },
+              { generator: 'G-002', lastMaint: '01/02/2024', nextMaint: '01/05/2024', status: 'Em dia' },
+              { generator: 'G-003', lastMaint: '20/12/2023', nextMaint: '20/03/2024', status: 'Atrasado' },
+              { generator: 'G-005', lastMaint: '10/11/2023', nextMaint: '10/02/2024', status: 'Crítico' }
+            ]
+          },
+          alerts: {
+            title: 'Relatório de Alertas',
+            data: [
+              { date: 'Hoje', type: 'Crítico', message: 'Temperatura excessiva G-005', status: 'Não resolvido' },
+              { date: 'Hoje', type: 'Aviso', message: 'Combustível baixo G-004', status: 'Não resolvido' },
+              { date: 'Ontem', type: 'Info', message: 'Manutenção agendada G-003', status: 'Agendado' },
+              { date: '2 dias atrás', type: 'Sucesso', message: 'Manutenção concluída G-001', status: 'Resolvido' }
+            ]
+          },
+          fuel: {
+            title: 'Relatório de Combustível',
+            data: [
+              { generator: 'G-001', current: '78%', consumption: '12L/h', autonomy: '65h' },
+              { generator: 'G-002', current: '45%', consumption: '8L/h', autonomy: '28h' },
+              { generator: 'G-003', current: '92%', consumption: '0L/h', autonomy: 'N/A' },
+              { generator: 'G-004', current: '23%', consumption: '15L/h', autonomy: '8h' },
+              { generator: 'G-005', current: '15%', consumption: '0L/h', autonomy: 'N/A' }
+            ]
+          }
+        };
+
+        const report = reports[type];
+        
+        reportContent.innerHTML = `
+          <h3 style="margin-bottom: var(--space-4); font-size: var(--text-lg);">${report.title}</h3>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--glass-border);">
+                  ${Object.keys(report.data[0]).map(key => 
+                    `<th style="text-align: left; padding: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); text-transform: uppercase;">${key}</th>`
+                  ).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${report.data.map(row => `
+                  <tr style="border-bottom: 1px solid var(--glass-border);">
+                    ${Object.values(row).map(val => 
+                      `<td style="padding: var(--space-3); font-size: var(--text-sm);">${val}</td>`
+                    ).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+    })();
+  </script>
+</body>
+</html>

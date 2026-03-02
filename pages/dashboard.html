@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0B1F33">
+  <meta name="description" content="AMZ App - Dashboard">
+  
+  <title>Dashboard - AMZ App</title>
+  
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logoamz.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="../pages/dashboard.html" class="navbar-brand">
+	  <div class="navbar-brand-icon">
+		  <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
+	  </div>
+      <span class="navbar-brand-text"><span>App</span></span>
+    </a>
+    <div class="navbar-actions">
+      <button type="button" id="menuToggle" class="menu-toggle btn btn-secondary btn-sm" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <nav>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">
+          <a href="../pages/dashboard.html" class="sidebar-menu-link active">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/monitoramento.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            Monitoramento
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/relatorios.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            Relatórios
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/clientes.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+            Clientes
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/configuracoes.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Configurações
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Bottom Nav (Mobile) -->
+  <nav class="bottom-nav">
+    <a href="../pages/dashboard.html" class="bottom-nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      <span>Início</span>
+    </a>
+    <a href="../pages/monitoramento.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+      </svg>
+      <span>Monitor</span>
+    </a>
+    <a href="../pages/relatorios.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      <span>Relatórios</span>
+    </a>
+    <a href="../pages/clientes.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+      </svg>
+      <span>Clientes</span>
+    </a>
+    <a href="../pages/configuracoes.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>Ajustes</span>
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="page-header">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Visão geral do sistema</p>
+    </header>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 grid-cols-md-4" id="statsGrid">
+      <!-- Stats will be loaded here -->
+    </div>
+
+    <!-- Generators Section -->
+    <section style="margin-top: var(--space-8); padding: 0 var(--space-4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h2 style="font-size: var(--text-lg); font-weight: var(--font-semibold);">Geradores</h2>
+        <a href="../pages/monitoramento.html" style="font-size: var(--text-sm);">Ver todos</a>
+      </div>
+      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
+        <!-- Generators will be loaded here -->
+      </div>
+    </section>
+
+    <!-- Alerts Section -->
+    <section style="margin-top: var(--space-8); padding: 0 var(--space-4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h2 style="font-size: var(--text-lg); font-weight: var(--font-semibold);">Alertas Recentes</h2>
+        <a href="#" style="font-size: var(--text-sm);">Ver todos</a>
+      </div>
+      <div id="alertsList">
+        <!-- Alerts will be loaded here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="../config.js"></script>
+  <script src="../js/utils/helpers.js"></script>
+  <script src="../js/services/mock.service.js"></script>
+  <script src="../js/services/api.service.js"></script>
+  <script src="../js/services/auth.service.js"></script>
+  <script src="../js/app.js"></script>
+
+  <script>
+    (function() {
+      // Sidebar toggle
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('open');
+      });
+
+      sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      });
+
+      // Load dashboard data
+      async function loadDashboard() {
+        const service = CONFIG.isDev() ? MockService : ApiService;
+        
+        try {
+          const response = await service.getDashboardSummary();
+          
+          if (response.success) {
+            renderStats(response.data.stats);
+            renderGenerators(response.data.recentGenerators);
+            renderAlerts(response.data.recentAlerts);
+          }
+        } catch (error) {
+          console.error('Error loading dashboard:', error);
+        }
+      }
+
+      function renderStats(stats) {
+        const container = document.getElementById('statsGrid');
+        
+        const statsData = [
+          { icon: 'zap', color: 'success', value: stats.generators.online, label: 'Online', sublabel: `${Math.round((stats.generators.online / stats.generators.total) * 100)}%` },
+          { icon: 'alert', color: 'warning', value: stats.alerts.unread, label: 'Alertas', sublabel: 'Pendentes' },
+          { icon: 'users', color: 'info', value: stats.clients.total, label: 'Clientes', sublabel: 'Ativos' },
+          { icon: 'tool', color: 'error', value: stats.maintenance.pending, label: 'Manutenções', sublabel: 'Pendentes' }
+        ];
+
+        container.innerHTML = statsData.map(stat => `
+          <div class="card stat-card">
+            <div class="stat-icon ${stat.color}">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                ${getIcon(stat.icon)}
+              </svg>
+            </div>
+            <div class="stat-value">${stat.value}</div>
+            <div class="stat-label">${stat.label}</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">${stat.sublabel}</div>
+          </div>
+        `).join('');
+      }
+
+      function renderGenerators(generators) {
+        const container = document.getElementById('generatorsGrid');
+        
+        container.innerHTML = generators.map(gen => `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">${gen.name}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">${gen.id}</div>
+              </div>
+              <span class="badge badge-${gen.status}">${gen.status}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4);">
+              <div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Temperatura</div>
+                <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${gen.temperature}°C</div>
+              </div>
+              <div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Potência</div>
+                <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${gen.power}%</div>
+              </div>
+              <div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Tensão</div>
+                <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${gen.voltage}V</div>
+              </div>
+              <div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Combustível</div>
+                <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${gen.fuel}%</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderAlerts(alerts) {
+        const container = document.getElementById('alertsList');
+        
+        const typeColors = {
+          error: 'error',
+          warning: 'warning',
+          info: 'info',
+          success: 'success'
+        };
+
+        container.innerHTML = alerts.map(alert => `
+          <div class="card" style="margin-bottom: var(--space-3); ${!alert.read ? 'border-left: 3px solid var(--color-accent);' : ''}">
+            <div style="display: flex; gap: var(--space-3);">
+              <div class="stat-icon ${typeColors[alert.type]}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  ${getIcon(alert.type === 'error' ? 'x-circle' : alert.type === 'warning' ? 'alert' : alert.type === 'success' ? 'check' : 'info')}
+                </svg>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-weight: var(--font-medium);">${alert.title}</div>
+                <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1);">${alert.description}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2);">${Utils.timeAgo(alert.date)}</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function getIcon(name) {
+        const icons = {
+          'zap': '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>',
+          'alert': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>',
+          'users': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+          'tool': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>',
+          'x-circle': '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>',
+          'info': '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>',
+          'check': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+        };
+        return icons[name] || '';
+      }
+
+      loadDashboard();
+    })();
+  </script>
+</body>
+</html>
