@@ -297,7 +297,7 @@ MOCK: {
 
 ## 📄 Licença
 
-Este projeto é propriedade da AMZ. Todos os direitos reservados.
+Este projeto é propriedade da Glef - Gestões & Soluções Inteligente. Todos os direitos reservados.
 
 ---
 
@@ -315,11 +315,11 @@ Este projeto é propriedade da AMZ. Todos os direitos reservados.
 
 Em caso de dúvidas ou problemas:
 
-- Email: suporte@amz.app
-- Documentação: https://docs.amz.app
-- Issues: https://github.com/amz/app/issues
+- Email: suporte@glef.app
+- Documentação: https://docs.glef.app
+- Issues: https://github.com/GlefGestoes/base-teste-app
 
 ---
 
 **Versão:** 1.0.0  
-**Última atualização:** 2024
+**Última atualização:** 2026
