@@ -1,10 +1,8 @@
 /**
  * ============================================
- * AUTH SERVICE
- * Gerenciamento de autenticação
+ * AUTH SERVICE (SESSION STORAGE VERSION)
+ * Gerenciamento de autenticação por sessão
  * ============================================
- * 
- * Funciona em ambos os modos (dev/prod) automaticamente
  */
 
 const AuthService = {
@@ -26,7 +24,7 @@ const AuthService = {
       const response = await service.login(email, password);
 
       if (response.success && response.data) {
-        const { user, token, refreshToken, expiresIn } = response.data;
+        const { user, token, refreshToken } = response.data;
         
         this.saveTokens(token, refreshToken);
         this.saveUser(user);
@@ -76,7 +74,7 @@ const AuthService = {
   getCurrentUser() {
     if (this._currentUser) return this._currentUser;
     
-    const userJson = localStorage.getItem(window.CONFIG?.AUTH?.USER_KEY);
+    const userJson = sessionStorage.getItem(window.CONFIG?.AUTH?.USER_KEY);
     if (userJson) {
       try {
         this._currentUser = JSON.parse(userJson);
@@ -89,7 +87,7 @@ const AuthService = {
   },
 
   /**
-   * Obtém papel (role) do usuário
+   * Obtém papel (role)
    */
   getRole() {
     const user = this.getCurrentUser();
@@ -103,7 +101,6 @@ const AuthService = {
     const user = this.getCurrentUser();
     if (!user) return false;
 
-    // Admin tem todas as permissões
     if (user.role === 'administrador') return true;
 
     const permissions = {
@@ -114,16 +111,16 @@ const AuthService = {
     };
 
     const userPermissions = permissions[user.role] || [];
-    
+
     if (Array.isArray(permission)) {
       return permission.some(p => userPermissions.includes(p));
     }
-    
+
     return userPermissions.includes(permission) || userPermissions.includes('*');
   },
 
   /**
-   * Verifica se tem determinado papel
+   * Verifica papel
    */
   hasRole(roles) {
     const role = this.getRole();
@@ -132,7 +129,7 @@ const AuthService = {
     if (Array.isArray(roles)) {
       return roles.includes(role);
     }
-    
+
     return role === roles;
   },
 
@@ -154,30 +151,30 @@ const AuthService = {
   },
 
   // ==========================================
-  // STORAGE
+  // SESSION STORAGE
   // ==========================================
 
   saveTokens(token, refreshToken) {
-    localStorage.setItem(window.CONFIG?.AUTH?.TOKEN_KEY, token);
-    localStorage.setItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY, refreshToken);
+    sessionStorage.setItem(window.CONFIG?.AUTH?.TOKEN_KEY, token);
+    sessionStorage.setItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY, refreshToken);
   },
 
   saveUser(user) {
-    localStorage.setItem(window.CONFIG?.AUTH?.USER_KEY, JSON.stringify(user));
+    sessionStorage.setItem(window.CONFIG?.AUTH?.USER_KEY, JSON.stringify(user));
   },
 
   getToken() {
-    return localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+    return sessionStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
   },
 
   getRefreshToken() {
-    return localStorage.getItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
+    return sessionStorage.getItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
   },
 
   clearSession() {
-    localStorage.removeItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    localStorage.removeItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(window.CONFIG?.AUTH?.USER_KEY);
+    sessionStorage.removeItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+    sessionStorage.removeItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(window.CONFIG?.AUTH?.USER_KEY);
     this._currentUser = null;
   }
 };
