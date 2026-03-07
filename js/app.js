@@ -53,17 +53,17 @@ const App = {
 	checkAuth() {
 	  const path = window.location.pathname;
 	  const file = path.split("/").pop();
-
+	
 	  const isAuthPage = file === "" || file === "index.html";
-
+	
 	  if (!isAuthPage && !window.AuthService?.isAuthenticated()) {
-		window.AuthService?.redirectToLogin();
+	    window.AuthService?.redirectToLogin();
 	  }
-
+	
 	  if (isAuthPage && window.AuthService?.isAuthenticated()) {
-		window.AuthService?.redirectAfterLogin();
+	    window.AuthService?.redirectAfterLogin();
 	  }
-	}
+	},
 
   /**
    * Mostra badge de modo dev
