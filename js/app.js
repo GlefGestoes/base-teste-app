@@ -45,7 +45,7 @@ const App = {
 			.catch(err => console.error("SW erro:", err));
 		});
 	  }
-	}
+	},
 
   /**
    * Verifica autenticação
