@@ -39,6 +39,24 @@ const AuthService = {
     }
   },
 
+  	  /**
+	 * Registra novo usuário
+	 */
+	async register(user) {
+	  try {
+		const service = this.getService();
+		const response = await service.register(user);
+
+		if (response.success) {
+		  return { success: true, data: response.data };
+		}
+
+		return { success: false, error: response.error };
+	  } catch (error) {
+		return { success: false, error: error.message };
+	  }
+	},
+
   /**
    * Realiza logout
    */
