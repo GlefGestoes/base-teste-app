@@ -69,6 +69,36 @@ const ApiService = {
   },
 
   // ==========================================
+  // AUTENTICAÇÃO
+  // ==========================================
+
+  async login(email, password) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: { email, password }
+    });
+  },
+  
+	async register(user) {
+	  return this.request('/auth/register', {
+		method: 'POST',
+		body: user
+	  });
+	},
+
+  async logout() {
+    return this.request('/auth/logout', { method: 'POST' });
+  },
+
+  async refreshToken() {
+    return this.request('/auth/refresh', { method: 'POST' });
+  },
+
+  async getProfile() {
+    return this.request('/auth/profile');
+  },
+
+  // ==========================================
   // GENERATORS
   // ==========================================
 
