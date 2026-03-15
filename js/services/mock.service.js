@@ -126,6 +126,41 @@ const MockService = {
     });
   },
 
+/**
+ * Registro de novo usuário
+ */
+	async register(user) {
+	  await this.delay();
+
+	  if (this.shouldError()) {
+		return this.error('Erro de conexão simulado');
+	  }
+
+	  // verifica se email já existe
+	  const exists = this.USERS.find(u => u.email === user.email);
+	  if (exists) {
+		return this.error('Email já cadastrado');
+	  }
+
+	  const newUser = {
+		id: Date.now(),
+		name: user.name,
+		email: user.email,
+		password: user.password,
+		role: user.role || 'cliente',
+		avatar: null
+	  };
+
+	  this.USERS.push(newUser);
+
+	  return this.success({
+		id: newUser.id,
+		name: newUser.name,
+		email: newUser.email,
+		role: newUser.role
+	  });
+	},
+
   /**
    * Obtém perfil do usuário
    */
