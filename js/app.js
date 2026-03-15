@@ -77,7 +77,8 @@ const App = {
     badge.style.cssText = `
       position: fixed;
       top: 10px;
-      left: 10px;
+	  left: 50%;
+      transform: translateX(-50%);
       background: #FF5E00;
       color: white;
       padding: 4px 12px;
