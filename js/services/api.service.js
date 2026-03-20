@@ -1,23 +1,27 @@
 /**
  * ============================================
- * API SERVICE - SUPABASE
+ * API SERVICE
  * Comunicação com backend em produção
  * ============================================
+ * 
+ * Este serviço faz requisições HTTP reais à API.
+ * Usado apenas quando CONFIG.MODE = 'production'
  */
 
 const ApiService = {
-
   /**
    * Headers padrão para requisições
    */
   getHeaders() {
-
     const headers = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yZ3ZucW95cnBham1vc21qZndiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTcwODEsImV4cCI6MjA4ODMzMzA4MX0.386o3VAq6aN4_AFfBQuZiVPQJdEVNpqBL5AMDSkCALo',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yZ3ZucW95cnBham1vc21qZndiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTcwODEsImV4cCI6MjA4ODMzMzA4MX0.386o3VAq6aN4_AFfBQuZiVPQJdEVNpqBL5AMDSkCALo'
+      'Accept': 'application/json'
     };
+
+    const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
     return headers;
   },
@@ -26,9 +30,8 @@ const ApiService = {
    * Faz requisição HTTP
    */
   async request(endpoint, options = {}) {
-
-    const url = `https://mrgvnqoyrpajmosmjfwb.supabase.co/rest/v1${endpoint}`;
-
+    const url = `${window.CONFIG.API.BASE_URL}${endpoint}`;
+    
     const config = {
       method: options.method || 'GET',
       headers: this.getHeaders(),
@@ -40,10 +43,9 @@ const ApiService = {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), window.CONFIG.API.TIMEOUT);
 
     try {
-
       const response = await fetch(url, {
         ...config,
         signal: controller.signal
@@ -57,19 +59,16 @@ const ApiService = {
       }
 
       return await response.json();
-
     } catch (error) {
-
       if (error.name === 'AbortError') {
         throw new Error('Tempo de requisição excedido');
       }
-
       throw error;
     }
   },
 
   // ==========================================
-  // AUTENTICAÇÃO
+  // AUTH
   // ==========================================
 
   async login(email, password) {
@@ -103,16 +102,16 @@ const ApiService = {
   // ==========================================
 
   async getGenerators() {
-    return this.request('/generators?select=*');
+    return this.request('/generators');
   },
 
   async getGenerator(id) {
-    return this.request(`/generators?id=eq.${id}&select=*`);
+    return this.request(`/generators/${id}`);
   },
 
   async updateGenerator(id, data) {
-    return this.request(`/generators?id=eq.${id}`, {
-      method: 'PATCH',
+    return this.request(`/generators/${id}`, {
+      method: 'PUT',
       body: data
     });
   },
@@ -122,14 +121,11 @@ const ApiService = {
   // ==========================================
 
   async getAlerts() {
-    return this.request('/alerts?select=*');
+    return this.request('/alerts');
   },
 
   async markAlertRead(id) {
-    return this.request(`/alerts?id=eq.${id}`, {
-      method: 'PATCH',
-      body: { read: true }
-    });
+    return this.request(`/alerts/${id}/read`, { method: 'PUT' });
   },
 
   // ==========================================
@@ -137,11 +133,11 @@ const ApiService = {
   // ==========================================
 
   async getClients() {
-    return this.request('/clients?select=*');
+    return this.request('/clients');
   },
 
   async getClient(id) {
-    return this.request(`/clients?id=eq.${id}&select=*`);
+    return this.request(`/clients/${id}`);
   },
 
   async createClient(data) {
@@ -152,8 +148,8 @@ const ApiService = {
   },
 
   async updateClient(id, data) {
-    return this.request(`/clients?id=eq.${id}`, {
-      method: 'PATCH',
+    return this.request(`/clients/${id}`, {
+      method: 'PUT',
       body: data
     });
   },
@@ -163,7 +159,7 @@ const ApiService = {
   // ==========================================
 
   async getActivities() {
-    return this.request('/activities?select=*');
+    return this.request('/activities');
   },
 
   // ==========================================
@@ -171,19 +167,8 @@ const ApiService = {
   // ==========================================
 
   async getDashboardSummary() {
-
-    const generators = await this.getGenerators();
-    const alerts = await this.getAlerts();
-    const clients = await this.getClients();
-
-    return {
-      generators: generators.length,
-      alerts: alerts.length,
-      clients: clients.length
-    };
-
+    return this.request('/dashboard/summary');
   }
-
 };
 
 // Exporta globalmente
