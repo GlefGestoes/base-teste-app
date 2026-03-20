@@ -173,3 +173,9 @@ const ApiService = {
 
 // Exporta globalmente
 window.ApiService = ApiService;
+
+// Se estiver em modo desenvolvimento, substitui o ApiService pelo MockService
+if (window.CONFIG?.isDev()) {
+    console.warn("⚠️ AMZ App: Redirecionando ApiService para MockService (Modo Dev)");
+    window.ApiService = window.MockService;
+}
