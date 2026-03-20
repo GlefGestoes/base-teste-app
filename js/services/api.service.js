@@ -30,6 +30,19 @@ const ApiService = {
    * Faz requisição HTTP
    */
   async request(endpoint, options = {}) {
+    // ==========================================
+    // TRAVA DE SEGURANÇA PARA MODO DEV
+    // ==========================================
+    if (window.CONFIG?.isDev?.() || window.CONFIG?.MODE === 'development') {
+      console.warn(`[ApiService] Bloqueando fetch real para ${endpoint}. Redirecionando para Mock.`);
+      
+      // Aqui, em vez de continuar, nós forçamos o uso do MockService
+      // Se você fez a troca no final do arquivo (window.ApiService = window.MockService),
+      // este if garante que se algo falhar na troca, o fetch real não ocorra.
+      return window.MockService.request?.(endpoint, options) || { success: false, error: 'Mock não configurado' };
+    }
+    // ==========================================
+
     const url = `${window.CONFIG.API.BASE_URL}${endpoint}`;
     
     const config = {
@@ -53,6 +66,7 @@ const ApiService = {
 
       clearTimeout(timeoutId);
 
+      // O erro do "<!DOCTYPE" acontece aqui embaixo quando o fetch retorna HTML
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(error.message || `HTTP ${response.status}`);
@@ -66,7 +80,7 @@ const ApiService = {
       throw error;
     }
   },
-
+	
   // ==========================================
   // AUTH
   // ==========================================
