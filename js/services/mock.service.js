@@ -13,12 +13,18 @@ const MockService = {
   // DADOS MOCKADOS
   // ==========================================
   
-  USERS: [
-    { id: 1, name: 'Administrador', email: 'admin@amz.app', password: 'admin123', role: 'administrador', avatar: null },
-    { id: 2, name: 'João Vendedor', email: 'vendedor@amz.app', password: 'vendedor123', role: 'vendedor', avatar: null },
-    { id: 3, name: 'Maria Técnica', email: 'tecnico@amz.app', password: 'tecnico123', role: 'tecnico', avatar: null },
-    { id: 4, name: 'Carlos Cliente', email: 'cliente@amz.app', password: 'cliente123', role: 'cliente', avatar: null }
-  ],
+	USERS: (() => {
+	  try {
+		return JSON.parse(localStorage.getItem('amz_mock_users')) || [
+		  { id: 1, name: 'Administrador', email: 'admin@amz.app', password: 'admin123', role: 'administrador', avatar: null },
+		  { id: 2, name: 'João Vendedor', email: 'vendedor@amz.app', password: 'vendedor123', role: 'vendedor', avatar: null },
+		  { id: 3, name: 'Maria Técnica', email: 'tecnico@amz.app', password: 'tecnico123', role: 'tecnico', avatar: null },
+		  { id: 4, name: 'Carlos Cliente', email: 'cliente@amz.app', password: 'cliente123', role: 'cliente', avatar: null }
+		];
+	  } catch {
+		return [];
+	  }
+	})(),
 
   GENERATORS: [
     { id: 'G-001', name: 'Principal - Alfa', client: 'Indústria XYZ Ltda', status: 'online', temperature: 72, power: 85, voltage: 220, current: 45, fuel: 78, hours: 1247, lastMaintenance: '2024-01-15' },
@@ -103,7 +109,11 @@ const MockService = {
       return this.error('Erro de conexão simulado');
     }
 
-    const user = this.USERS.find(u => u.email === email && u.password === password);
+	//Recarrega do localStorage para garantir que pegou o novo cadastro
+    const currentUsers = this.getUsers();
+	// Procura no array atualizado
+    const user = currentUsers.find(u => u.email === email && u.password === password);
+	
     
     if (!user) {
       return this.error('Credenciais inválidas');
@@ -118,6 +128,7 @@ const MockService = {
         name: user.name,
         email: user.email,
         role: user.role,
+		isPending: user.isPending,
         avatar: user.avatar
       },
       token,
@@ -125,8 +136,8 @@ const MockService = {
       expiresIn: 3600
     });
   },
-
-/**
+  
+  /**
  * Registro de novo usuário
  */
 	async register(user) {
@@ -136,8 +147,10 @@ const MockService = {
 		return this.error('Erro de conexão simulado');
 	  }
 
+		const currentUsers = this.getUsers();
+
 	  // verifica se email já existe
-	  const exists = this.USERS.find(u => u.email === user.email);
+	  const exists = currentUsers.find(u => u.email === user.email);
 	  if (exists) {
 		return this.error('Email já cadastrado');
 	  }
@@ -148,41 +161,49 @@ const MockService = {
 		email: user.email,
 		password: user.password,
 		role: user.role || 'cliente',
+		isPending: user.isPending || false,
 		avatar: null
 	  };
 
-	  this.USERS.push(newUser);
+	  currentUsers.push(newUser);
+
+	  // sincroniza memória + storage
+	  this.USERS = currentUsers;
+	  this.saveUsers(currentUsers);
 
 	  return this.success({
 		id: newUser.id,
 		name: newUser.name,
 		email: newUser.email,
-		role: newUser.role
+		role: newUser.role,
+		isPending: newUser.isPending
 	  });
 	},
 
   /**
    * Obtém perfil do usuário
    */
-  async getProfile() {
-    await this.delay();
-    
-    const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    if (!token) return this.error('Não autenticado');
+	async getProfile() {
+	  await this.delay();
+	  
+	  const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+	  if (!token) return this.error('Não autenticado');
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const user = this.USERS.find(u => u.id === payload.sub);
-    
-    if (!user) return this.error('Usuário não encontrado');
+	  const payload = JSON.parse(atob(token.split('.')[1]));
 
-    return this.success({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar
-    });
-  },
+	  const users = this.getUsers(); // ✅ correto
+	  const user = users.find(u => u.id === payload.sub);
+
+	  if (!user) return this.error('Usuário não encontrado');
+
+	  return this.success({
+		id: user.id,
+		name: user.name,
+		email: user.email,
+		role: user.role,
+		avatar: user.avatar
+	  });
+	},
 
   /**
    * Lista geradores
@@ -259,6 +280,23 @@ const MockService = {
       recentActivities: this.ACTIVITIES.slice(0, 5)
     });
   },
+  
+  // ==========================================
+	// HELPERS DE STORAGE
+	// ==========================================
+
+	getUsers() {
+	  try {
+		return JSON.parse(localStorage.getItem('amz_mock_users')) || this.USERS;
+	  } catch {
+		return this.USERS;
+	  }
+	},
+
+	saveUsers(users) {
+	  this.USERS = users;
+	  localStorage.setItem('amz_mock_users', JSON.stringify(users));
+	},
 
   // ==========================================
   // UTILITÁRIOS
