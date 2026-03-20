@@ -1,8 +1,10 @@
 /**
  * ============================================
- * AUTH SERVICE (SESSION STORAGE VERSION)
- * Gerenciamento de autenticação por sessão
+ * AUTH SERVICE
+ * Gerenciamento de autenticação
  * ============================================
+ * 
+ * Funciona em ambos os modos (dev/prod) automaticamente
  */
 
 const AuthService = {
@@ -24,7 +26,7 @@ const AuthService = {
       const response = await service.login(email, password);
 
       if (response.success && response.data) {
-        const { user, token, refreshToken } = response.data;
+        const { user, token, refreshToken, expiresIn } = response.data;
         
         this.saveTokens(token, refreshToken);
         this.saveUser(user);
@@ -38,8 +40,8 @@ const AuthService = {
       return { success: false, error: error.message };
     }
   },
-
-  	  /**
+  
+	  /**
 	 * Registra novo usuário
 	 */
 	async register(user) {
@@ -92,7 +94,7 @@ const AuthService = {
   getCurrentUser() {
     if (this._currentUser) return this._currentUser;
     
-    const userJson = sessionStorage.getItem(window.CONFIG?.AUTH?.USER_KEY);
+    const userJson = localStorage.getItem(window.CONFIG?.AUTH?.USER_KEY);
     if (userJson) {
       try {
         this._currentUser = JSON.parse(userJson);
@@ -105,7 +107,7 @@ const AuthService = {
   },
 
   /**
-   * Obtém papel (role)
+   * Obtém papel (role) do usuário
    */
   getRole() {
     const user = this.getCurrentUser();
@@ -119,6 +121,7 @@ const AuthService = {
     const user = this.getCurrentUser();
     if (!user) return false;
 
+    // Admin tem todas as permissões
     if (user.role === 'administrador') return true;
 
     const permissions = {
@@ -129,16 +132,16 @@ const AuthService = {
     };
 
     const userPermissions = permissions[user.role] || [];
-
+    
     if (Array.isArray(permission)) {
       return permission.some(p => userPermissions.includes(p));
     }
-
+    
     return userPermissions.includes(permission) || userPermissions.includes('*');
   },
 
   /**
-   * Verifica papel
+   * Verifica se tem determinado papel
    */
   hasRole(roles) {
     const role = this.getRole();
@@ -147,7 +150,7 @@ const AuthService = {
     if (Array.isArray(roles)) {
       return roles.includes(role);
     }
-
+    
     return role === roles;
   },
 
@@ -167,36 +170,62 @@ const AuthService = {
     const redirect = params.get('redirect') || './pages/dashboard.html';
     window.location.href = redirect;
   },
+  
+   /**
+   * Simulação de novo usuário e login
+   */
+   
+   /**
+   * Atualiza os dados do usuário logado localmente
+   */
+  updateUserLocal(newData) {
+    const user = this.getCurrentUser();
+    const updatedUser = { ...user, ...newData, isPending: false };
+    this.saveUser(updatedUser);
+    this._currentUser = updatedUser;
+    return updatedUser;
+  },
+
+  /**
+   * Verifica se o usuário logado ainda tem pendências de cadastro
+   */
+  isProfilePending() {
+    const user = this.getCurrentUser();
+    // Consideramos pendente se tiver a flag 'isPending' que criaremos no cadastro
+    return user && user.isPending === true;
+  },
 
   // ==========================================
-  // SESSION STORAGE
+  // STORAGE
   // ==========================================
 
   saveTokens(token, refreshToken) {
-    sessionStorage.setItem(window.CONFIG?.AUTH?.TOKEN_KEY, token);
-    sessionStorage.setItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(window.CONFIG?.AUTH?.TOKEN_KEY, token);
+    localStorage.setItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY, refreshToken);
   },
 
   saveUser(user) {
-    sessionStorage.setItem(window.CONFIG?.AUTH?.USER_KEY, JSON.stringify(user));
+    localStorage.setItem(window.CONFIG?.AUTH?.USER_KEY, JSON.stringify(user));
   },
 
   getToken() {
-    return sessionStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+    return localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
   },
 
   getRefreshToken() {
-    return sessionStorage.getItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
+    return localStorage.getItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
   },
 
   clearSession() {
-    sessionStorage.removeItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    sessionStorage.removeItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
-    sessionStorage.removeItem(window.CONFIG?.AUTH?.USER_KEY);
+    localStorage.removeItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+    localStorage.removeItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(window.CONFIG?.AUTH?.USER_KEY);
     this._currentUser = null;
   }
 };
 
 // Exporta globalmente
 window.AuthService = AuthService;
+
+
 
