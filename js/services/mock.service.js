@@ -322,3 +322,4 @@ const MockService = {
 
 // Exporta globalmente
 window.MockService = MockService;
+
