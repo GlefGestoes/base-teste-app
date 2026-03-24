@@ -26,6 +26,7 @@ form.addEventListener("submit", async (event) => {
 try {
     // 3. Chamada ao Serviço
     const result = await AuthService.register(user);
+	console.log("RESULTADO REGISTER:", result);
 
     if (result.success) {
       alert("Usuário criado com sucesso!");
