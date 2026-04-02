@@ -8,34 +8,37 @@ PWA (Progressive Web App) completo para monitoramento e gerenciamento de gerador
 
 ```
 amz-app/
-├── index.html                 # Página de login (entry point)
-├── manifest.json              # Configuração PWA
-├── service-worker.js          # Service Worker para offline
-├── config.js                  # Configuração central (dev/prod)
-├── README.md                  # Documentação
+├── index.html              # Página de login (entry point)
+├── manifest.json           # Configuração PWA
+├── service-worker.js       # Service Worker para offline
+├── config.js               # Configuração central (dev/prod)
+├── README.md               # Documentação
 │
 ├── css/
-│   └── styles.css             # Estilos consolidados
+│   └── styles.css          # Estilos consolidados
 │
 ├── js/
-│   ├── app.js                 # Entry point JavaScript
+│   ├── app.js              # Entry point JavaScript
 │   ├── utils/
-│   │   └── helpers.js         # Funções utilitárias
+│   │   └── helpers.js      # Funções utilitárias
 │   └── services/
-│       ├── mock.service.js    # API mock (desenvolvimento)
-│       ├── api.service.js     # API real (produção)
-│       └── auth.service.js    # Autenticação
+│       ├── mock.service.js # API mock (desenvolvimento)
+│       ├── api.service.js  # API real (produção)
+│       ├── auth.service.js # Autenticação
+│       └── register.js     # Cadastro de usuários
 │
 ├── pages/
-│   ├── dashboard.html         # Dashboard principal
-│   ├── monitoramento.html     # Monitoramento em tempo real
-│   ├── relatorios.html        # Relatórios e análises
-│   ├── clientes.html          # Gerenciamento de clientes
-│   └── configuracoes.html     # Configurações do usuário
+│   ├── cadastro.html       # Cadastro de usuário
+│   ├── clientes.html       # Gerenciamento de clientes
+│   ├── configuracoes.html  # Configurações do usuário
+│   ├── dashboard.html      # Dashboard principal
+│   ├── geradores.html      # Gerenciamento de geradores
+│   ├── monitoramento.html  # Monitoramento em tempo real
+│   └── relatorios.html     # Relatórios e análises
 │
 └── assets/
     └── icons/
-        └── favicon.svg        # Ícone do app
+        └── logoamz.png     # Logo do app
 ```
 
 ---
