@@ -2,95 +2,64 @@
  * ============================================
  * AMZ APP - CONFIGURAÇÃO CENTRAL
  * ============================================
- * 
- * Arquivo único de configuração para alternar entre
- * modos de desenvolvimento e produção.
- * 
- * INSTRUÇÕES:
- * 1. Para desenvolvimento local: mantenha MODE = 'development'
- * 2. Para produção: altere MODE = 'production'
- * 3. Em produção, configure a API_URL corretamente
  */
 
 const CONFIG = {
-  /**
-   * MODO DA APLICAÇÃO
-   * 'development' - Usa mocks locais, não precisa de backend
-   * 'production'  - Conecta à API real
-   */
-  MODE: 'development',
+  MODE: 'development', // 'development' | 'production'
 
-  /**
-   * INFORMAÇÕES DO APP
-   */
   APP: {
     NAME: 'AMZ App',
     VERSION: '1.0.0',
     DESCRIPTION: 'Sistema de Gerenciamento de Geradores'
   },
 
-  /**
-   * CONFIGURAÇÕES DE API
-   */
   API: {
-    // URL base da API (usada apenas em produção)
     BASE_URL: 'https://api.amz.app/v1',
-    
-    // Timeout em milissegundos
     TIMEOUT: 30000,
-    
-    // Número de tentativas em caso de falha
     RETRIES: 3
   },
 
   /**
-   * FEATURE FLAGS
+   * ============================================
+   * CONFIGURAÇÃO DO DSE GATEWAY 4G
+   * ============================================
+   * Ajuste o IP conforme sua rede local.
+   * Em produção, use um proxy no backend para evitar CORS.
    */
+  DSE: {
+    BASE_URL: 'http://192.168.1.253',
+    USERNAME: 'Admin',
+    PASSWORD: 'admin',
+    POLL_INTERVAL: 5000,
+    TIMEOUT: 8000,
+    MAX_RETRIES: 3,
+    AUTO_POLL: true,
+  },
+
   FEATURES: {
     OAUTH_GOOGLE: true,
     OAUTH_APPLE: true,
     OFFLINE_MODE: true,
-    PUSH_NOTIFICATIONS: false
+    PUSH_NOTIFICATIONS: false,
+    DSE_INTEGRATION: true,
   },
 
-  /**
-   * CONFIGURAÇÕES DE MOCK (apenas desenvolvimento)
-   */
   MOCK: {
-    // Delay simulado em ms (min, max)
     DELAY: [200, 800],
-    
-    // Taxa de erro simulada (0 a 1)
     ERROR_RATE: 0.05,
-    
-    // Habilitar logs
     DEBUG: true
   },
 
-  /**
-   * CONFIGURAÇÕES DE AUTH
-   */
   AUTH: {
     TOKEN_KEY: 'amz_token',
     REFRESH_TOKEN_KEY: 'amz_refresh_token',
     USER_KEY: 'amz_user',
-    TOKEN_EXPIRY: 3600 // segundos
+    TOKEN_EXPIRY: 3600
   },
 
-  /**
-   * MÉTODOS UTILITÁRIOS
-   */
-  isDev() {
-    return this.MODE === 'development';
-  },
-
-  isProd() {
-    return this.MODE === 'production';
-  },
-
-  getApiUrl() {
-    return this.isProd() ? this.API.BASE_URL : null;
-  },
+  isDev()  { return this.MODE === 'development'; },
+  isProd() { return this.MODE === 'production'; },
+  getApiUrl() { return this.isProd() ? this.API.BASE_URL : null; },
 
   log(...args) {
     if (this.isDev() && this.MOCK.DEBUG) {
@@ -99,11 +68,6 @@ const CONFIG = {
   }
 };
 
-// Exporta para uso global
-if (typeof window !== 'undefined') {
-  window.CONFIG = CONFIG;
-}
+if (typeof window !== 'undefined')  window.CONFIG = CONFIG;
+if (typeof module !== 'undefined' && module.exports) module.exports = CONFIG;
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = CONFIG;
-}
