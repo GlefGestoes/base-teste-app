@@ -13,250 +13,369 @@
 
 <body>
 
-<!-- SIDEBAR -->
-  <header class="navbar">
-    <a href="../pages/dashboard.html" class="navbar-brand">
-      <div class="navbar-brand-icon">
-		  <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
-	  </div>
-      <span class="navbar-brand-text"><span></span></span>
-    </a>
-    <div class="navbar-actions">
-	  <button type="button" id="menuToggleNavbar" class="btn btn-secondary btn-sm">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
+<!-- NAVBAR -->
+<header class="navbar">
+  <a href="../pages/dashboard.html" class="navbar-brand">
+    <div class="navbar-brand-icon">
+      <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
     </div>
-  </header>
+    <span class="navbar-brand-text"><span></span></span>
+  </a>
+  <div class="navbar-actions">
+    <!-- Indicador de status do gateway DSE -->
+    <div id="dseStatusBadge" style="
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted);
+      margin-right: 8px;
+    ">
+      <span id="dseStatusDot" style="
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #6b7280; display: inline-block;
+      "></span>
+      <span id="dseStatusText">Gateway</span>
+    </div>
+    <button type="button" id="menuToggleNavbar" class="btn btn-secondary btn-sm">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+</header>
 
-  <div id="sidebarOverlay" class="sidebar-overlay"></div>
-  <aside id="sidebar" class="sidebar">
-    <nav>
-      <ul class="sidebar-menu">
-        <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/geradores.html" class="sidebar-menu-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>Geradores</a></li>
-		<li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
-      </ul>
-    </nav>
-  </aside>
-
-  <nav class="bottom-nav">
-    <a href="../pages/dashboard.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
-    <a href="../pages/monitoramento.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
-    <a href="../pages/relatorios.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
-    <a href="../pages/clientes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
-    <a href="../pages/geradores.html" class="bottom-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg><span>Geradores</span></a>
-	<a href="../pages/configuracoes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<aside id="sidebar" class="sidebar">
+  <nav>
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
+      <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
+      <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
+      <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
+      <li class="sidebar-menu-item"><a href="../pages/geradores.html" class="sidebar-menu-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>Geradores</a></li>
+      <li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
+    </ul>
   </nav>
+</aside>
+
+<nav class="bottom-nav">
+  <a href="../pages/dashboard.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
+  <a href="../pages/monitoramento.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
+  <a href="../pages/relatorios.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
+  <a href="../pages/clientes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
+  <a href="../pages/geradores.html" class="bottom-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg><span>Geradores</span></a>
+  <a href="../pages/configuracoes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
+</nav>
 
 <!-- MAIN -->
-	<div class="main-wrapper">
+<div class="main-wrapper">
+  <main class="main-content">
 
-	  <main class="main-content">
-		
-		<header class="header">
-		  <input type="text" id="searchInput" placeholder="Buscar gerador..." class="form-input search-input">
-		  <button id="btnNovo" class="btn btn-primary">
-			+ Novo Gerador
-		  </button>
-		</header>
+    <header class="header">
+      <input type="text" id="searchInput" placeholder="Buscar gerador..." class="form-input search-input">
+      <button id="btnNovo" class="btn btn-primary">+ Novo Gerador</button>
+    </header>
 
-		<div id="generatorsGrid" class="grid"></div>
-	  </main>
+    <!-- Painel do Gateway DSE (aparece somente quando conectado) -->
+    <div id="gatewayPanel" style="display:none; padding: 0 0 16px 0;">
+      <div class="card" style="border-left: 3px solid var(--color-accent);">
+        <div class="card-header" style="margin-bottom: 8px;">
+          <div class="card-title" style="font-size:14px;">
+            🔌 Gateway DSE — <span id="gwSerial">...</span>
+          </div>
+          <span id="gwUpdateTime" style="font-size:11px; color:var(--text-muted);"></span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:13px;">
+          <div>📶 <strong id="gwSignal">—</strong> (<span id="gwOperator">—</span>)</div>
+          <div>🌐 IP: <strong id="gwIp">—</strong></div>
+          <div>📡 MQTT: <strong id="gwMqtt">—</strong></div>
+          <div>📍 GPS: <strong id="gwGps">—</strong></div>
+        </div>
+      </div>
+    </div>
 
-	</div>
+    <!-- Grid de geradores -->
+    <div id="generatorsGrid" class="grid"></div>
 
-<!-- MODAL -->
+  </main>
+</div>
+
+<!-- MODAL CADASTRO/EDIÇÃO -->
 <div id="generatorModal" class="modal">
   <div class="modal-container">
-
     <div class="modal-header">
       <h2 id="modalTitle">Novo Gerador</h2>
       <button id="closeModal" class="btn btn-secondary btn-sm">X</button>
     </div>
-
     <div class="modal-body">
-
       <form id="generatorForm" class="login-form">
-
         <div class="form-group">
           <label class="form-label">Serial *</label>
           <input type="text" id="genSerial" class="form-input" required>
         </div>
-
         <div class="form-group">
           <label class="form-label">Cliente *</label>
           <select id="genClient" class="form-select"></select>
         </div>
-
         <div class="form-group">
           <label class="form-label">Local</label>
           <input type="text" id="genLocal" class="form-input">
         </div>
-
         <div class="form-grid-3">
           <div class="form-group">
             <label class="form-label">Cidade</label>
             <input type="text" id="genCidade" class="form-input">
           </div>
-
           <div class="form-group">
             <label class="form-label">UF</label>
             <input type="text" id="genUF" class="form-input" maxlength="2">
           </div>
-
           <div class="form-group">
             <label class="form-label">CEP</label>
             <input type="text" id="genCEP" class="form-input">
           </div>
         </div>
-
       </form>
-
     </div>
-
     <div class="modal-footer">
       <button id="btnCancel" class="btn btn-secondary">Cancelar</button>
       <button form="generatorForm" class="btn btn-primary">Salvar</button>
     </div>
-
   </div>
 </div>
 
-  <script src="../config.js"></script>
-  <script src="../js/utils/helpers.js"></script>
-  <script src="../js/services/mock.service.js"></script>
-  <script src="../js/services/api.service.js"></script>
-  <script src="../js/services/auth.service.js"></script>
-  <script src="../js/app.js"></script>
+<script src="../config.js"></script>
+<script src="../js/utils/helpers.js"></script>
+<script src="../js/services/mock.service.js"></script>
+<script src="../js/services/api.service.js"></script>
+<script src="../js/services/auth.service.js"></script>
+<script src="../js/services/dse.service.js"></script>
+<script src="../js/app.js"></script>
 
 <script>
-(function(){
+(function () {
 
-  // ===============================
+  // =============================================
   // ELEMENTOS
-  // ===============================
-  const modal = document.getElementById('generatorModal');
-  const form = document.getElementById('generatorForm');
-  const grid = document.getElementById('generatorsGrid');
+  // =============================================
+  const modal       = document.getElementById('generatorModal');
+  const form        = document.getElementById('generatorForm');
+  const grid        = document.getElementById('generatorsGrid');
   const searchInput = document.getElementById('searchInput');
 
   const fields = {
-    serial: document.getElementById("genSerial"),
-    client: document.getElementById("genClient"),
-    local: document.getElementById("genLocal"),
-    cidade: document.getElementById("genCidade"),
-    uf: document.getElementById("genUF"),
-    cep: document.getElementById("genCEP")
+    serial: document.getElementById('genSerial'),
+    client: document.getElementById('genClient'),
+    local:  document.getElementById('genLocal'),
+    cidade: document.getElementById('genCidade'),
+    uf:     document.getElementById('genUF'),
+    cep:    document.getElementById('genCEP'),
   };
 
-  // ===============================
-  // DADOS MOCK (mesmo padrão clientes)
-  // ===============================
+  // =============================================
+  // DADOS
+  // =============================================
   window.clients = [
-    { id: 1, name: "Empresa X" },
-    { id: 2, name: "Indústria Y" }
+    { id: 1, name: 'Empresa X' },
+    { id: 2, name: 'Indústria Y' },
   ];
 
-  window.generators = [];
+  // Carrega geradores salvos no localStorage para persistência
+  window.generators = JSON.parse(localStorage.getItem('amz_generators') || '[]');
 
   let currentIndex = null;
 
-  // ===============================
-  // LOAD CLIENTS
-  // ===============================
-  function loadClients(){
-    fields.client.innerHTML = `
-      <option value="">Selecione</option>
-      ${clients.map(c => `<option value="${c.id}">${c.name}</option>`).join("")}
-    `;
+  // =============================================
+  // INTEGRAÇÃO DSE GATEWAY
+  // =============================================
+
+  // Elementos do painel do gateway
+  const gatewayPanel = document.getElementById('gatewayPanel');
+  const statusDot    = document.getElementById('dseStatusDot');
+  const statusText   = document.getElementById('dseStatusText');
+
+  // Mapa de cores para status
+  const STATUS_COLOR = {
+    online:   '#10b981', // verde
+    offline:  '#ef4444', // vermelho
+    retrying: '#f59e0b', // amarelo
+  };
+
+  /**
+   * Atualiza o badge de status no navbar
+   */
+  function updateStatusBadge(status) {
+    statusDot.style.background  = STATUS_COLOR[status] || '#6b7280';
+    statusText.textContent = {
+      online:   'Gateway Online',
+      offline:  'Gateway Offline',
+      retrying: 'Reconectando…',
+    }[status] || 'Gateway';
   }
 
-  // ===============================
-  // MODAL
-  // ===============================
-  function openModal(index = null){
+  /**
+   * Atualiza o painel informativo do gateway
+   * e sincroniza o status online/offline dos geradores cadastrados
+   */
+  function onGatewayData(data) {
+    // Mostra painel
+    gatewayPanel.style.display = 'block';
 
-    form.reset();
-    modal.style.display = "flex";
+    // Preenche dados do gateway
+    document.getElementById('gwSerial').textContent   = data.device.serial;
+    document.getElementById('gwIp').textContent       = data.gsm.ip;
+    document.getElementById('gwOperator').textContent = data.gsm.operator;
+    document.getElementById('gwMqtt').textContent     = data.mqtt.connected ? 'Conectado' : 'Desconectado';
+    document.getElementById('gwUpdateTime').textContent =
+      'Atualizado: ' + new Date(data.capturedAt).toLocaleTimeString('pt-BR');
 
-    currentIndex = index;
+    // Sinal GSM: converte 0–5 em barras
+    const bars = ['○○○○○','●○○○○','●●○○○','●●●○○','●●●●○','●●●●●'];
+    document.getElementById('gwSignal').textContent =
+      (bars[data.gsm.signal] || '—') + ' ' + data.gsm.type;
 
-    if(index !== null){
-      const g = generators[index];
+    // GPS
+    document.getElementById('gwGps').textContent = data.gps.hasFix
+      ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}`
+      : 'Sem sinal';
 
-      fields.serial.value = g.serial;
-      fields.client.value = g.clientId;
-      fields.local.value = g.local;
-      fields.cidade.value = g.cidade;
-      fields.uf.value = g.uf;
-      fields.cep.value = g.cep;
+    // Atualiza status online/offline de cada gerador cadastrado
+    // cruzando pelo serial com os módulos DSE
+    const moduleMap = {};
+    data.modules.forEach(m => {
+      if (m.serial) moduleMap[m.serial.toUpperCase()] = m;
+    });
+
+    let changed = false;
+    generators.forEach(g => {
+      const mod = moduleMap[g.serial?.toUpperCase()];
+      if (mod) {
+        const novoStatus = mod.online ? 'Online' : 'Offline';
+        if (g.status !== novoStatus) {
+          g.status = novoStatus;
+          g.firmware = mod.firmware;
+          g.protocol = mod.protocol;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem('amz_generators', JSON.stringify(generators));
+      render(generators);
     }
   }
 
-  function closeModal(){
-    modal.style.display = "none";
+  // Inicia integração DSE se feature flag ativa
+  if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
+    window.DSEService.onStatus(updateStatusBadge);
+    window.DSEService.onData(onGatewayData);
+
+    if (window.CONFIG?.DSE?.AUTO_POLL) {
+      window.DSEService.startPolling();
+    }
+  }
+
+  // =============================================
+  // CLIENTES
+  // =============================================
+  function loadClients() {
+    fields.client.innerHTML =
+      '<option value="">Selecione</option>' +
+      clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  // =============================================
+  // MODAL
+  // =============================================
+  function openModal(index = null) {
+    form.reset();
+    modal.style.display = 'flex';
+    currentIndex = index;
+
+    document.getElementById('modalTitle').textContent =
+      index !== null ? 'Editar Gerador' : 'Novo Gerador';
+
+    if (index !== null) {
+      const g = generators[index];
+      fields.serial.value = g.serial;
+      fields.client.value = g.clientId;
+      fields.local.value  = g.local;
+      fields.cidade.value = g.cidade;
+      fields.uf.value     = g.uf;
+      fields.cep.value    = g.cep;
+    }
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
     currentIndex = null;
   }
 
-  // ===============================
+  // =============================================
   // SALVAR
-  // ===============================
-  form.addEventListener("submit", (e)=>{
+  // =============================================
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const data = {
-      serial: fields.serial.value.trim(),
-      clientId: Number(fields.client.value),
-      clientName: clients.find(c => c.id == fields.client.value)?.name || "",
-      local: fields.local.value.trim(),
-      cidade: fields.cidade.value.trim(),
-      uf: fields.uf.value.trim(),
-      cep: fields.cep.value.trim(),
-      status: "Ativo"
+      serial:     fields.serial.value.trim(),
+      clientId:   Number(fields.client.value),
+      clientName: clients.find(c => c.id == fields.client.value)?.name || '',
+      local:      fields.local.value.trim(),
+      cidade:     fields.cidade.value.trim(),
+      uf:         fields.uf.value.trim(),
+      cep:        fields.cep.value.trim(),
+      status:     'Aguardando',  // será atualizado pelo DSE
+      firmware:   '',
+      protocol:   '',
     };
 
-    if(currentIndex === null){
+    if (currentIndex === null) {
       generators.unshift(data);
     } else {
-      generators[currentIndex] = data;
+      generators[currentIndex] = { ...generators[currentIndex], ...data };
     }
 
+    localStorage.setItem('amz_generators', JSON.stringify(generators));
     render(generators);
     closeModal();
   });
 
-  // ===============================
+  // =============================================
   // BUSCA
-  // ===============================
-  searchInput.addEventListener("input", (e)=>{
+  // =============================================
+  searchInput.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
-
     const filtered = generators.filter(g =>
       g.serial.toLowerCase().includes(term) ||
-      g.clientName.toLowerCase().includes(term)
+      g.clientName.toLowerCase().includes(term) ||
+      (g.local || '').toLowerCase().includes(term)
     );
-
     render(filtered);
   });
 
-  // ===============================
+  // =============================================
   // RENDER
-  // ===============================
-  function render(list){
+  // =============================================
+  function statusClass(status) {
+    const map = {
+      'Online':    'badge-online',
+      'Offline':   'badge-offline',
+      'Aguardando':'badge-warning',
+    };
+    return map[status] || 'badge-warning';
+  }
 
-    if(list.length === 0){
-      grid.innerHTML = `<p style="padding:20px;">Nenhum gerador encontrado</p>`;
+  function render(list) {
+    if (list.length === 0) {
+      grid.innerHTML = `<p style="padding:20px; color:var(--text-muted);">
+        Nenhum gerador encontrado. Clique em "+ Novo Gerador" para cadastrar.
+      </p>`;
       return;
     }
 
-    grid.innerHTML = list.map((g, index)=>`
+    grid.innerHTML = list.map((g, index) => `
       <div class="card">
 
         <div class="card-header">
@@ -264,45 +383,51 @@
             <div class="card-title">${g.serial}</div>
             <div style="font-size:12px;color:#aaa;">${g.clientName}</div>
           </div>
-          <span class="badge badge-online">${g.status}</span>
+          <span class="badge ${statusClass(g.status)}">${g.status}</span>
         </div>
 
-        <div style="font-size:14px;color:#ccc;">
-          📍 ${g.local || "Sem local"}<br>
-          ${g.cidade} - ${g.uf}
+        <div style="font-size:13px;color:#ccc; margin: 8px 0;">
+          📍 ${g.local || 'Sem local definido'}<br>
+          ${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : ''}
         </div>
+
+        ${g.firmware ? `
+        <div style="font-size:11px;color:var(--text-muted); margin-bottom:8px;">
+          Firmware: ${g.firmware} &nbsp;|&nbsp; ${g.protocol}
+        </div>` : ''}
 
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="btn btn-secondary" style="flex:1;" onclick="edit(${index})">
+          <button class="btn btn-secondary" style="flex:1;" onclick="editGenerator(${index})">
             Editar
           </button>
         </div>
 
       </div>
-    `).join("");
+    `).join('');
   }
 
-  // ===============================
-  // AÇÕES
-  // ===============================
-  window.edit = (index) => openModal(index);
+  // =============================================
+  // AÇÕES GLOBAIS
+  // =============================================
+  window.editGenerator = (index) => openModal(index);
 
-  document.getElementById("btnNovo").onclick = () => openModal();
-  document.getElementById("closeModal").onclick = closeModal;
-  document.getElementById("btnCancel").onclick = closeModal;
+  document.getElementById('btnNovo').onclick    = () => openModal();
+  document.getElementById('closeModal').onclick = closeModal;
+  document.getElementById('btnCancel').onclick  = closeModal;
 
   // Sidebar
   document.getElementById('menuToggleNavbar').onclick = () => {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('open');
   };
-
   document.getElementById('sidebarOverlay').onclick = () => {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   };
 
+  // =============================================
   // INIT
+  // =============================================
   loadClients();
   render(generators);
 
