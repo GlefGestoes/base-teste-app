@@ -29,6 +29,7 @@ const OPTIONAL_ASSETS = [
   './js/services/mock.service.js',
   './js/services/api.service.js',
   './js/services/auth.service.js',
+  './js/services/dse.service.js',
   './pages/dashboard.html',
   './pages/monitoramento.html',
   './pages/relatorios.html',
