@@ -169,6 +169,7 @@
 
   const fields = {
     serial: document.getElementById('genSerial'),
+    moduleId: document.getElementById('genModuleId'),
     client: document.getElementById('genClient'),
     local:  document.getElementById('genLocal'),
     cidade: document.getElementById('genCidade'),
@@ -303,6 +304,7 @@
     if (index !== null) {
       const g = generators[index];
       fields.serial.value = g.serial;
+      fields.moduleId.value = g.moduleId || '';
       fields.client.value = g.clientId;
       fields.local.value  = g.local;
       fields.cidade.value = g.cidade;
@@ -324,6 +326,7 @@
 
     const data = {
       serial:     fields.serial.value.trim(),
+      moduleId: fields.moduleId.value.trim(),
       clientId:   Number(fields.client.value),
       clientName: clients.find(c => c.id == fields.client.value)?.name || '',
       local:      fields.local.value.trim(),
@@ -384,7 +387,7 @@
 
         <div class="card-header">
           <div>
-            <div class="card-title">${g.serial}</div>
+            <div class="card-title">${g.serial} <small>(${g.moduleId})</small></div>
             <div style="font-size:12px;color:#aaa;">${g.clientName}</div>
           </div>
           <span class="badge ${statusClass(g.status)}">${g.status}</span>
