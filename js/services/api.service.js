@@ -12,19 +12,14 @@ const ApiService = {
   /**
    * Headers padrão para requisições
    */
-  getHeaders() {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-
-    const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return headers;
-  },
+	getHeaders() {
+	  return {
+	    'Content-Type': 'application/json',
+	    'Accept': 'application/json',
+	    'apikey': window.CONFIG.SUPABASE.ANON_KEY,
+	    'Authorization': `Bearer ${window.CONFIG.SUPABASE.ANON_KEY}`
+	  };
+	},
 
   /**
    * Faz requisição HTTP
@@ -43,7 +38,7 @@ const ApiService = {
     }
     // ==========================================
 
-    const url = `${window.CONFIG.API.BASE_URL}${endpoint}`;
+    const url = `${window.CONFIG.SUPABASE.URL}/rest/v1${endpoint}`;
     
     const config = {
       method: options.method || 'GET',
@@ -85,50 +80,51 @@ const ApiService = {
   // AUTH
   // ==========================================
 
-  async login(email, password) {
-    return this.request('/auth/login', {
-      method: 'POST',
-      body: { email, password }
-    });
-  },
+  // async login(email, password) {
+   //  return this.request('/auth/login', {
+   //    method: 'POST',
+   //    body: { email, password }
+  //   });
+  // },
   
-	async register(user) {
-	  return this.request('/auth/register', {
-		method: 'POST',
-		body: user
-	  });
-	},
+	// async register(user) {
+	//   return this.request('/auth/register', {
+	// 	method: 'POST',
+	// 	body: user
+	//   });
+   // 	},
 
-  async logout() {
-    return this.request('/auth/logout', { method: 'POST' });
-  },
+  // async logout() {
+  //   return this.request('/auth/logout', { method: 'POST' });
+  // },
 
-  async refreshToken() {
-    return this.request('/auth/refresh', { method: 'POST' });
-  },
+  // async refreshToken() {
+  //   return this.request('/auth/refresh', { method: 'POST' });
+  // },
 
-  async getProfile() {
-    return this.request('/auth/profile');
-  },
+  // async getProfile() {
+  //   return this.request('/auth/profile');
+  // },
+  		
 
   // ==========================================
   // GENERATORS
   // ==========================================
 
-  async getGenerators() {
-    return this.request('/generators');
-  },
-
-  async getGenerator(id) {
-    return this.request(`/generators/${id}`);
-  },
-
-  async updateGenerator(id, data) {
-    return this.request(`/generators/${id}`, {
-      method: 'PUT',
-      body: data
-    });
-  },
+	async getGenerators() {
+	  return this.request('/generators?select=*');
+	},
+	
+	async getGenerator(id) {
+	  return this.request(`/generators?id=eq.${id}&select=*`);
+	},
+	
+	async updateGenerator(id, data) {
+	  return this.request(`/generators?id=eq.${id}`, {
+	    method: 'PATCH',
+	    body: data
+	  });
+	},
 
   // ==========================================
   // ALERTS
@@ -146,27 +142,48 @@ const ApiService = {
   // CLIENTS
   // ==========================================
 
-  async getClients() {
-    return this.request('/clients');
-  },
+	async getClients() {
+	  return this.request('/clients?select=*');
+	},
+	
+	async getClient(id) {
+	  return this.request(`/clients?id=eq.${id}&select=*`);
+	},
+	
+	async createClient(data) {
+	  return this.request('/clients', {
+	    method: 'POST',
+	    body: data
+	  });
+	},
+	
+	async updateClient(id, data) {
+	  return this.request(`/clients?id=eq.${id}`, {
+	    method: 'PATCH',
+	    body: data
+	  });
+	},
 
-  async getClient(id) {
-    return this.request(`/clients/${id}`);
-  },
+  // ==========================================
+  // Generator Status
+  // ==========================================
 
-  async createClient(data) {
-    return this.request('/clients', {
-      method: 'POST',
-      body: data
-    });
-  },
+	async getGeneratorStatus(generatorId) {
+	  return this.request(
+	    `/generator_status?generator_id=eq.${generatorId}&order=updated_at.desc&limit=1`
+	  );
+	},
+	
+  // ==========================================
+  // Generator Events
+  // ==========================================
 
-  async updateClient(id, data) {
-    return this.request(`/clients/${id}`, {
-      method: 'PUT',
-      body: data
-    });
-  },
+	async getGeneratorEvents(generatorId) {
+	  return this.request(
+	    `/generator_events?generator_id=eq.${generatorId}&order=event_time.desc`
+	  );
+	},
+	
 
   // ==========================================
   // ACTIVITIES
@@ -180,10 +197,10 @@ const ApiService = {
   // DASHBOARD
   // ==========================================
 
-  async getDashboardSummary() {
-    return this.request('/dashboard/summary');
-  }
-};
+  // async getDashboardSummary() {
+  //   return this.request('/dashboard/summary');
+  // }
+  // };
 
 // Exporta globalmente
 window.ApiService = ApiService;
