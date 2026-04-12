@@ -133,7 +133,7 @@ self.addEventListener('fetch', (event) => {
 
   // CSS e JS — Cache First
   if (url.pathname.match(/\.(css|js)$/)) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE));
+    event.respondWith(networkFirst(request)); // ← era cacheFirst
     return;
   }
 
