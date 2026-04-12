@@ -669,6 +669,12 @@
 					  Detalhes
 					</button>
 
+					<button onclick="handleDeleteClient('${client.id}', '${client.name}')"
+					  style="background:none; border:1px solid #EF4444; color:#EF4444; 
+					         padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px;">
+					  Excluir
+					</button>
+
 				  </div>
 
 				</div>
@@ -688,7 +694,17 @@
 			openModal(action, window.currentClients[index], index);
 
 		renderClients(window.currentClients);
-
+		// --- Função do botão de excluir ---
+		async function handleDeleteClient(id, name) {
+		  if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
+		  try {
+		    await window.ApiService.deleteClient(id);
+		    await loadClients(); // atualiza a lista sem recarregar a página
+		  } catch (err) {
+		    alert('Erro ao excluir: ' + err.message);
+		  }
+		}
+		
 	})();
 	
   </script>
