@@ -278,7 +278,7 @@ const ApiService = {
    //}
    };
 
- // Exporta globalmente
+// Exporta globalmente
 window.ApiService = ApiService;
 
 // Se estiver em modo desenvolvimento, substitui o ApiService pelo MockService
