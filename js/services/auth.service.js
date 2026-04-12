@@ -159,7 +159,7 @@ const AuthService = {
    */
   redirectToLogin() {
     this.clearSession();
-    window.location.href = './index.html';
+    window.location.href = "/base-teste-app/";
   },
 
   /**
@@ -167,7 +167,7 @@ const AuthService = {
    */
   redirectAfterLogin() {
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect') || './pages/dashboard.html';
+    const redirect = params.get('redirect') || '/base-teste-app/pages/dashboard.html'';
     window.location.href = redirect;
   },
   
