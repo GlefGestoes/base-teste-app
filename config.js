@@ -28,7 +28,7 @@ const CONFIG = {
    */
   SUPABASE: {
     URL: 'https://mrgvnqoyrpajmosmjfwb.supabase.co',
-    ANON_KEY: 'sb_publishable_hzgfbdFLWibQVfO4niwJNg__bRW64LY',
+    ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yZ3ZucW95cnBham1vc21qZndiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTcwODEsImV4cCI6MjA4ODMzMzA4MX0.386o3VAq6aN4_AFfBQuZiVPQJdEVNpqBL5AMDSkCALo',
     FUNCTIONS_URL: 'https://mrgvnqoyrpajmosmjfwb.supabase.co/functions/v1'
   },
   SYNC: {
