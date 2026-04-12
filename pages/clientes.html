@@ -380,8 +380,8 @@
 			});
 
 		// --- 2. Estado da Aplicação ---
-		const savedClients = localStorage.getItem('amz_clientes_data');
 		window.currentClients = [];
+
 		async function loadClients() {
 		  try {
 		    const data = await window.ApiService.getClients();
@@ -391,7 +391,10 @@
 		    console.error('Erro ao carregar clientes:', err);
 		  }
 		}
+
 		loadClients();
+
+		let currentMode = 'novo';
 		
 		// === NOVO: Verificação de Perfil Pendente ===
 		const currentUser = AuthService.getCurrentUser();
