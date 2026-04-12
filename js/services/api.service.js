@@ -128,6 +128,18 @@ const ApiService = {
 	  });
 	},
 
+	// Botão detelar gerador
+	
+	async deleteGenerator(id) {
+	  return this.request(`/generators?id=eq.${id}`, {
+	    method: 'DELETE',
+	    headers: {
+	      ...this.getHeaders(),
+	      'Prefer': 'return=minimal'
+	    }
+	  });
+	},
+
   // ==========================================
   // ALERTS
   // ==========================================
@@ -166,6 +178,18 @@ const ApiService = {
 	  });
 	},
 
+	// Botão detelar cliente
+
+	async deleteClient(id) {
+	  return this.request(`/clients?id=eq.${id}`, {
+	    method: 'DELETE',
+	    headers: {
+	      ...this.getHeaders(),
+	      'Prefer': 'return=minimal'
+	    }
+	  });
+	},
+	
   // ==========================================
   // Generator Status
   // ==========================================
