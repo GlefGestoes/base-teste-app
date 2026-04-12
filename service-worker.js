@@ -150,9 +150,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   // API — Network First
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('api.')) {
-    event.respondWith(networkFirst(request));
-    return;
+  if (url.hostname.includes('supabase.co')) {
+  event.respondWith(networkFirst(request));
+  return;
   }
 
   // Padrão — Stale While Revalidate
