@@ -26,10 +26,12 @@ const CONFIG = {
    * Ajuste o IP conforme sua rede local.
    * Em produção, use um proxy no backend para evitar CORS.
    */
-  DSE: {
-    BASE_URL: 'http://192.168.1.253',
-    USERNAME: 'Admin',
-    PASSWORD: 'admin',
+  SUPABASE: {
+    URL: 'https://mrgvnqoyrpajmosmjfwb.supabase.co',
+    ANON_KEY: 'sb_publishable_hzgfbdFLWibQVfO4niwJNg__bRW64LY',
+    FUNCTIONS_URL: 'https://mrgvnqoyrpajmosmjfwb.supabase.co/functions/v1'
+  },
+  SYNC: {
     POLL_INTERVAL: 5000,
     TIMEOUT: 8000,
     MAX_RETRIES: 3,
