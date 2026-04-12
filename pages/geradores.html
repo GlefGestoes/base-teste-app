@@ -442,7 +442,21 @@
   // =============================================
   loadClients();
   render(generators);
-
+  // =============================================
+  // Função de deletar geradores
+  // =============================================
+  async function handleDeleteGenerator(index) {
+    const g = generators[index];
+    if (!confirm(`Excluir gerador "${g.serial}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await window.ApiService.deleteGenerator(g.id);
+      await loadGenerators();
+    } catch (err) {
+      alert('Erro ao excluir: ' + err.message);
+    }
+  }
+  window.handleDeleteGenerator = handleDeleteGenerator;
+  
 })();
 </script>
 
