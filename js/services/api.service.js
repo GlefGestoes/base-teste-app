@@ -13,11 +13,13 @@ const ApiService = {
    * Headers padrão para requisições
    */
 	getHeaders() {
+	  const sessionToken = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+	  const token = sessionToken || window.CONFIG.SUPABASE.ANON_KEY;
 	  return {
 	    'Content-Type': 'application/json',
 	    'Accept': 'application/json',
 	    'apikey': window.CONFIG.SUPABASE.ANON_KEY,
-	    'Authorization': `Bearer ${window.CONFIG.SUPABASE.ANON_KEY}`
+	    'Authorization': `Bearer ${token}`
 	  };
 	},
 
