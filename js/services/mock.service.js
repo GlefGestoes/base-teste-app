@@ -16,7 +16,7 @@ const MockService = {
 	USERS: (() => {
 	  try {
 		return JSON.parse(localStorage.getItem('amz_mock_users')) || [
-		  { id: 1, name: 'Administrador', email: 'admin@amz.app', password: 'admin123', role: 'administrador', avatar: null },
+		  { id: 1, name: 'Administrador', email: 'admin@amz.app', password: '!@#Amz_App', role: 'administrador', avatar: null },
 		  { id: 2, name: 'João Vendedor', email: 'vendedor@amz.app', password: 'vendedor123', role: 'vendedor', avatar: null },
 		  { id: 3, name: 'Maria Técnica', email: 'tecnico@amz.app', password: 'tecnico123', role: 'tecnico', avatar: null },
 		  { id: 4, name: 'Carlos Cliente', email: 'cliente@amz.app', password: 'cliente123', role: 'cliente', avatar: null }
