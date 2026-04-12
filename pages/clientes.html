@@ -381,26 +381,17 @@
 
 		// --- 2. Estado da Aplicação ---
 		const savedClients = localStorage.getItem('amz_clientes_data');
-		window.currentClients = savedClients ? JSON.parse(savedClients) : [
-			{
-				name: "Indústria XYZ Ltda",
-				document: "12.345.678/0001-90",
-				email: "contato@industriaxyz.com.br",
-				contact: "(11) 3333-4444",
-				type: "empresa",
-				address: "Av. Industrial, 1000 - São Paulo, SP",
-				city: "São Paulo",
-				uf: "SP",
-				cep: "01234-567",
-				generators: 2,
-				model: "Stemac 250kVA",
-				photoUrl: "",
-				status: "Ativo"
-			}
-		];
-
-		let currentMode = 'novo';
-		let currentEditIndex = null;
+		window.currentClients = [];
+		async function loadClients() {
+		  try {
+		    const data = await window.ApiService.getClients();
+		    window.currentClients = Array.isArray(data) ? data : [];
+		    renderClients(window.currentClients);
+		  } catch (err) {
+		    console.error('Erro ao carregar clientes:', err);
+		  }
+		}
+		loadClients();
 		
 		// === NOVO: Verificação de Perfil Pendente ===
 		const currentUser = AuthService.getCurrentUser();
@@ -518,32 +509,22 @@
 
 		// --- 5. Eventos de Ação ---
 
-		form.addEventListener('submit', (e) => {
-
-			e.preventDefault();
-
-			const formData = getClientFormData();
-
-			if (currentMode === 'novo') {
-
-				window.currentClients.unshift(formData);
-				// === NOVO: Se era um perfil pendente, agora não é mais ===
-				if (AuthService.isProfilePending()) {
-					AuthService.updateUserLocal({ isPending: false });
-					const alertBox = document.getElementById('pendingAlert');
-					if(alertBox) alertBox.style.display = 'none';
-				}
-			} 
-			else if (currentMode === 'editar') {
-
-				window.currentClients[currentEditIndex] = formData;
-			}
-
-			renderClients(window.currentClients);
-			// 2. SALVA NO LOCALSTORAGE (Para não perder os dados no F5)
-			localStorage.setItem('amz_clientes_data', JSON.stringify(window.currentClients));
-
-			closeModal();
+		form.addEventListener('submit', async (e) => {
+		  e.preventDefault();
+		  const formData = getClientFormData();
+		
+		  try {
+		    if (currentMode === 'novo') {
+		      await window.ApiService.createClient(formData);
+		    } else if (currentMode === 'editar') {
+		      const id = window.currentClients[currentEditIndex].id;
+		      await window.ApiService.updateClient(id, formData);
+		    }
+		    await loadClients(); // recarrega da API em vez de manipular array local
+		    closeModal();
+		  } catch (err) {
+		    alert('Erro ao salvar: ' + err.message);
+		  }
 		});
 
 		// Busca dinâmica
