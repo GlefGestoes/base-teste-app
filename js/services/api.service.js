@@ -82,31 +82,81 @@ const ApiService = {
   // AUTH
   // ==========================================
 
-  // async login(email, password) {
-   //  return this.request('/auth/login', {
-   //    method: 'POST',
-   //    body: { email, password }
-  //   });
-  // },
-  
-	// async register(user) {
-	//   return this.request('/auth/register', {
-	// 	method: 'POST',
-	// 	body: user
-	//   });
-   // 	},
+  async login(email, password) {
+    const url = `${window.CONFIG.SUPABASE.URL}/auth/v1/token?grant_type=password`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': window.CONFIG.SUPABASE.ANON_KEY
+      },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: data.error_description || 'Email ou senha inválidos' };
+    }
+    return {
+      success: true,
+      data: {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || data.user.email,
+          role: data.user.user_metadata?.role || 'administrador'
+        },
+        token: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresIn: data.expires_in
+      }
+    };
+  },
 
-  // async logout() {
-  //   return this.request('/auth/logout', { method: 'POST' });
-  // },
+  async register(user) {
+    const url = `${window.CONFIG.SUPABASE.URL}/auth/v1/signup`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': window.CONFIG.SUPABASE.ANON_KEY
+      },
+      body: JSON.stringify({
+        email: user.email,
+        password: user.password,
+        data: { name: user.name, role: user.role || 'cliente', isPending: user.isPending || false }
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: data.error_description || 'Erro ao criar conta' };
+    }
+    return { success: true, data };
+  },
 
-  // async refreshToken() {
-  //   return this.request('/auth/refresh', { method: 'POST' });
-  // },
+  async logout() {
+    const token = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+    await fetch(`${window.CONFIG.SUPABASE.URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: {
+        'apikey': window.CONFIG.SUPABASE.ANON_KEY,
+        'Authorization': `Bearer ${token}`
+      }
+    }).catch(() => {});
+    return { success: true };
+  },
 
-  // async getProfile() {
-  //   return this.request('/auth/profile');
-  // },
+  async getProfile() {
+    const token = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+    const response = await fetch(`${window.CONFIG.SUPABASE.URL}/auth/v1/user`, {
+      headers: {
+        'apikey': window.CONFIG.SUPABASE.ANON_KEY,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    if (!response.ok) return { success: false, error: 'Não autenticado' };
+    return { success: true, data };
+  },
   		
 
   // ==========================================
