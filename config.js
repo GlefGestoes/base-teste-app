@@ -5,7 +5,7 @@
  */
 
 const CONFIG = {
-  MODE: 'development', // 'development' | 'production'
+  MODE: 'production', // 'development' | 'production'
 
   APP: {
     NAME: 'AMZ App',
