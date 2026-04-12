@@ -273,12 +273,12 @@ const ApiService = {
   // DASHBOARD
   // ==========================================
 
-  // async getDashboardSummary() {
-  //   return this.request('/dashboard/summary');
-  // }
-  // };
+   //async getDashboardSummary() {
+     //return this.request('/dashboard/summary');
+   //}
+   };
 
-// Exporta globalmente
+ // Exporta globalmente
 window.ApiService = ApiService;
 
 // Se estiver em modo desenvolvimento, substitui o ApiService pelo MockService
