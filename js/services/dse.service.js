@@ -33,11 +33,11 @@ const DSEService = {
   async sync(generator) {
     try {
       this._emitStatus('syncing');
-
+  
       const cfg = this._getConfig();
-
+  
       const res = await fetch(
-        `${cfg.URL}/functions/v1/sync-generator`,
+        `${cfg.FUNCTIONS_URL}/sync-generator`,
         {
           method: 'POST',
           headers: {
@@ -46,22 +46,22 @@ const DSEService = {
           },
           body: JSON.stringify({
             serial: generator.serial,
-            module_id: generator.module_id,
+            module_id: generator.moduleId,
             generator_id: generator.id
           })
         }
       );
-
+  
       if (!res.ok) throw new Error('Erro na sincronização');
-
+  
       const data = await res.json();
-
+  
       this._lastData = data;
       this._emit(data);
       this._emitStatus('online');
-
+  
       return data;
-
+  
     } catch (err) {
       this._emitStatus('error', err.message);
       console.error('[DSEService] sync error:', err);
@@ -125,29 +125,29 @@ const DSEService = {
   // POLLING
   // -------------------------------------------
   startPolling(generator, intervalMs = 10000) {
+    if (!generator || !generator.id) return;
     if (this._isPolling) return;
-
+  
+    this._currentGenerator = generator;
     this._isPolling = true;
-
+  
     const loop = async () => {
       if (!this._isPolling) return;
-
-      await this.sync(generator);
+      await this.sync(this._currentGenerator);
       this._pollTimer = setTimeout(loop, intervalMs);
     };
-
+  
     loop();
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.stopPolling();
-      else this.startPolling(generator, intervalMs);
-    });
-  },
-
-  stopPolling() {
-    this._isPolling = false;
-    if (this._pollTimer) clearTimeout(this._pollTimer);
-    this._pollTimer = null;
+  
+    if (!this._visibilityListenerAdded) {
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) this.stopPolling();
+        else if (this._currentGenerator) {
+          this.startPolling(this._currentGenerator, intervalMs);
+        }
+      });
+      this._visibilityListenerAdded = true;
+    }
   },
 
   // -------------------------------------------
