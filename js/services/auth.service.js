@@ -167,7 +167,7 @@ const AuthService = {
    */
   redirectAfterLogin() {
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect') || '/base-teste-app/pages/dashboard.html'';
+    const redirect = params.get('redirect') || '/base-teste-app/pages/dashboard.html';
     window.location.href = redirect;
   },
   
