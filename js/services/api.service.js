@@ -138,6 +138,32 @@ const ApiService = {
         || { success: false, error: 'Mock não configurado' };
     }
 
+    // Não há refresh pare o Supabase, pois ele emite tokens com 1h de validade. 
+    async refreshTokenIfNeeded() {
+      const expiry = localStorage.getItem('amz_token_expiry');
+      if (!expiry) return;
+      const expiresAt = parseInt(expiry, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (expiresAt - now > 300) return; // > 5 min restantes: ok
+    
+      const refreshToken = localStorage.getItem(window.CONFIG.AUTH.REFRESH_TOKEN_KEY);
+      if (!refreshToken) { window.location.href = '/index.html'; return; }
+    
+      const res = await fetch(
+        `${window.CONFIG.SUPABASE.URL}/auth/v1/token?grant_type=refresh_token`,
+        { method: 'POST',
+          headers: { 'Content-Type': 'application/json',
+                     'apikey': window.CONFIG.SUPABASE.ANON_KEY },
+          body: JSON.stringify({ refresh_token: refreshToken }) }
+      );
+      if (!res.ok) { window.location.href = '/index.html'; return; }
+      const data = await res.json();
+      localStorage.setItem(window.CONFIG.AUTH.TOKEN_KEY, data.access_token);
+      localStorage.setItem(window.CONFIG.AUTH.REFRESH_TOKEN_KEY, data.refresh_token);
+      const exp = Math.floor(Date.now()/1000) + data.expires_in;
+      localStorage.setItem('amz_token_expiry', exp);
+    },
+
     // ------------------------------------------
     // Bug #3 — renova token se necessário
     // ------------------------------------------
