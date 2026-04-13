@@ -447,10 +447,12 @@
   // =============================================
   async function handleDeleteGenerator(index) {
     const g = generators[index];
-    if (!confirm(`Excluir gerador "${g.serial}"? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Excluir "${g.serial}"?`)) return;
     try {
       await window.ApiService.deleteGenerator(g.id);
-      await loadGenerators();
+      await loadGenerators(); // ← não existe!
+      generators.splice(index, 1);  // remove localmente
+      render(generators);           // re-renderiza a lista
     } catch (err) {
       alert('Erro ao excluir: ' + err.message);
     }
