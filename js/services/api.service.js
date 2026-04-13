@@ -266,9 +266,10 @@ const ApiService = {
     }
 
     // Bug #3 — salva a expiração absoluta (epoch em segundos)
-    const expiresAt = Math.floor(Date.now() / 1000) + data.expires_in;
-    localStorage.setItem('amz_token_expiry', expiresAt);
 
+    const exp = Math.floor(Date.now()/1000) + data.expires_in;
+    localStorage.setItem('amz_token_expiry', exp);
+    
     return {
       success: true,
       data: {
