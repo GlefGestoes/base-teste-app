@@ -147,14 +147,15 @@ const DSEService = {
 
     if (!this._visibilityListenerAdded) {
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) this.stopPolling();
-        else if (this._currentGenerator) {
+        if (document.hidden) {
+          this.stopPolling();
+        } else if (this._currentGenerator) {
+          this.stopPolling();
           this.startPolling(this._currentGenerator, intervalMs);
         }
       });
       this._visibilityListenerAdded = true;
-    }
-  },
+    },
 
   stopPolling() {
     this._isPolling = false;
