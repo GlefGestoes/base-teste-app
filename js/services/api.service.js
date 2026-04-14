@@ -344,6 +344,14 @@ const ApiService = {
     });
   },
 
+  async createGenerator(data) {
+    return this.request('/generators', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: data
+    });
+  },
+
   async deleteGenerator(id) {
     // 'Prefer: return=minimal' faz o Supabase retornar 204 No Content.
     // Agora tratado corretamente em request() — retorna { success: true }.
