@@ -131,36 +131,37 @@ const DSEService = {
   // POLLING
   // -------------------------------------------
   startPolling(generator, intervalMs = 10000) {
-    if (!generator || !generator.id) return;
-    if (this._isPolling) return;
-
-    this._currentGenerator = generator;
-    this._isPolling = true;
-
-    const loop = async () => {
-      if (!this._isPolling) return;
-      await this.sync(this._currentGenerator);
-      this._pollTimer = setTimeout(loop, intervalMs);
-    };
-
-    loop();
-
-    if (!this._visibilityListenerAdded) {
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          this.stopPolling();
-        } else if (this._currentGenerator) {
-          this.stopPolling();
-          this.startPolling(this._currentGenerator, intervalMs);
-        }
-      });
-      this._visibilityListenerAdded = true;
+      if (!generator || !generator.id) return;
+      if (this._isPolling) return;
+  
+      this._currentGenerator = generator;
+      this._isPolling = true;
+  
+      const loop = async () => {
+        if (!this._isPolling) return;
+        await this.sync(this._currentGenerator);
+        this._pollTimer = setTimeout(loop, intervalMs);
+      };
+  
+      loop();
+  
+      if (!this._visibilityListenerAdded) {
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            this.stopPolling();
+          } else if (this._currentGenerator) {
+            this.stopPolling();
+            this.startPolling(this._currentGenerator, intervalMs);
+          }
+        });
+        this._visibilityListenerAdded = true;
+      }             // ← fecha o if
+    },              // ← fecha startPolling
+  
+    stopPolling() {
+      this._isPolling = false;
+      if (this._pollTimer) clearTimeout(this._pollTimer);
     },
-
-  stopPolling() {
-    this._isPolling = false;
-    if (this._pollTimer) clearTimeout(this._pollTimer);
-  },
 
   // -------------------------------------------
   // CALLBACKS
