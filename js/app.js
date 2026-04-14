@@ -42,9 +42,11 @@ const App = {
 	    window.addEventListener("load", () => {
 	      // Usa caminho relativo ao script atual, funciona em qualquer subpath
 	      const swPath = new URL('service-worker.js', document.baseURI).href;
-	      navigator.serviceWorker.register(swPath)
-	        .then(reg => console.log("SW registrado:", reg.scope))
-	        .catch(err => console.error("SW erro:", err));
+		  navigator.serviceWorker.register('/base-teste-app/service-worker.js', {
+		    scope: '/base-teste-app/'
+		  })
+		   .then(reg => console.log("SW registrado:", reg.scope))
+		   .catch(err => console.error("SW erro:", err));
 	    });
 	  }
 	},
