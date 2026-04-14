@@ -698,15 +698,17 @@
 
 		renderClients(window.currentClients);
 		// --- Função do botão de excluir ---
-		async function handleDeleteClient(id, name) {
-		  if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
-		  try {
-		    await window.ApiService.deleteClient(id);
-		    await loadClients(); // atualiza a lista sem recarregar a página
-		  } catch (err) {
-		    alert('Erro ao excluir: ' + err.message);
-		  }
-		}
+	// dentro da IIFE — adicionar a linha de exposição global
+	async function handleDeleteClient(id, name) {
+	  if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
+	  try {
+	    await window.ApiService.deleteClient(id);
+	    await loadClients(); // loadClients() existe nesta página — correto
+	  } catch (err) {
+	    alert('Erro ao excluir: ' + err.message);
+	  }
+	}
+	window.handleDeleteClient = handleDeleteClient;
 		
 	})();
 	
