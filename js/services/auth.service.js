@@ -216,12 +216,13 @@ const AuthService = {
     return localStorage.getItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
   },
 
-  clearSession() {
-    localStorage.removeItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    localStorage.removeItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(window.CONFIG?.AUTH?.USER_KEY);
-    this._currentUser = null;
-  }
+	clearSession() {
+	  localStorage.removeItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+	  localStorage.removeItem(window.CONFIG?.AUTH?.REFRESH_TOKEN_KEY);
+	  localStorage.removeItem(window.CONFIG?.AUTH?.USER_KEY);
+	  localStorage.removeItem('amz_token_expiry');
+	  this._currentUser = null;
+	}
 };
 
 // Exporta globalmente
