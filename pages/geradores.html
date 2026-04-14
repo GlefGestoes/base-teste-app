@@ -325,31 +325,32 @@
     e.preventDefault();
 
     const data = {
-      serial:     fields.serial.value.trim(),
-      moduleId: fields.moduleId.value.trim(),
-      clientId:   Number(fields.client.value),
-      clientName: clients.find(c => c.id == fields.client.value)?.name || '',
-      local:      fields.local.value.trim(),
-      cidade:     fields.cidade.value.trim(),
-      uf:         fields.uf.value.trim(),
-      cep:        fields.cep.value.trim(),
-      status:     'Aguardando',  // será atualizado pelo DSE
-      firmware:   '',
-      protocol:   '',
+      serial:      fields.serial.value.trim(),
+      module_id:   fields.moduleId.value.trim(),
+      client_id:   Number(fields.client.value),
+      local:       fields.local.value.trim(),
+      cidade:      fields.cidade.value.trim(),
+      uf:          fields.uf.value.trim(),
+      cep:         fields.cep.value.trim(),
+      status:      'Aguardando',
+      firmware:    '',
+      protocol:    '',
     };
 
-    if (editingIndex === null) {
-      // Novo gerador
-      const result = await window.ApiService.createGenerator(generatorData);
+    if (currentIndex === null) {
+      // Novo gerador — salva no Supabase
+      const result = await window.ApiService.createGenerator(data);
       if (result && !result.error) {
-        generators.push(result[0] || generatorData);
+        generators.unshift(result[0] || data);
       }
     } else {
-      // Editar existente
-      const g = generators[editingIndex];
-      await window.ApiService.updateGenerator(g.id, generatorData);
-      generators[editingIndex] = { ...g, ...generatorData };
+      // Editar existente — atualiza no Supabase
+      const g = generators[currentIndex];
+      await window.ApiService.updateGenerator(g.id, data);
+      generators[currentIndex] = { ...g, ...data };
     }
+
+    localStorage.setItem('amz_generators', JSON.stringify(generators));
     render(generators);
     closeModal();
   });
