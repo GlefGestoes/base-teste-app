@@ -62,14 +62,14 @@
   ],
   "screenshots": [
     {
-      "src": "./assets/screenshots/logoamz.png",
+      "src": "./assets/icons/logoamz.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Dashboard do AMZ App"
     },
     {
-      "src": "./assets/screenshots/logoamz.png",
+      "src": "./assets/icons/logoamz.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
