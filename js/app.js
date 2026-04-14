@@ -39,14 +39,16 @@ const App = {
    */
 	initServiceWorker() {
 	  if ('serviceWorker' in navigator) {
-		window.addEventListener("load", () => {
-		  navigator.serviceWorker.register("/base-teste-app/service-worker.js")
-			.then(reg => console.log("SW registrado:", reg.scope))
-			.catch(err => console.error("SW erro:", err));
-		});
+	    window.addEventListener("load", () => {
+	      // Usa caminho relativo ao script atual, funciona em qualquer subpath
+	      const swPath = new URL('service-worker.js', document.baseURI).href;
+	      navigator.serviceWorker.register(swPath)
+	        .then(reg => console.log("SW registrado:", reg.scope))
+	        .catch(err => console.error("SW erro:", err));
+	    });
 	  }
 	},
-
+	
   /**
    * Verifica autenticação
    */
