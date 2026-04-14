@@ -338,13 +338,18 @@
       protocol:   '',
     };
 
-    if (currentIndex === null) {
-      generators.unshift(data);
+    if (editingIndex === null) {
+      // Novo gerador
+      const result = await window.ApiService.createGenerator(generatorData);
+      if (result && !result.error) {
+        generators.push(result[0] || generatorData);
+      }
     } else {
-      generators[currentIndex] = { ...generators[currentIndex], ...data };
+      // Editar existente
+      const g = generators[editingIndex];
+      await window.ApiService.updateGenerator(g.id, generatorData);
+      generators[editingIndex] = { ...g, ...generatorData };
     }
-
-    localStorage.setItem('amz_generators', JSON.stringify(generators));
     render(generators);
     closeModal();
   });
