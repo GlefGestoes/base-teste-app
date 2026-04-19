@@ -419,7 +419,7 @@
 
 		function getClientFormData() {
 			return {
-				photoUrl: formFields.foto.value.trim(),
+				photo_url: formFields.foto.value.trim(),
 				name: formFields.nome.value.trim(),
 				document: formFields.doc.value.trim(),
 				email: formFields.email.value.trim(),
@@ -479,7 +479,7 @@
 
 			if (!data) return;
 
-			formFields.foto.value = data.photoUrl || '';
+			formFields.foto.value = data.photo_url || '';
 			formFields.nome.value = data.name || '';
 			formFields.doc.value = data.document || '';
 			formFields.email.value = data.email || '';
@@ -580,9 +580,9 @@
 
 			container.innerHTML = clients.map((client, index) => {
 
-				const avatarUrl =
-					client.photoUrl ||
-					`https://ui-avatars.com/api/?name=${encodeURIComponent(client.name)}&background=0B1F33&color=fff&bold=true`;
+			const avatarUrl =
+			  client.photo_url ||
+			  `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name)}&background=0B1F33&color=fff&bold=true`;
 
 				return `
 
