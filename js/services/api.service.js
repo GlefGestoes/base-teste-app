@@ -185,8 +185,13 @@ const ApiService = {
 
       // Erro HTTP: tenta extrair mensagem do corpo
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `HTTP ${response.status}`);
+        let errorBody = {};
+        try {
+          errorBody = await response.json();
+        } catch (_) {}
+        // O Supabase retorna o erro em diferentes campos dependendo da versão
+        const msg = errorBody.message || errorBody.error || errorBody.hint || `HTTP ${response.status}`;
+        throw new Error(msg);
       }
 
       // ------------------------------------------
