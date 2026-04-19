@@ -180,13 +180,31 @@
   // =============================================
   // DADOS
   // =============================================
-  window.clients = [
-    { id: 1, name: 'Empresa X' },
-    { id: 2, name: 'Indústria Y' },
-  ];
+  window.clients = []; // aqui será preenchido pela API
+  
+  async function loadClientsFromAPI() {
+    try {
+      const data = await window.ApiService.getClients();
+      window.clients = Array.isArray(data) ? data : [];
+      loadClients();
+    } catch (err) {
+      console.error('Erro ao carregar clientes:', err);
+    }
+  }
 
   // Carrega geradores salvos no localStorage para persistência
-  window.generators = JSON.parse(localStorage.getItem('amz_generators') || '[]');
+  window.generators = []; // começa vazio
+
+  async function loadGeneratorsFromAPI() {
+    try {
+      const data = await window.ApiService.getGenerators();
+      window.generators = Array.isArray(data) ? data : [];
+      render(window.generators);
+    } catch (err) {
+      console.error('Erro ao carregar geradores:', err);
+      render([]);
+    }
+  }
 
   let currentIndex = null;
 
@@ -324,10 +342,16 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+  // ✅ VALIDAÇÃO - Clientes.
+    if (!fields.client.value) {
+      alert('Selecione um cliente antes de salvar.');
+      return;
+    }
+
     const data = {
       serial:      fields.serial.value.trim(),
       module_id:   fields.moduleId.value.trim(),
-      client_id:   Number(fields.client.value),
+      client_id: parseInt(fields.client.value, 10) || null,
       local:       fields.local.value.trim(),
       cidade:      fields.cidade.value.trim(),
       uf:          fields.uf.value.trim(),
@@ -338,20 +362,23 @@
     };
 
     if (currentIndex === null) {
-      // Novo gerador — salva no Supabase
-      const result = await window.ApiService.createGenerator(data);
-      if (result && !result.error) {
-        generators.unshift(result[0] || data);
+      try {
+        await window.ApiService.createGenerator(data);
+      } catch (err) {
+        alert('Erro ao salvar gerador: ' + err.message);
+        return;
       }
     } else {
-      // Editar existente — atualiza no Supabase
-      const g = generators[currentIndex];
-      await window.ApiService.updateGenerator(g.id, data);
-      generators[currentIndex] = { ...g, ...data };
+      try {
+        const g = generators[currentIndex];
+        await window.ApiService.updateGenerator(g.id, data);
+      } catch (err) {
+        alert('Erro ao atualizar gerador: ' + err.message);
+        return;
+      }
     }
 
-    localStorage.setItem('amz_generators', JSON.stringify(generators));
-    render(generators);
+    await loadGeneratorsFromAPI(); // fonte de verdade é o banco
     closeModal();
   });
 
@@ -446,7 +473,7 @@
   // =============================================
   // INIT
   // =============================================
-  loadClients();
+  loadClientsFromAPI(); // carrega da API antes de popular o select
   render(generators);
   // =============================================
   // Função de deletar geradores
