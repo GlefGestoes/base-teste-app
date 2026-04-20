@@ -335,7 +335,7 @@ const ApiService = {
   // ==========================================
 
   async getGenerators() {
-    return this.request('/generators?select=*');
+    return this.request('/generators?select=*,clients(name)');
   },
 
   async getGenerator(id) {
