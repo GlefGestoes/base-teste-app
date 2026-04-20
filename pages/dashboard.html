@@ -183,7 +183,12 @@
 
   <script>
     (function() {
-      // Sidebar toggle
+	  // ✅ Proteção de rota — primeiro bloco da IIFE
+	  if (!AuthService.isAuthenticated()) {
+	    window.location.href = '../index.html';
+	    return;
+	  }
+	  // Sidebar toggle
       const menuToggle = document.getElementById('menuToggle');
       const sidebar = document.getElementById('sidebar');
       const sidebarOverlay = document.getElementById('sidebarOverlay');
