@@ -122,12 +122,12 @@
             <option value="1">Indústria XYZ</option>
             <option value="2">Comércio ABC</option>
           </select>
-          <button class="btn btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-            Gerar
-          </button>
+		  <button class="btn btn-primary" onclick="selectReport(window._currentReportType || 'performance')">
+		  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+		  </svg>
+		  Gerar
+		</button>
         </div>
       </div>
 
@@ -179,6 +179,12 @@
 
   <script>
     (function() {
+	  // ✅ 1. Proteção de rota
+	  if (!AuthService.isAuthenticated()) {
+	    window.location.href = '../index.html';
+	    return;
+	  }
+		
       const menuToggle = document.getElementById('menuToggle');
       const sidebar = document.getElementById('sidebar');
       const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -193,74 +199,139 @@
         sidebarOverlay.classList.remove('open');
       });
 
-      window.selectReport = function(type) {
-        const reportContent = document.getElementById('reportContent');
-        
-        const reports = {
-          performance: {
-            title: 'Relatório de Performance',
-            data: [
-              { generator: 'G-001 - Principal Alfa', efficiency: '94%', uptime: '168h', avgPower: '82%' },
-              { generator: 'G-002 - Secundário Beta', efficiency: '89%', uptime: '156h', avgPower: '58%' },
-              { generator: 'G-006 - Reserva Zeta', efficiency: '96%', uptime: '142h', avgPower: '43%' }
-            ]
-          },
-          maintenance: {
-            title: 'Relatório de Manutenção',
-            data: [
-              { generator: 'G-001', lastMaint: '15/01/2024', nextMaint: '15/04/2024', status: 'Em dia' },
-              { generator: 'G-002', lastMaint: '01/02/2024', nextMaint: '01/05/2024', status: 'Em dia' },
-              { generator: 'G-003', lastMaint: '20/12/2023', nextMaint: '20/03/2024', status: 'Atrasado' },
-              { generator: 'G-005', lastMaint: '10/11/2023', nextMaint: '10/02/2024', status: 'Crítico' }
-            ]
-          },
-          alerts: {
-            title: 'Relatório de Alertas',
-            data: [
-              { date: 'Hoje', type: 'Crítico', message: 'Temperatura excessiva G-005', status: 'Não resolvido' },
-              { date: 'Hoje', type: 'Aviso', message: 'Combustível baixo G-004', status: 'Não resolvido' },
-              { date: 'Ontem', type: 'Info', message: 'Manutenção agendada G-003', status: 'Agendado' },
-              { date: '2 dias atrás', type: 'Sucesso', message: 'Manutenção concluída G-001', status: 'Resolvido' }
-            ]
-          },
-          fuel: {
-            title: 'Relatório de Combustível',
-            data: [
-              { generator: 'G-001', current: '78%', consumption: '12L/h', autonomy: '65h' },
-              { generator: 'G-002', current: '45%', consumption: '8L/h', autonomy: '28h' },
-              { generator: 'G-003', current: '92%', consumption: '0L/h', autonomy: 'N/A' },
-              { generator: 'G-004', current: '23%', consumption: '15L/h', autonomy: '8h' },
-              { generator: 'G-005', current: '15%', consumption: '0L/h', autonomy: 'N/A' }
-            ]
-          }
-        };
+	window.selectReport = async function(type) {
+	  window._currentReportType = type;
+	  const reportContent = document.getElementById('reportContent');
+	  reportContent.innerHTML = '<p style="color:var(--text-muted); padding:16px;">Carregando...</p>';
+	
+	  // Busca geradores do Supabase
+	  let generators = [];
+	  try {
+	    const res = await ApiService.getGenerators();
+	    generators = Array.isArray(res) ? res : [];
+	  } catch(e) {
+	    console.error('Erro ao carregar geradores:', e);
+	  }
+	
+	  const reports = {
+	
+	    // ── PERFORMANCE ─────────────────────────────
+	    performance: {
+	      title: 'Relatório de Performance',
+	      headers: ['Serial', 'Status', 'Potência (%)', 'Tensão (V)', 'Corrente (A)', 'Horas'],
+	      rows: generators.map(g => [
+	        g.serial        || '—',
+	        g.status        || '—',
+	        g.power         ?? '—',
+	        g.voltage       ?? '—',
+	        g.current       ?? '—',
+	        g.hours         ?? '—'
+	      ])
+	    },
+	
+	    // ── MANUTENÇÃO ───────────────────────────────
+	    maintenance: {
+	      title: 'Relatório de Manutenção',
+	      headers: ['Serial', 'Local', 'Cidade', 'UF', 'Última Manutenção', 'Status'],
+	      rows: generators.map(g => [
+	        g.serial            || '—',
+	        g.local             || '—',
+	        g.cidade            || '—',
+	        g.uf                || '—',
+	        g.last_maintenance  || '—',
+	        g.status            || '—'
+	      ])
+	    },
+	
+	    // ── ALERTAS (eventos DSE do XML) ─────────────
+	    alerts: {
+	      title: 'Relatório de Alertas — Eventos DSE',
+	      headers: ['Serial', 'Status', 'Temperatura (°C)', 'Combustível (%)', 'Firmware'],
+	      rows: generators.map(g => [
+	        g.serial      || '—',
+	        g.status      || '—',
+	        g.temperature ?? '—',
+	        g.fuel        ?? '—',
+	        g.firmware    || '—'
+	      ])
+	    },
+	
+	    // ── COMBUSTÍVEL ──────────────────────────────
+	    fuel: {
+	      title: 'Relatório de Combustível',
+	      headers: ['Serial', 'Combustível (%)', 'Potência (%)', 'Status', 'Cidade'],
+	      rows: generators.map(g => [
+	        g.serial  || '—',
+	        g.fuel    ?? '—',
+	        g.power   ?? '—',
+	        g.status  || '—',
+	        g.cidade  || '—'
+	      ])
+	    }
+	  };
+	
+	  const report = reports[type];
+	
+	  // Se não houver geradores cadastrados
+	  if (generators.length === 0) {
+	    reportContent.innerHTML = `
+	      <h3 style="margin-bottom:16px;">${report.title}</h3>
+	      <p style="color:var(--text-muted);">Nenhum gerador cadastrado ainda.</p>
+	    `;
+	    return;
+	  }
+	
+	  // Monta a tabela
+	  reportContent.innerHTML = `
+	    <h3 style="margin-bottom: var(--space-4); font-size: var(--text-lg);">${report.title}</h3>
+	    <div style="overflow-x: auto;">
+	      <table style="width: 100%; border-collapse: collapse;">
+	        <thead>
+	          <tr style="border-bottom: 1px solid var(--glass-border);">
+	            ${report.headers.map(h => `
+	              <th style="text-align:left; padding:var(--space-3); font-size:var(--text-sm);
+	                         color:var(--text-muted); text-transform:uppercase;">${h}</th>
+	            `).join('')}
+	          </tr>
+	        </thead>
+	        <tbody>
+	          ${report.rows.map(row => `
+	            <tr style="border-bottom: 1px solid var(--glass-border);">
+	              ${row.map(val => `
+	                <td style="padding:var(--space-3); font-size:var(--text-sm);">${val}</td>
+	              `).join('')}
+	            </tr>
+	          `).join('')}
+	        </tbody>
+	      </table>
+	    </div>
+	  `;
+	};
 
-        const report = reports[type];
-        
-        reportContent.innerHTML = `
-          <h3 style="margin-bottom: var(--space-4); font-size: var(--text-lg);">${report.title}</h3>
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--glass-border);">
-                  ${Object.keys(report.data[0]).map(key => 
-                    `<th style="text-align: left; padding: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); text-transform: uppercase;">${key}</th>`
-                  ).join('')}
-                </tr>
-              </thead>
-              <tbody>
-                ${report.data.map(row => `
-                  <tr style="border-bottom: 1px solid var(--glass-border);">
-                    ${Object.values(row).map(val => 
-                      `<td style="padding: var(--space-3); font-size: var(--text-sm);">${val}</td>`
-                    ).join('')}
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      };
+  // Popula filtros com dados reais do Supabase
+  async function loadFilters() {
+    try {
+      const generators = await ApiService.getGenerators();
+      const clients    = await ApiService.getClients();
+
+      const selGen = document.querySelectorAll('.form-select')[1];
+      const selCli = document.querySelectorAll('.form-select')[2];
+
+      if (Array.isArray(generators)) {
+        selGen.innerHTML = '<option value="">Todos os geradores</option>' +
+          generators.map(g => `<option value="${g.id}">${g.serial}</option>`).join('');
+      }
+
+      if (Array.isArray(clients)) {
+        selCli.innerHTML = '<option value="">Todos os clientes</option>' +
+          clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+    } catch(e) {
+      console.error('Erro ao carregar filtros:', e);
+    }
+  }
+
+  loadFilters();
     })();
   </script>
 </body>
