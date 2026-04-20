@@ -206,6 +206,11 @@
 
   <script>
     (function() {
+	// ✅ 1. Proteção de rota
+	  if (!AuthService.isAuthenticated()) {
+	    window.location.href = '../index.html';
+	    return;
+	  }
       const menuToggle = document.getElementById('menuToggle');
       const sidebar = document.getElementById('sidebar');
       const sidebarOverlay = document.getElementById('sidebarOverlay');
