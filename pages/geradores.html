@@ -322,7 +322,7 @@
     if (index !== null) {
       const g = generators[index];
       fields.serial.value = g.serial;
-      fields.moduleId.value = g.moduleId || '';
+      fields.moduleId.value = g.module_id || '';
       fields.client.value = g.clientId;
       fields.local.value  = g.local;
       fields.cidade.value = g.cidade;
@@ -420,7 +420,7 @@
 
         <div class="card-header">
           <div>
-            <div class="card-title">${g.serial} <small>(${g.moduleId})</small></div>
+            <div class="card-title">${g.serial} <small>(${g.module_id || ''})</small></div>
             <div style="font-size:12px;color:#aaa;">${g.clientName}</div>
           </div>
           <span class="badge ${statusClass(g.status)}">${g.status}</span>
