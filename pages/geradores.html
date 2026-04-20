@@ -159,6 +159,12 @@
 <script>
 (function () {
 
+  // ✅ 1. Proteção de rota
+  if (!AuthService.isAuthenticated()) {
+    window.location.href = '../index.html';
+    return;
+  }
+
   // =============================================
   // ELEMENTOS
   // =============================================
