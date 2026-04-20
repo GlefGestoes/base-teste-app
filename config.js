@@ -38,6 +38,11 @@ const CONFIG = {
     AUTO_POLL: true,
   },
 
+  DSE: {
+    AUTO_POLL: true,
+    POLL_INTERVAL: 5000
+  },
+
   FEATURES: {
     OAUTH_GOOGLE: true,
     OAUTH_APPLE: true,
