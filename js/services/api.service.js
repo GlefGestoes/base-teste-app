@@ -393,6 +393,7 @@ const ApiService = {
   async createClient(data) {
     return this.request('/clients', {
       method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
       body:   data
     });
   },
