@@ -418,21 +418,23 @@
 		// --- 3. Funções de Suporte ---
 
 		function getClientFormData() {
-			return {
-				photo_url: formFields.foto.value.trim(),
-				name: formFields.nome.value.trim(),
-				document: formFields.doc.value.trim(),
-				email: formFields.email.value.trim(),
-				contact: formFields.contato.value.trim(),
-				type: formFields.tipo.value,
-				address: formFields.endereco.value.trim(),
-				city: formFields.cidade.value.trim(),
-				uf: formFields.uf.value.trim(),
-				cep: formFields.cep.value.trim(),
-				generators: Math.max(0, Number(formFields.geradores.value) || 0),
-				model: formFields.modelo.value.trim(),
-				status: "Ativo"
-			};
+		  const currentUser = AuthService.getCurrentUser();
+		  return {
+		    photo_url: formFields.foto.value.trim(),
+		    name:      formFields.nome.value.trim(),
+		    document:  formFields.doc.value.trim(),
+		    email:     formFields.email.value.trim(),
+		    contact:   formFields.contato.value.trim(),
+		    type:      formFields.tipo.value,
+		    address:   formFields.endereco.value.trim(),
+		    city:      formFields.cidade.value.trim(),
+		    uf:        formFields.uf.value.trim(),
+		    cep:       formFields.cep.value.trim(),
+		    generators: Math.max(0, Number(formFields.geradores.value) || 0),
+		    model:     formFields.modelo.value.trim(),
+		    status:    'Ativo',
+		    user_id:   currentUser?.id || null   // ← Associa ao usuário logado
+		  };
 		}
 
 		function getClientTypeLabel(type) {
