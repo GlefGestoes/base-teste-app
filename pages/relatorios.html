@@ -207,8 +207,10 @@
 	  // Busca geradores do Supabase
 	  let generators = [];
 	  try {
-	    const res = await ApiService.getGenerators();
-	    generators = Array.isArray(res) ? res : [];
+	    const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+	    const _res = await _svc.getGenerators();
+	    const _raw = _res?.data ?? _res;
+	    generators = Array.isArray(_raw) ? _raw : [];
 	  } catch(e) {
 	    console.error('Erro ao carregar geradores:', e);
 	  }
@@ -311,8 +313,11 @@
   // Popula filtros com dados reais do Supabase
   async function loadFilters() {
     try {
-      const generators = await ApiService.getGenerators();
-      const clients    = await ApiService.getClients();
+      const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+      const _gRes = await _svc.getGenerators();
+      const _cRes = await _svc.getClients();
+      const generators = Array.isArray(_gRes?.data ?? _gRes) ? (_gRes?.data ?? _gRes) : [];
+      const clients    = Array.isArray(_cRes?.data ?? _cRes) ? (_cRes?.data ?? _cRes) : [];
 
       const selGen = document.querySelectorAll('.form-select')[1];
       const selCli = document.querySelectorAll('.form-select')[2];
