@@ -115,9 +115,12 @@
         
         try {
           const response = await service.getGenerators();
-          
-          if (response.success) {
-            renderGenerators(response.data);
+          // Normaliza: MockService retorna {success, data}, ApiService retorna array
+          const data = response?.success ? response.data : (Array.isArray(response) ? response : []);
+          if (data.length > 0) {
+            renderGenerators(data);
+          } else if (!response?.success && response) {
+            console.error('[Monitoramento] Erro ao carregar geradores:', response);
           }
         } catch (error) {
           console.error('Error loading generators:', error);
@@ -178,4 +181,6 @@
   </script>
 </body>
 </html>
+
+
 
