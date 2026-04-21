@@ -204,14 +204,22 @@
   async function loadGeneratorsFromAPI() {
     try {
       const data = await window.ApiService.getGenerators();
-      window.generators = Array.isArray(data) ? data : [];
+      
+      window.generators = (Array.isArray(data) ? data : []).map(g => ({
+        ...g,
+        // Garante o nome para o Card/Busca
+        clientName: g.clients?.name || 'Sem cliente',
+        // Garante o ID para o campo Select no Modal de Edição
+        clientId: g.client_id || (g.clients ? g.clients.id : null)
+      }));
+
       render(window.generators);
     } catch (err) {
       console.error('Erro ao carregar geradores:', err);
       render([]);
     }
   }
-
+  
   let currentIndex = null;
 
   // =============================================
@@ -477,27 +485,50 @@
   };
 
   // =============================================
-  // INIT
-  // =============================================
-  loadClientsFromAPI(); // carrega da API antes de popular o select
-  render(generators);
-  // =============================================
-  // Função de deletar geradores
+  // FUNÇÃO DE DELETAR GERADORES (Restaurada)
   // =============================================
   async function handleDeleteGenerator(index) {
-    const g = generators[index];
-    if (!confirm(`Excluir "${g.serial}"? Esta ação não pode ser desfeita.`)) return;
+    // Busca o gerador no array global usando o index passado pelo botão
+    const g = window.generators[index];
+    if (!g) return;
+
+    if (!confirm(`Excluir o gerador "${g.serial}"? Esta ação não pode ser desfeita.`)) return;
+
     try {
       await window.ApiService.deleteGenerator(g.id);
-      generators.splice(index, 1); // remove do array local
-      render(generators);          // re-renderiza sem o item removido
+      // Após deletar no banco, recarregamos a lista da API para garantir sincronia
+      await loadGeneratorsFromAPI();
     } catch (err) {
+      console.error('Erro ao excluir:', err);
       alert('Erro ao excluir: ' + err.message);
     }
   }
-  window.handleDeleteGenerator = handleDeleteGenerator;
   
+  // Expõe para o window para o onclick do HTML encontrar
+  window.handleDeleteGenerator = handleDeleteGenerator;
+
+  // =============================================
+  // INIT 
+  // =============================================
+  async function init() {
+    try {
+      // 1. Carrega clientes (essencial para o nome aparecer no render e no select)
+      await loadClientsFromAPI(); 
+      
+      // 2. Carrega geradores (que já chama o render() internamente)
+      await loadGeneratorsFromAPI();
+      
+      console.log("Página de geradores inicializada.");
+    } catch (err) {
+      console.error("Erro na inicialização:", err);
+    }
+  }
+
+  // Única chamada de inicialização
+  init();
+
 })();
+  
 </script>
 
 </body>
