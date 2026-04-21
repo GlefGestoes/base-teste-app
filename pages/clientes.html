@@ -706,19 +706,31 @@
 			openModal(action, window.currentClients[index], index);
 
 		renderClients(window.currentClients);
-		// --- Função do botão de excluir ---
-	// dentro da IIFE — adicionar a linha de exposição global
-	async function handleDeleteClient(id, name) {
-	  if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
-	  try {
-	    await window.ApiService.deleteClient(id);
-	    await loadClients(); // loadClients() existe nesta página — correto
-	  } catch (err) {
-	    alert('Erro ao excluir: ' + err.message);
-	  }
-	}
-	window.handleDeleteClient = handleDeleteClient;
-		
+
+	// 1. Função do botão de excluir - Definição da função dentro do escopo da IIFE
+    async function handleDeleteClient(id, name) {
+	        if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
+	        
+	        try {
+	            // Garante que o ApiService está disponível
+	            if (window.ApiService && window.ApiService.deleteClient) {
+	                await window.ApiService.deleteClient(id);
+	                await loadClients(); // Certifique-se que loadClients está definida nesta IIFE
+	            } else {
+	                throw new Error("Serviço de API não encontrado.");
+	            }
+	        } catch (err) {
+	            console.error(err);
+	            alert('Erro ao excluir: ' + err.message);
+	        }
+	    }
+	
+	    // 2. EXPOHA para o window ANTES de fechar a IIFE
+	    window.handleDeleteClient = handleDeleteClient;
+	
+	    // 3. Inicializações finais
+	    renderClients(window.currentClients || []);
+	
 	})();
 	
   </script>
