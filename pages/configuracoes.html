@@ -233,9 +233,10 @@
       }
 
 	window.logout = async function() {
-	  await AuthService.logout();              // ← aguarda limpar tokens
-	  window.location.href = '../index.html';
-	};();
+      await AuthService.logout();
+      window.location.href = '../index.html';
+	    }; 
+	})(); 		
   </script>
 </body>
 </html>
