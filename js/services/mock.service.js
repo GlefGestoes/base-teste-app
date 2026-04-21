@@ -262,21 +262,21 @@ const MockService = {
    */
   async getDashboardSummary() {
     await this.delay();
-    
-    const totalGenerators = this.GENERATORS.length;
-    const online = this.GENERATORS.filter(g => g.status === 'online').length;
-    const alerts = this.ALERTS.filter(a => !a.read).length;
-    const totalClients = this.CLIENTS.length;
-
+    const total   = this.GENERATORS.length;
+    const online  = this.GENERATORS.filter(g => g.status === 'online').length;
+    const unread  = this.ALERTS.filter(a => !a.read).length;
+    const clients = this.CLIENTS.length;
     return this.success({
       stats: {
-        generators: { total: totalGenerators, online, offline: totalGenerators - online },
-        alerts: { total: this.ALERTS.length, unread: alerts },
-        clients: { total: totalClients, active: totalClients },
+        generators: { total, online, offline: total - online },
+        alerts:     { total: this.ALERTS.length, unread },
+        clients:    { total: clients, active: clients },
         maintenance: { pending: 3, completed: 12 }
       },
-      recentGenerators: this.GENERATORS.slice(0, 4),
-      recentAlerts: this.ALERTS.slice(0, 5),
+      recentGenerators: this.GENERATORS.slice(0, 4).map(g => ({
+        ...g, client: g.client || 'Sem cliente'
+      })),
+      recentAlerts:     this.ALERTS.slice(0, 5),
       recentActivities: this.ACTIVITIES.slice(0, 5)
     });
   },
@@ -302,6 +302,55 @@ const MockService = {
   // UTILITÁRIOS
   // ==========================================
 
+  // ─── Geradores (CRUD) ───────────────────────────────────────────────────────
+  async createGenerator(data) {
+    await this.delay();
+    const id = 'G-' + String(Date.now()).slice(-4);
+    const gen = { id, ...data, status: 'offline' };
+    this.GENERATORS.push(gen);
+    return this.success(gen);
+  },
+
+  async updateGenerator(id, data) {
+    await this.delay();
+    const idx = this.GENERATORS.findIndex(g => g.id === id);
+    if (idx === -1) return this.error('Gerador não encontrado');
+    this.GENERATORS[idx] = { ...this.GENERATORS[idx], ...data };
+    return this.success(this.GENERATORS[idx]);
+  },
+
+  async deleteGenerator(id) {
+    await this.delay();
+    const idx = this.GENERATORS.findIndex(g => g.id === id);
+    if (idx === -1) return this.error('Gerador não encontrado');
+    this.GENERATORS.splice(idx, 1);
+    return this.success({ success: true });
+  },
+
+  // ─── Clientes (CRUD) ─────────────────────────────────────────────────────
+  async createClient(data) {
+    await this.delay();
+    const newClient = { id: Date.now(), ...data, createdAt: new Date().toISOString() };
+    this.CLIENTS.push(newClient);
+    return this.success(newClient);
+  },
+
+  async updateClient(id, data) {
+    await this.delay();
+    const idx = this.CLIENTS.findIndex(c => String(c.id) === String(id));
+    if (idx === -1) return this.error('Cliente não encontrado');
+    this.CLIENTS[idx] = { ...this.CLIENTS[idx], ...data };
+    return this.success(this.CLIENTS[idx]);
+  },
+
+  async deleteClient(id) {
+    await this.delay();
+    const idx = this.CLIENTS.findIndex(c => String(c.id) === String(id));
+    if (idx === -1) return this.error('Cliente não encontrado');
+    this.CLIENTS.splice(idx, 1);
+    return this.success({ success: true });
+  },
+
   generateToken(user) {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const payload = btoa(JSON.stringify({
@@ -322,4 +371,3 @@ const MockService = {
 
 // Exporta globalmente
 window.MockService = MockService;
-
