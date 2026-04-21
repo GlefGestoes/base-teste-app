@@ -391,8 +391,10 @@
 
 		async function loadClients() {
 		  try {
-		    const data = await window.ApiService.getClients();
-		    window.currentClients = Array.isArray(data) ? data : [];
+		    const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+		    const response = await _svc.getClients();
+		    const raw = response?.data ?? response;
+		    window.currentClients = Array.isArray(raw) ? raw : [];
 		    renderClients(window.currentClients);
 		  } catch (err) {
 		    console.error('Erro ao carregar clientes:', err);
@@ -526,11 +528,12 @@
 		  const formData = getClientFormData();
 		
 		  try {
+		    const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
 		    if (currentMode === 'novo') {
-		      await window.ApiService.createClient(formData);
+		      await _svc.createClient(formData);
 		    } else if (currentMode === 'editar') {
 		      const id = window.currentClients[currentEditIndex].id;
-		      await window.ApiService.updateClient(id, formData);
+		      await _svc.updateClient(id, formData);
 		    }
 		    await loadClients(); // recarrega da API em vez de manipular array local
 		    closeModal();
@@ -713,8 +716,9 @@
 	        
 	        try {
 	            // Garante que o ApiService está disponível
-	            if (window.ApiService && window.ApiService.deleteClient) {
-	                await window.ApiService.deleteClient(id);
+	            const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+	            if (_svc && _svc.deleteClient) {
+	                await _svc.deleteClient(id);
 	                await loadClients(); // Certifique-se que loadClients está definida nesta IIFE
 	            } else {
 	                throw new Error("Serviço de API não encontrado.");
@@ -737,4 +741,5 @@
   
 </body>
 </html>
+
 
