@@ -444,9 +444,45 @@ const ApiService = {
   // DASHBOARD
   // ==========================================
 
-  // async getDashboardSummary() {
-  //   return this.request('/dashboard/summary');
-  // }
+  async getDashboardSummary() {
+    try {
+      const [genRes, alertRes, cliRes, actRes, recentGenRes] = await Promise.all([
+        this.request('/generators?select=id,status'),
+        this.request('/alerts?select=id,type,title,description,read,created_at&order=created_at.desc&limit=5'),
+        this.request('/clients?select=id,contract'),
+        this.request('/activities?select=*&order=created_at.desc&limit=5'),
+        this.request('/generators?select=*,clients(name)&order=updated_at.desc&limit=4')
+      ]);
+
+      const gens    = Array.isArray(genRes)      ? genRes      : [];
+      const alerts  = Array.isArray(alertRes)    ? alertRes    : [];
+      const clients = Array.isArray(cliRes)      ? cliRes      : [];
+      const acts    = Array.isArray(actRes)      ? actRes      : [];
+      const recent  = Array.isArray(recentGenRes)? recentGenRes: [];
+
+      return {
+        success: true,
+        data: {
+          stats: {
+            generators: {
+              total:   gens.length,
+              online:  gens.filter(g => g.status === 'online' || g.status === 'Online').length,
+              offline: gens.filter(g => g.status === 'offline'|| g.status === 'Offline').length
+            },
+            alerts:     { total: alerts.length,  unread: alerts.filter(a => !a.read).length },
+            clients:    { total: clients.length,  active: clients.filter(c => c.contract === 'Ativo').length },
+            maintenance:{ pending: 0, completed: 0 }
+          },
+          recentGenerators: recent.map(g => ({ ...g, client: g.clients?.name || 'Sem cliente' })),
+          recentAlerts:     alerts,
+          recentActivities: acts
+        }
+      };
+    } catch (err) {
+      console.error('[ApiService] getDashboardSummary:', err);
+      return { success: false, error: err.message };
+    }
+  }
 
 };
 
