@@ -190,8 +190,10 @@
   
   async function loadClientsFromAPI() {
     try {
-      const data = await window.ApiService.getClients();
-      window.clients = Array.isArray(data) ? data : [];
+      const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+      const response = await _svc.getClients();
+      const raw = response?.data ?? response;
+      window.clients = Array.isArray(raw) ? raw : [];
       loadClients();
     } catch (err) {
       console.error('Erro ao carregar clientes:', err);
@@ -203,8 +205,10 @@
 
   async function loadGeneratorsFromAPI() {
     try {
-      const data = await window.ApiService.getGenerators();
-      
+      const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+      const response = await _svc.getGenerators();
+      const data = response?.data ?? response;
+
       window.generators = (Array.isArray(data) ? data : []).map(g => ({
         ...g,
         // Garante o nome para o Card/Busca
@@ -309,7 +313,7 @@
     window.DSEService.onData(onGatewayData);
 
     if (window.CONFIG?.DSE?.AUTO_POLL) {
-      window.DSEService.startPolling();
+      window.DSEService.startPolling(null, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
     }
   }
 
@@ -377,7 +381,8 @@
 
     if (currentIndex === null) {
       try {
-        await window.ApiService.createGenerator(data);
+        const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+        await _svc.createGenerator(data);
       } catch (err) {
         alert('Erro ao salvar gerador: ' + err.message);
         return;
@@ -385,7 +390,8 @@
     } else {
       try {
         const g = generators[currentIndex];
-        await window.ApiService.updateGenerator(g.id, data);
+        const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+        await _svc.updateGenerator(g.id, data);
       } catch (err) {
         alert('Erro ao atualizar gerador: ' + err.message);
         return;
@@ -495,7 +501,8 @@
     if (!confirm(`Excluir o gerador "${g.serial}"? Esta ação não pode ser desfeita.`)) return;
 
     try {
-      await window.ApiService.deleteGenerator(g.id);
+      const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+      await _svc.deleteGenerator(g.id);
       // Após deletar no banco, recarregamos a lista da API para garantir sincronia
       await loadGeneratorsFromAPI();
     } catch (err) {
@@ -510,6 +517,10 @@
   // =============================================
   // INIT 
   // =============================================
+  window.addEventListener('beforeunload', () => {
+    if (window.DSEService) window.DSEService.destroy();
+  });
+
   async function init() {
     try {
       // 1. Carrega clientes (essencial para o nome aparecer no render e no select)
@@ -533,3 +544,4 @@
 
 </body>
 </html>
+
