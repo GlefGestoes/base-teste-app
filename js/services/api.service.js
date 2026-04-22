@@ -25,14 +25,20 @@ const ApiService = {
    * Monta os headers padrão usando o token atual do localStorage.
    */
   getHeaders() {
-    const sessionToken = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
-    const token = sessionToken || window.CONFIG.SUPABASE.ANON_KEY;
-    return {
+    const token = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+    
+    const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'apikey': window.CONFIG.SUPABASE.ANON_KEY,
-      'Authorization': `Bearer ${token}`
     };
+    
+    // Só envia Authorization se tem token válido
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
   },
 
   // ==========================================
