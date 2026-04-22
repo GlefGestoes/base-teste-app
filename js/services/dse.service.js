@@ -138,14 +138,35 @@ const DSEService = {
       this._currentGenerator = generator;
       this._isPolling = true;
   
+      let consecutiveFailures = 0;
+      const MAX_FAILURES = 5;
+      const BACKOFF_MULTIPLIER = 2;
+      const MAX_INTERVAL = 300000; // 5 min
+      
       const loop = async () => {
         if (!this._isPolling) return;
-        await this.sync(this._currentGenerator);
-        this._pollTimer = setTimeout(loop, intervalMs);
+        
+        try {
+          await this.sync(this._currentGenerator);
+          consecutiveFailures = 0; // Reseta no sucesso
+        } catch (err) {
+          consecutiveFailures++;
+          if (consecutiveFailures >= MAX_FAILURES) {
+            this._emitStatus('offline', 'Máximo de falhas atingido');
+            this.stopPolling();
+            return;
+          }
+        }
+        
+        // Backoff exponencial: 10s → 20s → 40s → ... → 5min
+        const nextInterval = Math.min(
+          intervalMs * Math.pow(BACKOFF_MULTIPLIER, consecutiveFailures),
+          MAX_INTERVAL
+        );
+        
+        this._pollTimer = setTimeout(loop, nextInterval);
       };
-  
-      loop();
-  
+        
       if (!this._visibilityListenerAdded) {
         document.addEventListener('visibilitychange', () => {
           if (document.hidden) {
