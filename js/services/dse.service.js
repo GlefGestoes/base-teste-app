@@ -19,6 +19,7 @@ const DSEService = {
   _lastData: null,
   _dataListeners: [],
   _statusListeners: [],
+  _visibilityListenerAdded: false,
 
   // -------------------------------------------
   // CONFIG & HELPERS
@@ -76,7 +77,7 @@ const DSEService = {
     } catch (err) {
       this._emitStatus('error', err.message);
       console.error('[DSEService] sync error:', err);
-      return null;
+      return null; // ✅ NÃO quebra o polling
     }
   },
 
@@ -103,8 +104,8 @@ const DSEService = {
       return json[0] || null;
 
     } catch (err) {
-      this._emitStatus('error', err.message);
-      return null;
+      console.error('[DSEService] getEvents error:', err);
+      return []; // ✅ falha silenciosa segura
     }
   },
 
