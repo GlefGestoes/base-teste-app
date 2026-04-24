@@ -2,11 +2,6 @@
  * ============================================
  * AMZ APP - DSE SERVICE (via Supabase)
  * ============================================
- *
- * Este serviço:
- * - NÃO acessa o gateway diretamente
- * - Usa Supabase Edge Function como backend
- * - Mantém padrão de eventos (onData / onStatus)
  */
 
 const DSEService = {
@@ -20,6 +15,13 @@ const DSEService = {
   _dataListeners: [],
   _statusListeners: [],
   _visibilityListenerAdded: false,
+  
+  // ✅ NOVO: Estado do circuit breaker (persiste entre chamadas)
+  _consecutiveFailures: 0,
+  _maxFailures: 5,
+  _backoffMultiplier: 2,
+  _maxInterval: 300000, // 5 min
+  _baseInterval: 10000, // 10s (padrão)
 
   // -------------------------------------------
   // CONFIG & HELPERS
@@ -28,18 +30,21 @@ const DSEService = {
     return window.CONFIG?.SUPABASE || {};
   },
 
-  // Helper interno para pegar o token do usuário logado
   _getAuthHeaders() {
     const cfg = this._getConfig();
-    // Busca o token no localStorage conforme a chave configurada no sistema
     const userToken = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    const bearer = userToken || cfg.ANON_KEY; // fallback para anon se não logado
-
-    return {
+    
+    // ✅ CORREÇÃO: NÃO usar ANON_KEY como fallback de Authorization
+    const headers = {
       'Content-Type': 'application/json',
       'apikey': cfg.ANON_KEY,
-      'Authorization': `Bearer ${bearer}`
     };
+    
+    if (userToken) {
+      headers['Authorization'] = `Bearer ${userToken}`;
+    }
+    
+    return headers;
   },
 
   // -------------------------------------------
@@ -55,7 +60,7 @@ const DSEService = {
         `${cfg.FUNCTIONS_URL}/sync-generator`,
         {
           method: 'POST',
-          headers: this._getAuthHeaders(), // Atualizado para usar o helper
+          headers: this._getAuthHeaders(),
           body: JSON.stringify({
             serial: generator.serial,
             module_id: generator.moduleId,
@@ -64,7 +69,10 @@ const DSEService = {
         }
       );
 
-      if (!res.ok) throw new Error('Erro na sincronização');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
 
       const data = await res.json();
 
@@ -77,7 +85,7 @@ const DSEService = {
     } catch (err) {
       this._emitStatus('error', err.message);
       console.error('[DSEService] sync error:', err);
-      return null; // ✅ NÃO quebra o polling
+      throw err; // ✅ PROPAGA o erro para o loop capturar
     }
   },
 
@@ -90,8 +98,10 @@ const DSEService = {
 
       const res = await fetch(
         `${cfg.URL}/rest/v1/generator_status?generator_id=eq.${generatorId}&order=updated_at.desc&limit=1`,
-        { headers: this._getAuthHeaders() } // Atualizado para usar o helper
+        { headers: this._getAuthHeaders() }
       );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
 
@@ -104,8 +114,9 @@ const DSEService = {
       return json[0] || null;
 
     } catch (err) {
-      console.error('[DSEService] getEvents error:', err);
-      return []; // ✅ falha silenciosa segura
+      this._emitStatus('error', err.message);
+      console.error('[DSEService] getStatus error:', err);
+      return null;
     }
   },
 
@@ -118,10 +129,13 @@ const DSEService = {
 
       const res = await fetch(
         `${cfg.URL}/rest/v1/generator_events?generator_id=eq.${generatorId}&order=event_time.desc`,
-        { headers: this._getAuthHeaders() } // Atualizado para usar o helper
+        { headers: this._getAuthHeaders() }
       );
 
-      return res.json();
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      return await res.json();
+
     } catch (err) {
       console.error('[DSEService] getEvents error:', err);
       return [];
@@ -129,61 +143,91 @@ const DSEService = {
   },
 
   // -------------------------------------------
-  // POLLING
+  // POLLING COM BACKOFF EXPONENCIAL
   // -------------------------------------------
   startPolling(generator, intervalMs = 10000) {
-      if (!generator || !generator.id) return;
-      if (this._isPolling) return;
-  
-      this._currentGenerator = generator;
-      this._isPolling = true;
-  
-      let consecutiveFailures = 0;
-      const MAX_FAILURES = 5;
-      const BACKOFF_MULTIPLIER = 2;
-      const MAX_INTERVAL = 300000; // 5 min
-      
-      const loop = async () => {
-        if (!this._isPolling) return;
-        
-        try {
-          await this.sync(this._currentGenerator);
-          consecutiveFailures = 0; // Reseta no sucesso
-        } catch (err) {
-          consecutiveFailures++;
-          if (consecutiveFailures >= MAX_FAILURES) {
-            this._emitStatus('offline', 'Máximo de falhas atingido');
-            this.stopPolling();
-            return;
-          }
-        }
-        
-        // Backoff exponencial: 10s → 20s → 40s → ... → 5min
-        const nextInterval = Math.min(
-          intervalMs * Math.pow(BACKOFF_MULTIPLIER, consecutiveFailures),
-          MAX_INTERVAL
+    if (!generator || !generator.id) {
+      console.warn('[DSEService] Generator inválido para polling');
+      return;
+    }
+    
+    if (this._isPolling) {
+      console.log('[DSEService] Polling já ativo');
+      return;
+    }
+
+    this._currentGenerator = generator;
+    this._isPolling = true;
+    this._baseInterval = intervalMs;
+    
+    // ✅ NÃO reseta _consecutiveFailures aqui — mantém histórico
+
+    const loop = async () => {
+      if (!this._isPolling) return;
+
+      try {
+        await this.sync(this._currentGenerator);
+        // ✅ Sucesso: reseta contador de falhas
+        this._consecutiveFailures = 0;
+      } catch (err) {
+        this._consecutiveFailures++;
+        console.warn(
+          `[DSEService] Falha ${this._consecutiveFailures}/${this._maxFailures}:`,
+          err.message
         );
-        
-        this._pollTimer = setTimeout(loop, nextInterval);
-      };
-        
-      if (!this._visibilityListenerAdded) {
-        document.addEventListener('visibilitychange', () => {
-          if (document.hidden) {
-            this.stopPolling();
-          } else if (this._currentGenerator) {
-            this.stopPolling();
-            this.startPolling(this._currentGenerator, intervalMs);
-          }
-        });
-        this._visibilityListenerAdded = true;
-      }             // ← fecha o if
-    },              // ← fecha startPolling
-  
-    stopPolling() {
-      this._isPolling = false;
-      if (this._pollTimer) clearTimeout(this._pollTimer);
-    },
+
+        // ✅ Circuit breaker: para após N falhas
+        if (this._consecutiveFailures >= this._maxFailures) {
+          console.error('[DSEService] Circuit breaker ativado');
+          this._emitStatus('offline', 'Máximo de falhas atingido');
+          this.stopPolling();
+          return; // Sai do loop permanentemente
+        }
+      }
+
+      // ✅ Calcula próximo intervalo com backoff exponencial
+      const nextInterval = Math.min(
+        this._baseInterval * Math.pow(this._backoffMultiplier, this._consecutiveFailures),
+        this._maxInterval
+      );
+
+      console.log(`[DSEService] Próximo poll em ${nextInterval / 1000}s`);
+
+      this._pollTimer = setTimeout(() => loop(), nextInterval);
+    };
+
+    // ✅ INICIA o polling imediatamente
+    loop();
+
+    // ✅ Listener de visibilidade (garantido uma vez)
+    if (!this._visibilityListenerAdded) {
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          console.log('[DSEService] Aba oculta — pausando polling');
+          this.stopPolling();
+        } else if (this._currentGenerator) {
+          console.log('[DSEService] Aba visível — retomando polling');
+          // ✅ Retoma sem resetar falhas (mantém backoff)
+          this.startPolling(this._currentGenerator, this._baseInterval);
+        }
+      });
+      this._visibilityListenerAdded = true;
+    }
+  },
+
+  stopPolling() {
+    this._isPolling = false;
+    if (this._pollTimer) {
+      clearTimeout(this._pollTimer);
+      this._pollTimer = null;
+    }
+  },
+
+  // ✅ NOVO: Reset manual do circuit breaker
+  resetCircuitBreaker() {
+    this._consecutiveFailures = 0;
+    console.log('[DSEService] Circuit breaker resetado');
+  },
 
   // -------------------------------------------
   // CALLBACKS
@@ -199,13 +243,13 @@ const DSEService = {
 
   _emit(data) {
     this._dataListeners.forEach(cb => {
-      try { cb(data); } catch (e) {}
+      try { cb(data); } catch (e) { /* silencioso */ }
     });
   },
 
   _emitStatus(status, msg = '') {
     this._statusListeners.forEach(cb => {
-      try { cb(status, msg); } catch (e) {}
+      try { cb(status, msg); } catch (e) { /* silencioso */ }
     });
   },
 
