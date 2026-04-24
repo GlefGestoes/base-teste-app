@@ -1,7 +1,6 @@
 /**
  * ============================================
- * AMZ APP - ENTRY POINT
- * Inicialização da aplicação
+ * AMZ APP - APP.JS (Entry Point)
  * ============================================
  */
 
@@ -35,39 +34,75 @@ const App = {
   },
 
   /**
-   * Inicializa Service Worker
+   * ✅ Inicializa Service Worker com path dinâmico
    */
-	initServiceWorker() {
-	  if ('serviceWorker' in navigator) {
-	    window.addEventListener("load", () => {
-	      // Usa caminho relativo ao script atual, funciona em qualquer subpath
-	      const swPath = new URL('service-worker.js', document.baseURI).href;
-		  navigator.serviceWorker.register('/base-teste-app/service-worker.js', {
-		    scope: '/base-teste-app/'
-		  })
-		   .then(reg => console.log("SW registrado:", reg.scope))
-		   .catch(err => console.error("SW erro:", err));
-	    });
-	  }
-	},
-	
+  initServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener("load", () => {
+        // ✅ Detecta o path base automaticamente da URL atual
+        // Ex: /base-teste-app/pages/dashboard.html → /base-teste-app
+        // Ex: /index.html → /
+        const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '/';
+        
+        // ✅ Monta o caminho do SW baseado no path detectado
+        const swPath = basePath.endsWith('/') 
+          ? basePath + 'service-worker.js' 
+          : basePath + '/service-worker.js';
+
+        // ✅ Registra com scope dinâmico (uma única cadeia de promessas)
+        navigator.serviceWorker.register(swPath, { scope: basePath })
+          .then(reg => {
+            console.log("[SW] Registrado:", reg.scope);
+            
+            // ✅ Verifica atualizações do SW em background
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker?.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[SW] Nova versão disponível. Recarregue para atualizar.');
+                }
+              });
+            });
+          })
+          .catch(err => {
+            console.error("[SW] Erro no registro:", err);
+            
+            // ✅ Fallback: tenta registrar na raiz se subpath falhar
+            if (basePath !== '/') {
+              console.log('[SW] Tentando fallback na raiz...');
+              navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                .then(reg => console.log("[SW] Fallback registrado:", reg.scope))
+                .catch(fallbackErr => console.error("[SW] Fallback também falhou:", fallbackErr));
+            }
+          });
+      });
+    } else {
+      console.warn('[SW] Service Worker não suportado neste navegador');
+    }
+  },
+
   /**
-   * Verifica autenticação
+   * ✅ CORRIGIDO: Verifica autenticação com paths dinâmicos
    */
-	checkAuth() {
-	  const path = window.location.pathname;
-	  const file = path.split("/").pop();
-	
-	  const isAuthPage = file === "" || file === "index.html";
-	
-	  if (!isAuthPage && !window.AuthService?.isAuthenticated()) {
-	    window.AuthService?.redirectToLogin();
-	  }
-	
-	  if (isAuthPage && window.AuthService?.isAuthenticated()) {
-	    window.AuthService?.redirectAfterLogin();
-	  }
-	},
+  checkAuth() {
+    const path = window.location.pathname;
+    const file = path.split("/").pop() || 'index.html';
+    
+    // ✅ Detecta se está na raiz ou em subpasta
+    const isAuthPage = file === '' || file === 'index.html' || file === 'cadastro.html';
+    
+    if (!isAuthPage && !window.AuthService?.isAuthenticated()) {
+      // ✅ Redireciona para login relativo ao path atual
+      const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '/';
+      const loginPath = basePath.endsWith('/') ? basePath : basePath + '/';
+      window.location.href = loginPath + 'index.html';
+      return;
+    }
+
+    if (isAuthPage && window.AuthService?.isAuthenticated()) {
+      window.AuthService?.redirectAfterLogin();
+    }
+  },
 
   /**
    * Mostra badge de modo dev
@@ -81,7 +116,7 @@ const App = {
     badge.style.cssText = `
       position: fixed;
       top: 10px;
-	  left: 50%;
+      left: 50%;
       transform: translateX(-50%);
       background: #FF5E00;
       color: white;
