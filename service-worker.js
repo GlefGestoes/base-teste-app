@@ -1,19 +1,21 @@
 /**
  * ============================================
- * AMZ APP - SERVICE WORKER
+ * AMZ APP - SERVICE WORKER v2.0
  * ============================================
  *
- * Gerencia cache e funcionalidade offline da PWA.
- * Estratégia: Cache First, then Network
+ * Correções aplicadas:
+ * - CSS/JS voltam para cacheFirst (offline funcional)
+ * - Estratégia API separada: networkOnly para Supabase
+ * - Fallback robusto para qualquer tipo de asset
+ * - Scope dinâmico compatível com subpastas
  */
 
-const CACHE_NAME    = 'amz-app-v1';
-const STATIC_CACHE  = 'amz-static-v1';
-const DYNAMIC_CACHE = 'amz-dynamic-v1';
-const IMAGE_CACHE   = 'amz-images-v1';
+const CACHE_VERSION = 'v2'; // Incrementar a cada deploy
+const STATIC_CACHE  = `amz-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `amz-dynamic-${CACHE_VERSION}`;
+const IMAGE_CACHE   = `amz-images-${CACHE_VERSION}`;
 
-// Assets críticos — se qualquer um falhar, o install falha
-// Mantenha aqui APENAS o que você tem 100% de certeza que existe
+// Assets críticos — sempre na raiz (mesmo nível que index.html)
 const CRITICAL_ASSETS = [
   './',
   './index.html',
@@ -23,7 +25,7 @@ const CRITICAL_ASSETS = [
   './assets/icons/logoamz.png',
 ];
 
-// Assets opcionais — falha silenciosa por arquivo
+// Assets opcionais — falha silenciosa
 const OPTIONAL_ASSETS = [
   './js/utils/helpers.js',
   './js/services/mock.service.js',
@@ -34,6 +36,7 @@ const OPTIONAL_ASSETS = [
   './pages/monitoramento.html',
   './pages/relatorios.html',
   './pages/clientes.html',
+  './pages/geradores.html',
   './pages/configuracoes.html',
   './pages/cadastro.html',
 ];
@@ -53,11 +56,11 @@ self.addEventListener('install', (event) => {
         // Cache crítico: atômico — qualquer 404 aqui aborta o install
         const cacheCritical = cache.addAll(CRITICAL_ASSETS);
 
-        // Cache opcional: individual — cada arquivo falha por conta própria
+        // Cache opcional: individual — falha silenciosa
         const cacheOptional = Promise.all(
           OPTIONAL_ASSETS.map((url) =>
             cache.add(url).catch((err) => {
-              console.warn(`[SW] Asset opcional não encontrado (ignorado): ${url}`, err.message);
+              console.warn(`[SW] Asset opcional não encontrado: ${url}`, err.message);
             })
           )
         );
@@ -66,10 +69,12 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('[SW] Assets cacheados com sucesso');
-        return self.skipWaiting();
+        return self.skipWaiting(); // Ativa imediatamente
       })
       .catch((error) => {
         console.error('[SW] Erro ao cachear assets críticos:', error);
+        // Mesmo com erro, tenta continuar (não bloqueia install)
+        return self.skipWaiting();
       })
   );
 });
@@ -86,10 +91,11 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
+            // Limpa apenas caches antigos da MESMA família
             if (
-              cacheName !== STATIC_CACHE &&
-              cacheName !== DYNAMIC_CACHE &&
-              cacheName !== IMAGE_CACHE
+              cacheName.startsWith('amz-static-') && cacheName !== STATIC_CACHE ||
+              cacheName.startsWith('amz-dynamic-') && cacheName !== DYNAMIC_CACHE ||
+              cacheName.startsWith('amz-images-') && cacheName !== IMAGE_CACHE
             ) {
               console.log('[SW] Removendo cache antigo:', cacheName);
               return caches.delete(cacheName);
@@ -99,7 +105,7 @@ self.addEventListener('activate', (event) => {
       })
       .then(() => {
         console.log('[SW] Service Worker ativado');
-        return self.clients.claim();
+        return self.clients.claim(); // Assume controle imediatamente
       })
   );
 });
@@ -115,110 +121,150 @@ self.addEventListener('fetch', (event) => {
   // Ignora requisições não-GET
   if (request.method !== 'GET') return;
 
-  // Ignora chrome-extension e outros esquemas não-http
+  // Ignora esquemas não-http
   if (!url.protocol.startsWith('http')) return;
 
   // Ignora analytics e tracking
-  if (
-    url.pathname.includes('analytics') ||
-    url.pathname.includes('tracking')
-  ) return;
+  if (url.pathname.includes('analytics') || url.pathname.includes('tracking')) return;
 
-  // Páginas HTML — Network First
+  // 1. Páginas HTML — Network First (sempre versão mais recente)
   const acceptHeader = request.headers.get('accept') || '';
   if (request.mode === 'navigate' || acceptHeader.includes('text/html')) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirstWithOfflineFallback(request));
     return;
   }
 
-  // CSS e JS — Cache First
+  // 2. CSS e JS — CACHE FIRST (essencial para offline!)
   if (url.pathname.match(/\.(css|js)$/)) {
-    event.respondWith(networkFirst(request)); // ← era cacheFirst
+    event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
   }
 
-  // Imagens — Cache First
+  // 3. Imagens — Cache First
   if (request.destination === 'image') {
     event.respondWith(cacheFirst(request, IMAGE_CACHE));
     return;
   }
 
-  // Fontes — Cache First
+  // 4. Fontes — Cache First
   if (request.destination === 'font') {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
   }
 
-  // API — Network First
+  // 5. API Supabase — NETWORK ONLY (nunca cacheia dados dinâmicos)
   if (url.hostname.includes('supabase.co')) {
-  event.respondWith(networkFirst(request));
-  return;
+    event.respondWith(networkOnly(request));
+    return;
   }
 
-  // Padrão — Stale While Revalidate
+  // 6. Padrão — Stale While Revalidate
   event.respondWith(staleWhileRevalidate(request));
 });
 
 // ============================================
-// ESTRATÉGIAS DE CACHE
+// ESTRATÉGIAS DE CACHE (CORRIGIDAS)
 // ============================================
 
 /**
- * Cache First — Tenta o cache primeiro, senão vai na rede
+ * Cache First — ESSENCIAL para CSS/JS funcionarem offline
  */
 async function cacheFirst(request, cacheName = STATIC_CACHE) {
-  const cache  = await caches.open(cacheName);
+  const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
 
-  if (cached) return cached;
+  if (cached) {
+    // Retorna cache imediatamente (rápido)
+    return cached;
+  }
 
   try {
     const response = await fetch(request);
     if (response.ok) {
+      // Guarda no cache para próxima vez
       cache.put(request, response.clone());
     }
     return response;
   } catch (error) {
-    console.error('[SW] Erro ao buscar:', error);
-    const offline = await caches.match('./index.html');
-    return offline || new Response('Offline', { status: 503 });
+    console.error('[SW] Falha ao buscar recurso:', request.url, error);
+    
+    // Fallback último recurso: página offline genérica
+    if (request.destination === 'document') {
+      return caches.match('./index.html');
+    }
+    
+    // Para CSS/JS, retorna resposta vazia para não quebrar a página
+    return new Response('', { status: 503, statusText: 'Service Unavailable' });
   }
 }
 
 /**
- * Network First — Tenta a rede primeiro, senão usa cache
+ * Network First — Para HTML (sempre tenta versão mais recente)
  */
-async function networkFirst(request) {
+async function networkFirstWithOfflineFallback(request) {
   try {
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
+      // Atualiza cache dinâmico com versão mais recente
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch (error) {
-    console.log('[SW] Falha na rede, tentando cache...');
+    console.log('[SW] Rede falhou, tentando cache...');
 
+    // Tenta cache dinâmico primeiro (versão mais recente visitada)
     const dynamicCache = await caches.open(DYNAMIC_CACHE);
-    const cached       = await dynamicCache.match(request);
-    if (cached) return cached;
+    const dynamicMatch = await dynamicCache.match(request);
+    if (dynamicMatch) return dynamicMatch;
 
-    const staticCache  = await caches.open(STATIC_CACHE);
-    const staticCached = await staticCache.match(request);
-    if (staticCached) return staticCached;
+    // Tenta cache estático (páginas pre-cacheadas no install)
+    const staticCache = await caches.open(STATIC_CACHE);
+    const staticMatch = await staticCache.match(request);
+    if (staticMatch) return staticMatch;
 
-    // Fallback para index
-    return caches.match('./index.html');
+    // Fallback final: index.html (SPA behavior)
+    const fallback = await caches.match('./index.html');
+    if (fallback) return fallback;
+
+    // Último recurso: mensagem offline
+    return new Response(
+      '<html><body><h1>AMZ App - Offline</h1><p>Você está offline. Conecte-se à internet para continuar.</p></body></html>',
+      { headers: { 'Content-Type': 'text/html' } }
+    );
   }
 }
 
 /**
- * Stale While Revalidate — Retorna do cache e atualiza em background
+ * Network Only — Para API Supabase (nunca cacheia)
+ */
+async function networkOnly(request) {
+  // Sempre vai na rede, nunca usa cache
+  // Isso evita dados stale e problemas de sincronização
+  try {
+    return await fetch(request);
+  } catch (error) {
+    console.error('[SW] API offline:', request.url);
+    
+    // Retorna erro JSON para o cliente tratar
+    return new Response(
+      JSON.stringify({ error: 'Offline', message: 'Sem conexão com o servidor' }),
+      { 
+        status: 503, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+}
+
+/**
+ * Stale While Revalidate — Para assets genéricos
  */
 async function staleWhileRevalidate(request) {
-  const cache  = await caches.open(DYNAMIC_CACHE);
+  const cache = await caches.open(DYNAMIC_CACHE);
   const cached = await cache.match(request);
 
+  // Busca na rede em background (não bloqueia)
   const fetchPromise = fetch(request)
     .then((networkResponse) => {
       if (networkResponse.ok) {
@@ -226,8 +272,12 @@ async function staleWhileRevalidate(request) {
       }
       return networkResponse;
     })
-    .catch(() => cached);
+    .catch(() => {
+      console.log('[SW] SWR: rede falhou, usando cache');
+      return cached;
+    });
 
+  // Retorna cache imediatamente (rápido), atualiza depois
   return cached || fetchPromise;
 }
 
@@ -243,7 +293,7 @@ self.addEventListener('sync', (event) => {
 
 async function syncData() {
   console.log('[SW] Sincronizando dados em background...');
-  // Implementar lógica de sincronização aqui
+  // TODO: Implementar lógica de sincronização offline→online
 }
 
 // ============================================
@@ -256,13 +306,13 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
 
   const options = {
-    body:                data.body              || 'Nova notificação do AMZ App',
-    icon:                './assets/icons/logoamz.png',
-    badge:               './assets/icons/logoamz.png',
-    tag:                 data.tag               || 'default',
-    requireInteraction:  data.requireInteraction || false,
-    actions:             data.actions           || [],
-    data:                data.data              || {},
+    body: data.body || 'Nova notificação do AMZ App',
+    icon: './assets/icons/logoamz.png',
+    badge: './assets/icons/logoamz.png',
+    tag: data.tag || 'default',
+    requireInteraction: data.requireInteraction || false,
+    actions: data.actions || [],
+    data: data.data || {},
   };
 
   event.waitUntil(
@@ -284,7 +334,7 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window' })
       .then((clientList) => {
         for (const client of clientList) {
-          if (client.url === url && 'focus' in client) {
+          if (client.url.includes(url) && 'focus' in client) {
             return client.focus();
           }
         }
@@ -305,7 +355,7 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data === 'getVersion') {
-    event.ports[0].postMessage({ version: '1.0.0' });
+    event.ports[0]?.postMessage({ version: CACHE_VERSION });
   }
 
   if (event.data && event.data.type === 'CACHE_URLS') {
@@ -330,8 +380,7 @@ if ('periodicSync' in self.registration) {
 
 async function updatePeriodicData() {
   console.log('[SW] Atualização periódica de dados...');
-  // Implementar atualização periódica aqui
+  // TODO: Implementar sincronização periódica com Supabase
 }
 
-console.log('[SW] Service Worker carregado');
-
+console.log('[SW] Service Worker carregado - versão:', CACHE_VERSION);
