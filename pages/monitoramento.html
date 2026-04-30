@@ -90,7 +90,7 @@
   <script>
       (function() {
 	
-	  // ✅ 1. Proteção de rota
+	  // 1. Proteção de rota
 	  if (!AuthService.isAuthenticated()) {
 	    window.location.href = '../index.html';
 	    return;
@@ -119,6 +119,16 @@
           const data = response?.success ? response.data : (Array.isArray(response) ? response : []);
           if (data.length > 0) {
             renderGenerators(data);
+			  if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
+              const firstWithSerial = data.find(g => g.serial?.trim());
+				if (firstWithSerial) {
+				  window.DSEService.setGenerator({
+				    id: firstWithSerial.id,
+				    serial: firstWithSerial.serial,
+				    moduleId: firstWithSerial.module_id || ''
+				  });
+				}
+            }
           } else if (!response?.success && response) {
             console.error('[Monitoramento] Erro ao carregar geradores:', response);
           }
