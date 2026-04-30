@@ -159,7 +159,7 @@
 <script>
 (function () {
 
-  // ✅ 1. Proteção de rota
+  // 1. Proteção de rota
   if (!AuthService.isAuthenticated()) {
     window.location.href = '../index.html';
     return;
@@ -172,6 +172,7 @@
   const form        = document.getElementById('generatorForm');
   const grid        = document.getElementById('generatorsGrid');
   const searchInput = document.getElementById('searchInput');
+  let currentIndex = null;
 
   const fields = {
     serial: document.getElementById('genSerial'),
@@ -203,120 +204,87 @@
   // Carrega geradores salvos no localStorage para persistência
   window.generators = []; // começa vazio
 
-  async function loadGeneratorsFromAPI() {
-    try {
-      const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
-      const response = await _svc.getGenerators();
-      const data = response?.data ?? response;
-
-      window.generators = (Array.isArray(data) ? data : []).map(g => ({
-        ...g,
-        // Garante o nome para o Card/Busca
-        clientName: g.clients?.name || 'Sem cliente',
-        // Garante o ID para o campo Select no Modal de Edição
-        clientId: g.client_id || (g.clients ? g.clients.id : null)
-      }));
-
-      render(window.generators);
-    } catch (err) {
-      console.error('Erro ao carregar geradores:', err);
-      render([]);
-    }
-  }
-  
-  let currentIndex = null;
-
   // =============================================
   // INTEGRAÇÃO DSE GATEWAY
   // =============================================
-
-  // Elementos do painel do gateway
+   
   const gatewayPanel = document.getElementById('gatewayPanel');
   const statusDot    = document.getElementById('dseStatusDot');
   const statusText   = document.getElementById('dseStatusText');
-
-  // Mapa de cores para status
+   
   const STATUS_COLOR = {
-    online:   '#10b981', // verde
-    offline:  '#ef4444', // vermelho
-    retrying: '#f59e0b', // amarelo
+    online:   '#10b981',
+    offline:  '#ef4444',
+    syncing:  '#f59e0b',
+    error:    '#ef4444',
   };
-
-  /**
-   * Atualiza o badge de status no navbar
-   */
+   
   function updateStatusBadge(status) {
-    statusDot.style.background  = STATUS_COLOR[status] || '#6b7280';
+    statusDot.style.background = STATUS_COLOR[status] || '#6b7280';
     statusText.textContent = {
       online:   'Gateway Online',
       offline:  'Gateway Offline',
+      syncing:  'Sincronizando…',
       retrying: 'Reconectando…',
+      error:    'Erro de conexão',
     }[status] || 'Gateway';
   }
-
-  /**
-   * Atualiza o painel informativo do gateway
-   * e sincroniza o status online/offline dos geradores cadastrados
-   */
+   
   function onGatewayData(data) {
-    // Mostra painel
     gatewayPanel.style.display = 'block';
-
-    // Preenche dados do gateway
-    document.getElementById('gwSerial').textContent   = data.device.serial;
-    document.getElementById('gwIp').textContent       = data.gsm.ip;
-    document.getElementById('gwOperator').textContent = data.gsm.operator;
-    document.getElementById('gwMqtt').textContent     = data.mqtt.connected ? 'Conectado' : 'Desconectado';
+   
+    document.getElementById('gwSerial').textContent    = data.device?.serial ?? '—';
+    document.getElementById('gwIp').textContent        = data.gsm?.ip        ?? '—';
+    document.getElementById('gwOperator').textContent  = data.gsm?.operator  ?? '—';
+    document.getElementById('gwMqtt').textContent      = data.mqtt?.connected ? 'Conectado' : 'Desconectado';
     document.getElementById('gwUpdateTime').textContent =
       'Atualizado: ' + new Date(data.capturedAt).toLocaleTimeString('pt-BR');
-
-    // Sinal GSM: converte 0–5 em barras
+   
     const bars = ['○○○○○','●○○○○','●●○○○','●●●○○','●●●●○','●●●●●'];
     document.getElementById('gwSignal').textContent =
-      (bars[data.gsm.signal] || '—') + ' ' + data.gsm.type;
-
-    // GPS
-    document.getElementById('gwGps').textContent = data.gps.hasFix
+      (bars[data.gsm?.signal] || '—') + ' ' + (data.gsm?.type ?? '');
+   
+    document.getElementById('gwGps').textContent = data.gps?.hasFix
       ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}`
       : 'Sem sinal';
-
-    // Atualiza status online/offline de cada gerador cadastrado
-    // cruzando pelo serial com os módulos DSE
+   
+    // Atualiza status dos geradores cruzando pelo serial
     const moduleMap = {};
-    data.modules.forEach(m => {
+    (data.modules ?? []).forEach(m => {
       if (m.serial) moduleMap[m.serial.toUpperCase()] = m;
     });
-
+   
     let changed = false;
-    generators.forEach(g => {
+    (window.generators ?? []).forEach(g => {
       const mod = moduleMap[g.serial?.toUpperCase()];
       if (mod) {
         const novoStatus = mod.online ? 'Online' : 'Offline';
         if (g.status !== novoStatus) {
-          g.status = novoStatus;
+          g.status   = novoStatus;
           g.firmware = mod.firmware;
           g.protocol = mod.protocol;
           changed = true;
         }
       }
     });
-
+   
     if (changed) {
-      localStorage.setItem('amz_generators', JSON.stringify(generators));
-      render(generators);
+      localStorage.setItem('amz_generators', JSON.stringify(window.generators));
+      render(window.generators);
     }
   }
-
-  // Inicia integração DSE se feature flag ativa
+   
+  // Inicia DSE se feature flag ativa
   if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
     window.DSEService.onStatus(updateStatusBadge);
     window.DSEService.onData(onGatewayData);
-
+   
     if (window.CONFIG?.DSE?.AUTO_POLL) {
+      // CORREÇÃO BUG #1: inicia sem generator — o loop aguarda setGenerator()
       window.DSEService.startPolling(null, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
     }
   }
-
+   
   // =============================================
   // CLIENTES
   // =============================================
@@ -360,7 +328,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-  // ✅ VALIDAÇÃO - Clientes.
+  // VALIDAÇÃO - Clientes.
     if (!fields.client.value) {
       alert('Selecione um cliente antes de salvar.');
       return;
@@ -407,14 +375,15 @@
   // =============================================
   searchInput.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
+  
     const filtered = generators.filter(g =>
-      g.serial.toLowerCase().includes(term) ||
-      g.clientName.toLowerCase().includes(term) ||
+      (g.serial || '').toLowerCase().includes(term) ||
+      (g.clientName || '').toLowerCase().includes(term) ||
       (g.local || '').toLowerCase().includes(term)
     );
+  
     render(filtered);
   });
-
   // =============================================
   // RENDER
   // =============================================
@@ -476,6 +445,19 @@
   // =============================================
   window.editGenerator = (index) => openModal(index);
 
+  window.handleDeleteGenerator = async (index) => {
+    const g = generators[index];
+    if (confirm(`Tem certeza que deseja excluir o gerador ${g.serial}?`)) {
+      try {
+        const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+        await _svc.deleteGenerator(g.id); 
+        await loadGeneratorsFromAPI();
+      } catch (err) {
+        alert('Erro ao excluir gerador: ' + err.message);
+      }
+    }
+  };
+
   document.getElementById('btnNovo').onclick    = () => openModal();
   document.getElementById('closeModal').onclick = closeModal;
   document.getElementById('btnCancel').onclick  = closeModal;
@@ -491,28 +473,38 @@
   };
 
   // =============================================
-  // FUNÇÃO DE DELETAR GERADORES (Restaurada)
+  // FUNÇÃO loadGeneratorsFromAPI
   // =============================================
-  async function handleDeleteGenerator(index) {
-    // Busca o gerador no array global usando o index passado pelo botão
-    const g = window.generators[index];
-    if (!g) return;
-
-    if (!confirm(`Excluir o gerador "${g.serial}"? Esta ação não pode ser desfeita.`)) return;
-
+  async function loadGeneratorsFromAPI() {
     try {
       const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
-      await _svc.deleteGenerator(g.id);
-      // Após deletar no banco, recarregamos a lista da API para garantir sincronia
-      await loadGeneratorsFromAPI();
+      const response = await _svc.getGenerators();
+      const data = response?.data ?? response;
+  
+      window.generators = (Array.isArray(data) ? data : []).map(g => ({
+        ...g,
+        clientName: g.clients?.name || 'Sem cliente',
+        clientId: g.client_id || (g.clients ? g.clients.id : null)
+      }));
+  
+      // Integração com DSE
+      if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
+        const firstWithSerial = window.generators.find(g => g.serial?.trim());
+        if (firstWithSerial) {
+          window.DSEService.setGenerator({
+            id:       firstWithSerial.id,
+            serial:   firstWithSerial.serial,
+            moduleId: firstWithSerial.module_id || '',
+          });
+        }
+      }
+  
+      render(window.generators);
     } catch (err) {
-      console.error('Erro ao excluir:', err);
-      alert('Erro ao excluir: ' + err.message);
+      console.error('Erro ao carregar geradores:', err);
+      render([]);
     }
   }
-  
-  // Expõe para o window para o onclick do HTML encontrar
-  window.handleDeleteGenerator = handleDeleteGenerator;
 
   // =============================================
   // INIT 
