@@ -45,7 +45,7 @@ const CONFIG = {
 
   FEATURES: {
     OAUTH_GOOGLE: true,
-    OAUTH_APPLE: true,
+    OAUTH_APPLE: false,
     OFFLINE_MODE: true,
     PUSH_NOTIFICATIONS: false,
     DSE_INTEGRATION: true,
