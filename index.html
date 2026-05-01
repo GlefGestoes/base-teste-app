@@ -5,79 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="theme-color" content="#0B1F33">
   <meta name="description" content="AMZ App - Sistema de Gerenciamento de Geradores">
-  
   <title>Login - AMZ App</title>
-  
-  <!-- PWA -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/svg+xml" href="./assets/icons/logoamz.png">
-  
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Styles -->
   <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
   <main class="login-page">
     <div class="login-card">
-      <!-- Header -->
+
       <header class="login-header">
         <div class="login-logo">
           <div class="navbar-brand-icon">
-			<img src="./assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
-		  </div>
+            <img src="./assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
+          </div>
           <span class="navbar-brand-text"><span></span></span>
         </div>
         <h1 class="login-title">Energia ininterrupta</h1>
         <p class="login-subtitle">Para o seu negócio</p>
       </header>
 
-      <!-- Form -->
+      <!-- Feedback OAuth (retorno do redirect) -->
+      <div id="feedbackMsg" style="display:none; padding:12px 16px; border-radius:8px; font-size:14px; margin-bottom:16px;"></div>
+
       <form id="loginForm" class="login-form">
-        <!-- Email -->
+
         <div class="form-group">
-          <label for="email" class="form-label">
-            E-mail<span class="required">*</span>
-          </label>
+          <label for="email" class="form-label">E-mail <span class="required">*</span></label>
           <div class="input-group">
             <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="4" width="20" height="16" rx="2"></rect>
               <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
             </svg>
-            <input 
-              type="email" 
-              id="email" 
-              class="form-input" 
-              placeholder="seu@email.com"
-              required
-              autocomplete="email"
-            >
+            <input type="email" id="email" class="form-input" placeholder="seu@email.com" required autocomplete="email">
           </div>
-          <span id="emailError" class="form-error" style="display: none;"></span>
+          <span id="emailError" class="form-error" style="display:none;"></span>
         </div>
 
-        <!-- Password -->
         <div class="form-group">
-          <label for="password" class="form-label">
-            Senha<span class="required">*</span>
-          </label>
+          <label for="password" class="form-label">Senha <span class="required">*</span></label>
           <div class="input-group">
             <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            <input 
-              type="password" 
-              id="password" 
-              class="form-input" 
-              placeholder="••••••••"
-              required
-              minlength="6"
-              autocomplete="current-password"
-            >
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6" autocomplete="current-password">
             <button type="button" id="togglePassword" class="input-toggle" aria-label="Mostrar senha">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -85,10 +60,9 @@
               </svg>
             </button>
           </div>
-          <span id="passwordError" class="form-error" style="display: none;"></span>
+          <span id="passwordError" class="form-error" style="display:none;"></span>
         </div>
 
-        <!-- Options -->
         <div class="login-options">
           <label class="remember-me">
             <input type="checkbox" id="rememberMe">
@@ -99,24 +73,20 @@
             </span>
             Lembrar-me
           </label>
-          <a href="#">Esqueci a senha</a>
+          <a href="#" id="forgotPassword">Esqueci a senha</a>
         </div>
 
-        <!-- Submit -->
         <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
           <span id="btnText">Entrar</span>
-          <span id="btnSpinner" class="spinner" style="display: none;"></span>
+          <span id="btnSpinner" class="spinner" style="display:none;"></span>
         </button>
-		  <p class="login-register">
-			Não tem conta?
-			<a href="./pages/cadastro.html">Criar conta</a>
-		  </p>
-        <!-- Divider -->
-        <div class="divider">
-          <span>ou continue com</span>
-        </div>
 
-        <!-- Social -->
+        <p class="login-register">
+          Não tem conta? <a href="./pages/cadastro.html">Criar conta</a>
+        </p>
+
+        <div class="divider"><span>ou continue com</span></div>
+
         <div class="social-login">
           <button type="button" id="btnGoogle" class="social-btn">
             <svg width="18" height="18" viewBox="0 0 24 24">
@@ -134,118 +104,198 @@
             Apple
           </button>
         </div>
+
       </form>
 
-      <!-- Footer -->
-      <footer style="margin-top: var(--space-6); text-align: center; font-size: var(--text-xs); color: var(--text-muted);">
+      <footer style="margin-top:var(--space-6);text-align:center;font-size:var(--text-xs);color:var(--text-muted);">
         <p>Ao entrar, você concorda com os <a href="#">Termos</a> e <a href="#">Privacidade</a></p>
-        <p style="margin-top: var(--space-2);">v1.0.0</p>
+        <p style="margin-top:var(--space-2);">v1.0.0</p>
       </footer>
     </div>
   </main>
 
-  <!-- Scripts -->
   <script src="./config.js"></script>
   <script src="./js/utils/helpers.js"></script>
   <script src="./js/services/mock.service.js"></script>
   <script src="./js/services/api.service.js"></script>
   <script src="./js/services/auth.service.js"></script>
-  <script src="./js/services/dse.service.js"></script>
   <script src="./js/app.js"></script>
 
   <script>
-    (function() {
-      const form = document.getElementById('loginForm');
-      const email = document.getElementById('email');
-      const password = document.getElementById('password');
-      const togglePassword = document.getElementById('togglePassword');
-      const submitBtn = document.getElementById('submitBtn');
-      const btnText = document.getElementById('btnText');
-      const btnSpinner = document.getElementById('btnSpinner');
-      const emailError = document.getElementById('emailError');
-      const passwordError = document.getElementById('passwordError');
+  (function() {
 
-      // Toggle password visibility
-      togglePassword.addEventListener('click', () => {
-        const type = password.type === 'password' ? 'text' : 'password';
-        password.type = type;
-      });
+    // ─── Trata callback OAuth (retorno do Google/Apple) ──────────────────
+    // Supabase redireciona de volta com #access_token=...&refresh_token=...
+    const hash = window.location.hash;
+    if (hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const accessToken  = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const expiresIn    = parseInt(params.get('expires_in') || '3600', 10);
 
-      // Load saved email
-      const savedEmail = localStorage.getItem('amz_remember_email');
-      if (savedEmail) {
-        email.value = savedEmail;
-        document.getElementById('rememberMe').checked = true;
-      }
+      if (accessToken) {
+        // Salva sessão OAuth no mesmo formato do login manual
+        localStorage.setItem(window.CONFIG.AUTH.TOKEN_KEY,         accessToken);
+        localStorage.setItem(window.CONFIG.AUTH.REFRESH_TOKEN_KEY, refreshToken || '');
+        localStorage.setItem('amz_token_expiry',
+          String(Math.floor(Date.now() / 1000) + expiresIn));
 
-      function showError(element, message) {
-        element.textContent = message;
-        element.style.display = 'flex';
-      }
-
-      function hideErrors() {
-        emailError.style.display = 'none';
-        passwordError.style.display = 'none';
-      }
-
-      function setLoading(loading) {
-        submitBtn.disabled = loading;
-        btnText.style.display = loading ? 'none' : 'inline';
-        btnSpinner.style.display = loading ? 'block' : 'none';
-      }
-
-      function validate() {
-        hideErrors();
-        let valid = true;
-
-        if (!email.value.trim()) {
-          showError(emailError, 'E-mail é obrigatório');
-          valid = false;
-        } else if (!Utils.isValidEmail(email.value)) {
-          showError(emailError, 'E-mail inválido');
-          valid = false;
-        }
-
-        if (!password.value) {
-          showError(passwordError, 'Senha é obrigatória');
-          valid = false;
-        } else if (password.value.length < 6) {
-          showError(passwordError, 'Senha deve ter pelo menos 6 caracteres');
-          valid = false;
-        }
-
-        return valid;
-      }
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        if (!validate()) return;
-
-        setLoading(true);
-
-        const result = await AuthService.login(email.value.trim(), password.value);
-
-        if (result.success) {
-          // Save email if remember me
-          if (document.getElementById('rememberMe').checked) {
-            localStorage.setItem('amz_remember_email', email.value.trim());
-          } else {
-            localStorage.removeItem('amz_remember_email');
+        // Busca dados do usuário na API do Supabase
+        fetch(`${window.CONFIG.SUPABASE.URL}/auth/v1/user`, {
+          headers: {
+            'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+            'Authorization': `Bearer ${accessToken}`
           }
-          
-          AuthService.redirectAfterLogin();
-        } else {
-          showError(passwordError, result.error || 'Erro ao fazer login');
-          setLoading(false);
-        }
-      });
-
-      // Check if already logged in
-      if (AuthService.isAuthenticated()) {
-        AuthService.redirectAfterLogin();
+        })
+        .then(r => r.json())
+        .then(u => {
+          const user = {
+            id:    u.id,
+            email: u.email,
+            name:  u.user_metadata?.full_name || u.user_metadata?.name || u.email,
+            role:  u.user_metadata?.role || 'administrador',
+          };
+          localStorage.setItem(window.CONFIG.AUTH.USER_KEY, JSON.stringify(user));
+          window.location.href = '/base-teste-app/pages/dashboard.html';
+        })
+        .catch(() => {
+          window.location.href = '/base-teste-app/pages/dashboard.html';
+        });
+        return;
       }
-    })();
+    }
+
+    // ─── Já logado → dashboard ────────────────────────────────────────────
+    if (AuthService.isAuthenticated()) {
+      AuthService.redirectAfterLogin();
+      return;
+    }
+
+    const form           = document.getElementById('loginForm');
+    const emailInput     = document.getElementById('email');
+    const passwordInput  = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    const submitBtn      = document.getElementById('submitBtn');
+    const btnText        = document.getElementById('btnText');
+    const btnSpinner     = document.getElementById('btnSpinner');
+    const emailError     = document.getElementById('emailError');
+    const passwordError  = document.getElementById('passwordError');
+    const feedbackMsg    = document.getElementById('feedbackMsg');
+
+    // Toggle senha
+    togglePassword.addEventListener('click', () => {
+      passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+    });
+
+    // Email salvo
+    const saved = localStorage.getItem('amz_remember_email');
+    if (saved) {
+      emailInput.value = saved;
+      document.getElementById('rememberMe').checked = true;
+    }
+
+    function showError(el, msg) { el.textContent = msg; el.style.display = 'flex'; }
+    function hideErrors() {
+      emailError.style.display   = 'none';
+      passwordError.style.display = 'none';
+      feedbackMsg.style.display  = 'none';
+    }
+    function setLoading(on) {
+      submitBtn.disabled       = on;
+      btnText.style.display    = on ? 'none'  : 'inline';
+      btnSpinner.style.display = on ? 'block' : 'none';
+    }
+    function showFeedback(msg, type = 'error') {
+      feedbackMsg.textContent   = msg;
+      feedbackMsg.style.display = 'block';
+      feedbackMsg.style.background = type === 'success'
+        ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+      feedbackMsg.style.color   = type === 'success' ? '#10b981' : '#ef4444';
+      feedbackMsg.style.border  = `1px solid ${type === 'success' ? '#10b981' : '#ef4444'}`;
+    }
+
+    function validate() {
+      hideErrors();
+      let ok = true;
+      if (!emailInput.value.trim() || !Utils.isValidEmail(emailInput.value)) {
+        showError(emailError, 'E-mail inválido'); ok = false;
+      }
+      if (!passwordInput.value || passwordInput.value.length < 6) {
+        showError(passwordError, 'Senha deve ter pelo menos 6 caracteres'); ok = false;
+      }
+      return ok;
+    }
+
+    // ─── Login email/senha ────────────────────────────────────────────────
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
+      setLoading(true);
+
+      const result = await AuthService.login(emailInput.value.trim(), passwordInput.value);
+
+      if (result.success) {
+        if (document.getElementById('rememberMe').checked) {
+          localStorage.setItem('amz_remember_email', emailInput.value.trim());
+        } else {
+          localStorage.removeItem('amz_remember_email');
+        }
+        AuthService.redirectAfterLogin();
+      } else {
+        showFeedback(result.error || 'E-mail ou senha incorretos');
+        setLoading(false);
+      }
+    });
+
+    // ─── Esqueci a senha ──────────────────────────────────────────────────
+    document.getElementById('forgotPassword').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email || !Utils.isValidEmail(email)) {
+        showError(emailError, 'Digite seu e-mail para recuperar a senha');
+        return;
+      }
+
+      const res = await fetch(
+        `${window.CONFIG.SUPABASE.URL}/auth/v1/recover`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': window.CONFIG.SUPABASE.ANON_KEY
+          },
+          body: JSON.stringify({ email })
+        }
+      );
+
+      if (res.ok) {
+        showFeedback('E-mail de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+      } else {
+        showFeedback('Erro ao enviar e-mail de recuperação.');
+      }
+    });
+
+    // ─── OAuth Google ─────────────────────────────────────────────────────
+    document.getElementById('btnGoogle').addEventListener('click', () => {
+      if (!window.CONFIG?.FEATURES?.OAUTH_GOOGLE) {
+        showFeedback('Login com Google não habilitado.'); return;
+      }
+      window.location.href =
+        `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=google` +
+        `&redirect_to=${encodeURIComponent(window.location.origin + '/base-teste-app/index.html')}`;
+    });
+
+    // ─── OAuth Apple ──────────────────────────────────────────────────────
+    document.getElementById('btnApple').addEventListener('click', () => {
+      if (!window.CONFIG?.FEATURES?.OAUTH_APPLE) {
+        showFeedback('Login com Apple não habilitado.'); return;
+      }
+      window.location.href =
+        `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=apple` +
+        `&redirect_to=${encodeURIComponent(window.location.origin + '/base-teste-app/index.html')}`;
+    });
+
+  })();
   </script>
 </body>
 </html>
