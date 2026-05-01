@@ -156,10 +156,10 @@
             role:  u.user_metadata?.role || 'administrador',
           };
           localStorage.setItem(window.CONFIG.AUTH.USER_KEY, JSON.stringify(user));
-          window.location.href = '/base-teste-app/pages/dashboard.html';
+          window.location.href = 'https://glefgestoes.github.io/base-teste-app/pages/dashboard.html';
         })
         .catch(() => {
-          window.location.href = '/base-teste-app/pages/dashboard.html';
+          window.location.href = 'https://glefgestoes.github.io/base-teste-app/pages/dashboard.html';
         });
         return;
       }
@@ -282,7 +282,7 @@
       }
       window.location.href =
         `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=google` +
-        `&redirect_to=${encodeURIComponent(window.location.origin + '/base-teste-app/index.html')}`;
+        `&redirect_to=${encodeURIComponent('https://glefgestoes.github.io/base-teste-app/index.html')}`;
     });
 
     // ─── OAuth Apple ──────────────────────────────────────────────────────
@@ -292,7 +292,7 @@
       }
       window.location.href =
         `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=apple` +
-        `&redirect_to=${encodeURIComponent(window.location.origin + '/base-teste-app/index.html')}`;
+        `&redirect_to=${encodeURIComponent('https://glefgestoes.github.io/base-teste-app/index.html')}`;
     });
 
   })();
