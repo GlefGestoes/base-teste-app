@@ -1,94 +1,127 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criar Conta - AMZ</title>
-
-<link rel="stylesheet" href="../css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B1F33">
+  <title>Criar Conta - AMZ App</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logoamz.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
-
 <body>
-
 <div class="login-page">
-
   <div class="login-card">
 
-    <div class="login-header">
-
+    <header class="login-header">
       <div class="login-logo">
-        <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
+        <div class="navbar-brand-icon">
+          <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
+        </div>
       </div>
-
       <h1 class="login-title">Criar Conta</h1>
-      <p class="login-subtitle">Cadastre-se para acessar o sistema.</p>
+      <p class="login-subtitle">Cadastre-se para acessar o sistema</p>
+    </header>
 
-    </div>
+    <!-- Mensagem de feedback -->
+    <div id="feedbackMsg" style="display:none; padding:12px 16px; border-radius:8px; font-size:14px; margin-bottom:16px;"></div>
 
     <form id="registerForm" class="login-form">
 
       <div class="form-group">
-        <label for="name" class="form-label">Nome</label>
-        <input
-          type="text"
-          id="name"
-          class="form-input"
-          placeholder="Digite seu nome"
-          required
-        >
+        <label for="name" class="form-label">Nome completo <span class="required">*</span></label>
+        <div class="input-group">
+          <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input type="text" id="name" class="form-input" placeholder="Seu nome completo" required autocomplete="name">
+        </div>
+        <span id="nameError" class="form-error" style="display:none;"></span>
       </div>
 
       <div class="form-group">
-        <label for="email" class="form-label">Email</label>
-        <input
-          type="email"
-          id="email"
-          class="form-input"
-          placeholder="Digite seu email"
-          required
-        >
+        <label for="email" class="form-label">E-mail <span class="required">*</span></label>
+        <div class="input-group">
+          <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+          </svg>
+          <input type="email" id="email" class="form-input" placeholder="seu@email.com" required autocomplete="email">
+        </div>
+        <span id="emailError" class="form-error" style="display:none;"></span>
       </div>
 
       <div class="form-group">
-        <label for="password" class="form-label">Senha</label>
-        <input
-          type="password"
-          id="password"
-          class="form-input"
-          placeholder="Digite sua senha"
-          required
-        >
+        <label for="password" class="form-label">Senha <span class="required">*</span></label>
+        <div class="input-group">
+          <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <input type="password" id="password" class="form-input" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+          <button type="button" id="togglePassword" class="input-toggle" aria-label="Mostrar senha">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+        <span id="passwordError" class="form-error" style="display:none;"></span>
       </div>
 
       <div class="form-group">
-        <label for="confirmPassword" class="form-label">Confirmar senha</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          class="form-input"
-          placeholder="Confirme sua senha"
-          required
-        >
+        <label for="confirmPassword" class="form-label">Confirmar senha <span class="required">*</span></label>
+        <div class="input-group">
+          <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <input type="password" id="confirmPassword" class="form-input" placeholder="Repita a senha" required autocomplete="new-password">
+        </div>
+        <span id="confirmError" class="form-error" style="display:none;"></span>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-lg">
-        Criar Conta
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
+        <span id="btnText">Criar Conta</span>
+        <span id="btnSpinner" class="spinner" style="display:none;"></span>
       </button>
 
     </form>
 
-    <div class="divider">
-      <span>ou</span>
+    <div class="divider"><span>ou continue com</span></div>
+
+    <!-- Login Social -->
+    <div class="social-login">
+      <button type="button" id="btnGoogle" class="social-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continuar com Google
+      </button>
+      <button type="button" id="btnApple" class="social-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zm-5.85-15.1c.07-2.04 1.76-3.79 3.78-3.94.29 2.32-1.93 4.48-3.78 3.94z"/>
+        </svg>
+        Continuar com Apple
+      </button>
     </div>
 
-    <p class="text-center">
-      Já possui conta?
-      <a href="../index.html">Fazer login</a>
+    <p class="text-center" style="margin-top:16px;">
+      Já tem conta? <a href="../index.html">Fazer login</a>
     </p>
 
-  </div>
+    <footer style="margin-top:var(--space-6);text-align:center;font-size:var(--text-xs);color:var(--text-muted);">
+      <p>Ao criar conta, você concorda com os <a href="#">Termos</a> e <a href="#">Privacidade</a></p>
+    </footer>
 
+  </div>
 </div>
 
 <script src="../config.js"></script>
@@ -96,8 +129,135 @@
 <script src="../js/services/mock.service.js"></script>
 <script src="../js/services/api.service.js"></script>
 <script src="../js/services/auth.service.js"></script>
-<script src="../js/services/dse.service.js"></script>
-<script src="../js/register.js"></script>
 
+<script>
+(function() {
+
+  // Se já estiver logado, vai pro dashboard
+  if (AuthService.isAuthenticated()) {
+    window.location.href = '../pages/dashboard.html';
+    return;
+  }
+
+  const form           = document.getElementById('registerForm');
+  const submitBtn      = document.getElementById('submitBtn');
+  const btnText        = document.getElementById('btnText');
+  const btnSpinner     = document.getElementById('btnSpinner');
+  const feedbackMsg    = document.getElementById('feedbackMsg');
+  const togglePassword = document.getElementById('togglePassword');
+
+  // ─── Toggle senha ─────────────────────────────────────────────────────
+  togglePassword.addEventListener('click', () => {
+    const pwd  = document.getElementById('password');
+    pwd.type   = pwd.type === 'password' ? 'text' : 'password';
+  });
+
+  // ─── Helpers de UI ────────────────────────────────────────────────────
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.style.display = 'flex'; }
+  }
+  function hideErrors() {
+    ['nameError','emailError','passwordError','confirmError'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    feedbackMsg.style.display = 'none';
+  }
+  function showFeedback(msg, type = 'error') {
+    feedbackMsg.textContent    = msg;
+    feedbackMsg.style.display  = 'block';
+    feedbackMsg.style.background = type === 'success'
+      ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+    feedbackMsg.style.color    = type === 'success' ? '#10b981' : '#ef4444';
+    feedbackMsg.style.border   = `1px solid ${type === 'success' ? '#10b981' : '#ef4444'}`;
+  }
+  function setLoading(on) {
+    submitBtn.disabled        = on;
+    btnText.style.display     = on ? 'none'   : 'inline';
+    btnSpinner.style.display  = on ? 'block'  : 'none';
+  }
+
+  // ─── Validação ────────────────────────────────────────────────────────
+  function validate() {
+    hideErrors();
+    let ok = true;
+    const name    = document.getElementById('name').value.trim();
+    const email   = document.getElementById('email').value.trim();
+    const pwd     = document.getElementById('password').value;
+    const confirm = document.getElementById('confirmPassword').value;
+
+    if (!name || name.length < 2) {
+      showError('nameError', 'Nome deve ter pelo menos 2 caracteres'); ok = false;
+    }
+    if (!email || !Utils.isValidEmail(email)) {
+      showError('emailError', 'E-mail inválido'); ok = false;
+    }
+    if (!pwd || pwd.length < 6) {
+      showError('passwordError', 'Senha deve ter pelo menos 6 caracteres'); ok = false;
+    }
+    if (pwd !== confirm) {
+      showError('confirmError', 'As senhas não coincidem'); ok = false;
+    }
+    return ok;
+  }
+
+  // ─── Submit — cadastro com email/senha ────────────────────────────────
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setLoading(true);
+
+    const result = await AuthService.register({
+      name:      document.getElementById('name').value.trim(),
+      email:     document.getElementById('email').value.trim(),
+      password:  document.getElementById('password').value,
+      role:      'administrador',
+      isPending: false,
+    });
+
+    if (result.success) {
+      showFeedback('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
+      setTimeout(() => window.location.href = '../index.html', 2500);
+    } else {
+      showFeedback(result.error || 'Erro ao criar conta. Tente novamente.');
+      setLoading(false);
+    }
+  });
+
+  // ─── OAuth Google ─────────────────────────────────────────────────────
+  document.getElementById('btnGoogle').addEventListener('click', async () => {
+    if (!window.CONFIG?.FEATURES?.OAUTH_GOOGLE) {
+      showFeedback('Login com Google não habilitado.'); return;
+    }
+    try {
+      const res = await fetch(
+        `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + '/pages/dashboard.html')}`,
+        { method: 'GET', headers: { 'apikey': window.CONFIG.SUPABASE.ANON_KEY } }
+      );
+      // Supabase retorna redirect — seguimos a URL
+      if (res.redirected) { window.location.href = res.url; return; }
+      // Alternativa: abre a URL de autorização direto
+      window.location.href =
+        `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=google` +
+        `&redirect_to=${encodeURIComponent(window.location.origin + '/pages/dashboard.html')}`;
+    } catch(err) {
+      showFeedback('Erro ao iniciar login com Google: ' + err.message);
+    }
+  });
+
+  // ─── OAuth Apple ──────────────────────────────────────────────────────
+  document.getElementById('btnApple').addEventListener('click', () => {
+    if (!window.CONFIG?.FEATURES?.OAUTH_APPLE) {
+      showFeedback('Login com Apple não habilitado.'); return;
+    }
+    window.location.href =
+      `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=apple` +
+      `&redirect_to=${encodeURIComponent(window.location.origin + '/pages/dashboard.html')}`;
+  });
+
+})();
+</script>
 </body>
 </html>
