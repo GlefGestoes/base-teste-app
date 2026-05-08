@@ -39,19 +39,15 @@ const App = {
   initServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener("load", () => {
-        // ↑ LINHA ANTERIOR — mantenha esta
-        
-        // ✅ Detecta o path base automaticamente da URL atual
-        // Ex: /base-teste-app/pages/dashboard.html → /base-teste-app
-        // Ex: /index.html → /
-        const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '/';
-        
-        // ✅ Monta o caminho do SW baseado no path detectado
-        const swPath = basePath.endsWith('/') 
-          ? basePath + 'service-worker.js' 
-          : basePath + '/service-worker.js';
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        pathParts.pop(); // remove o filename
+        const knownSubdirs = ['pages', 'js', 'css', 'assets'];
+        if (knownSubdirs.includes(pathParts[pathParts.length - 1])) {
+          pathParts.pop(); // sobe da subpasta para a raiz do app
+        }
+        const basePath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
+        const swPath   = basePath + 'service-worker.js';
 
-        // ✅ Registra com scope dinâmico (uma única cadeia de promessas)
         navigator.serviceWorker.register(swPath, { scope: basePath })
           .then(reg => {
             console.log("[SW] Registrado:", reg.scope);
@@ -64,8 +60,7 @@ const App = {
               });
             });
           })
-          .catch(err => {
-            console.error("[SW] Erro no registro:", err);
+          .catch(err => console.error("[SW] Erro no registro:", err));
             if (basePath !== '/') {
               console.log('[SW] Tentando fallback na raiz...');
               navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
