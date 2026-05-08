@@ -292,11 +292,16 @@
 
         // Avisa DSEService sobre o generator para polling
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
+          // ↑ LINHA ANTERIOR — mantenha esta
           const first = allGenerators.find(g => g.serial?.trim());
           if (first) {
-            window.DSEService.setGenerator({ id: first.id, serial: first.serial, moduleId: first.module_id || '' });
+            const gen = { id: first.id, serial: first.serial, moduleId: first.module_id || '' };
+            if (window.CONFIG?.DSE?.AUTO_POLL) {
+              window.DSEService.startPolling(gen, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
+            } else {
+              window.DSEService.setGenerator(gen);
+            }
           }
-        }
       } catch (err) {
         console.error('[Monitoramento] Erro ao carregar geradores:', err);
         document.getElementById('generatorsGrid').innerHTML =
@@ -309,9 +314,6 @@
       window.DSEService.onStatus(updateStatusBadge);
       window.DSEService.onData(updateGatewayPanel);
 
-      if (window.CONFIG?.DSE?.AUTO_POLL) {
-        window.DSEService.startPolling(null, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
-      }
     }
 
     window.addEventListener('beforeunload', () => {
