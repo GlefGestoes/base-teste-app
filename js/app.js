@@ -39,6 +39,8 @@ const App = {
   initServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener("load", () => {
+        // ↑ LINHA ANTERIOR — mantenha esta
+        
         // ✅ Detecta o path base automaticamente da URL atual
         // Ex: /base-teste-app/pages/dashboard.html → /base-teste-app
         // Ex: /index.html → /
@@ -53,8 +55,6 @@ const App = {
         navigator.serviceWorker.register(swPath, { scope: basePath })
           .then(reg => {
             console.log("[SW] Registrado:", reg.scope);
-            
-            // ✅ Verifica atualizações do SW em background
             reg.addEventListener('updatefound', () => {
               const newWorker = reg.installing;
               newWorker?.addEventListener('statechange', () => {
@@ -66,8 +66,6 @@ const App = {
           })
           .catch(err => {
             console.error("[SW] Erro no registro:", err);
-            
-            // ✅ Fallback: tenta registrar na raiz se subpath falhar
             if (basePath !== '/') {
               console.log('[SW] Tentando fallback na raiz...');
               navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
