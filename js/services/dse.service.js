@@ -253,8 +253,8 @@ const DSEService = {
           console.log('[DSEService] Aba oculta — pausando polling');
           this.stopPolling();
         } else if (this._currentGenerator) {
-          console.log('[DSEService] Aba visível — retomando polling');
-          this.startPolling(this._currentGenerator, this._baseInterval);
+        console.log('[DSEService] Aba visível — retomando polling');
+        this.startPolling(this._currentGenerator, this._baseInterval);
         }
       });
       this._visibilityListenerAdded = true;
