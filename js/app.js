@@ -34,19 +34,19 @@ const App = {
   },
 
   /**
-   * ✅ Inicializa Service Worker com path dinâmico
+   * Inicializa Service Worker com path dinâmico
    */
   initServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener("load", () => {
         const pathParts = window.location.pathname.split('/').filter(Boolean);
-        pathParts.pop(); // remove o filename
+        pathParts.pop();
         const knownSubdirs = ['pages', 'js', 'css', 'assets'];
         if (knownSubdirs.includes(pathParts[pathParts.length - 1])) {
-          pathParts.pop(); // sobe da subpasta para a raiz do app
+          pathParts.pop();
         }
         const basePath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
-        const swPath   = basePath + 'service-worker.js';
+        const swPath = basePath + 'service-worker.js';
 
         navigator.serviceWorker.register(swPath, { scope: basePath })
           .then(reg => {
@@ -61,31 +61,24 @@ const App = {
             });
           })
           .catch(err => console.error("[SW] Erro no registro:", err));
-            if (basePath !== '/') {
-              console.log('[SW] Tentando fallback na raiz...');
-              navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-                .then(reg => console.log("[SW] Fallback registrado:", reg.scope))
-                .catch(fallbackErr => console.error("[SW] Fallback também falhou:", fallbackErr));
-            }
-          });
       });
     } else {
       console.warn('[SW] Service Worker não suportado neste navegador');
     }
   },
-
-  /**
-   * ✅ CORRIGIDO: Verifica autenticação com paths dinâmicos
+  
+   /**
+   *  CORRIGIDO: Verifica autenticação com paths dinâmicos
    */
   checkAuth() {
     const path = window.location.pathname;
     const file = path.split("/").pop() || 'index.html';
     
-    // ✅ Detecta se está na raiz ou em subpasta
+    //  Detecta se está na raiz ou em subpasta
     const isAuthPage = file === '' || file === 'index.html' || file === 'cadastro.html';
     
     if (!isAuthPage && !window.AuthService?.isAuthenticated()) {
-      // ✅ Redireciona para login relativo ao path atual
+      //  Redireciona para login relativo ao path atual
       const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '/';
       const loginPath = basePath.endsWith('/') ? basePath : basePath + '/';
       window.location.href = loginPath + 'index.html';
