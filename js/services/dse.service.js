@@ -252,7 +252,7 @@ const DSEService = {
         if (document.hidden) {
           console.log('[DSEService] Aba oculta — pausando polling');
           this.stopPolling();
-        } else if (this._currentGenerator) {
+        } else if (this._currentGenerator && !this._isPolling) {
         console.log('[DSEService] Aba visível — retomando polling');
         this.startPolling(this._currentGenerator, this._baseInterval);
         }
