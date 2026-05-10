@@ -353,9 +353,11 @@
           const first = allGenerators.find(g => g.serial?.trim());
           if (first) {
             const gen = { id: first.id, serial: first.serial, moduleId: first.module_id || '' };
-            
-            // Lógica do AUTO_POLL removida, mantendo apenas a configuração síncrona
-            window.DSEService.setGenerator(gen);
+            if (window.CONFIG?.DSE?.AUTO_POLL) {
+              window.DSEService.startPolling(gen, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
+            } else {
+              window.DSEService.setGenerator(gen);
+            }
           }
         }
       } catch(e) {
