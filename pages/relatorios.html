@@ -325,7 +325,7 @@
       `;
     };
 
-    // ─── CARREGAR FILTROS ─────────────────────────────────────────────────
+// ─── CARREGAR FILTROS ─────────────────────────────────────────────────
     async function loadFilters() {
       try {
         const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
@@ -351,7 +351,12 @@
         // Avisa DSEService
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
           const first = allGenerators.find(g => g.serial?.trim());
-          if (first) window.DSEService.setGenerator({ id: first.id, serial: first.serial, moduleId: first.module_id || '' });
+          if (first) {
+            const gen = { id: first.id, serial: first.serial, moduleId: first.module_id || '' };
+            
+            // Lógica do AUTO_POLL removida, mantendo apenas a configuração síncrona
+            window.DSEService.setGenerator(gen);
+          }
         }
       } catch(e) {
         console.error('[Relatorios] Erro ao carregar filtros:', e);
@@ -360,11 +365,8 @@
 
     // Inicia DSE polling
     if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
-      if (window.CONFIG?.DSE?.AUTO_POLL) {
-        window.DSEService.startPolling(null, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
-      }
+      // polling iniciado em loadFilters() após ter o generator
     }
-
     window.addEventListener('beforeunload', () => {
       if (window.DSEService) window.DSEService.destroy();
     });
