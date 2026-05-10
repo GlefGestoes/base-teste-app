@@ -130,7 +130,7 @@
     let allGenerators = [];
     let dseData       = null;
 
-    // ─── DSE STATUS BADGE ────────────────────────────────────────────────
+    // ─── DSE STATUS BADGE ─────────────────────────────────────────────────
     const STATUS_COLOR = { online:'#10b981', offline:'#ef4444', syncing:'#f59e0b', error:'#ef4444' };
 
     function updateStatusBadge(status) {
@@ -141,7 +141,7 @@
       }[status] || 'Gateway';
     }
 
-    // ─── PAINEL GATEWAY ──────────────────────────────────────────────────
+    // ─── PAINEL GATEWAY ───────────────────────────────────────────────────
     function updateGatewayPanel(data) {
       dseData = data;
       document.getElementById('gatewayPanel').style.display = 'block';
@@ -157,7 +157,6 @@
         ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}`
         : 'Sem sinal';
 
-      // Atualiza status dos geradores pelo serial do módulo DSE
       const moduleMap = {};
       (data.modules ?? []).forEach(m => { if (m.serial) moduleMap[m.serial.toUpperCase()] = m; });
 
@@ -167,16 +166,15 @@
           g.status   = mod.online ? 'Online' : 'Offline';
           g.firmware = mod.firmware || g.firmware;
           g.protocol = mod.protocol || g.protocol;
-          // Coordenadas do módulo DSE
-          g.dse_lat = mod.latitude;
-          g.dse_lon = mod.longitude;
+          g.dse_lat  = mod.latitude;
+          g.dse_lon  = mod.longitude;
         }
       });
 
       renderGenerators(applyFilters());
     }
 
-    // ─── FILTROS ─────────────────────────────────────────────────────────
+    // ─── FILTROS ──────────────────────────────────────────────────────────
     function applyFilters() {
       const status = document.getElementById('filterStatus').value;
       const client = document.getElementById('filterClient').value;
@@ -202,7 +200,6 @@
       }
 
       container.innerHTML = list.map(g => {
-        // Dados DSE do módulo correspondente
         const mod = dseData?.modules?.find(m => m.serial?.toUpperCase() === g.serial?.toUpperCase());
         const isOnline = g.status === 'Online';
 
@@ -215,8 +212,6 @@
             </div>
             <span class="badge ${statusClass(g.status)}">${g.status || 'Aguardando'}</span>
           </div>
-
-          <!-- Dados DSE em tempo real -->
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin:12px 0;">
             <div class="stat-card">
               <div class="stat-icon ${isOnline ? 'success' : 'error'}">
@@ -237,8 +232,6 @@
               <div class="stat-label">Protocolo</div>
             </div>
           </div>
-
-          <!-- Info do módulo DSE -->
           <div style="background:var(--bg-input);border-radius:var(--radius-lg);padding:var(--space-3);font-size:13px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
               <span style="color:var(--text-muted);">Módulo ID</span>
@@ -257,13 +250,10 @@
               <span>${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</span>
             </div>
           </div>
-
-          <!-- GPS do módulo DSE (se disponível) -->
           ${mod?.latitude ? `
           <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">
             📍 GPS: ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
           </div>` : ''}
-
           <div style="display:flex;gap:8px;margin-top:12px;">
             <a href="../pages/geradores.html" class="btn btn-secondary" style="flex:1;text-align:center;">Gerenciar</a>
           </div>
@@ -282,7 +272,6 @@
           clientName: g.clients?.name || 'Sem cliente',
         }));
 
-        // Popula filtro de clientes
         const clients = [...new Map(allGenerators.map(g => [g.client_id, g.clientName])).entries()];
         const selCli  = document.getElementById('filterClient');
         selCli.innerHTML = '<option value="">Todos os clientes</option>' +
@@ -290,9 +279,8 @@
 
         renderGenerators(applyFilters());
 
-        // Avisa DSEService sobre o generator para polling
+        // Inicia polling aqui, com generator já carregado da API
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
-          // ↑ LINHA ANTERIOR — mantenha esta
           const first = allGenerators.find(g => g.serial?.trim());
           if (first) {
             const gen = { id: first.id, serial: first.serial, moduleId: first.module_id || '' };
@@ -302,6 +290,8 @@
               window.DSEService.setGenerator(gen);
             }
           }
+        }
+
       } catch (err) {
         console.error('[Monitoramento] Erro ao carregar geradores:', err);
         document.getElementById('generatorsGrid').innerHTML =
@@ -310,10 +300,10 @@
     }
 
     // ─── INTEGRAÇÃO DSE ───────────────────────────────────────────────────
+    // Registra callbacks apenas — polling iniciado dentro de loadGenerators()
     if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
       window.DSEService.onStatus(updateStatusBadge);
       window.DSEService.onData(updateGatewayPanel);
-
     }
 
     window.addEventListener('beforeunload', () => {
