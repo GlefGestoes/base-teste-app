@@ -277,12 +277,7 @@
   // Inicia DSE se feature flag ativa
   if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
     window.DSEService.onStatus(updateStatusBadge);
-    window.DSEService.onData(onGatewayData);
-   
-    if (window.CONFIG?.DSE?.AUTO_POLL) {
-      // CORREÇÃO BUG #1: inicia sem generator — o loop aguarda setGenerator()
-      window.DSEService.startPolling(null, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
-    }
+    window.DSEService.onData(onGatewayData);   
   }
    
   // =============================================
@@ -491,15 +486,15 @@
       if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
         const firstWithSerial = window.generators.find(g => g.serial?.trim());
         if (firstWithSerial) {
-          window.DSEService.setGenerator({
-            id:       firstWithSerial.id,
-            serial:   firstWithSerial.serial,
-            moduleId: firstWithSerial.module_id || '',
-          });
+          const gen = { id: firstWithSerial.id, serial: firstWithSerial.serial, moduleId: firstWithSerial.module_id || '' };
+          if (window.CONFIG?.DSE?.AUTO_POLL) {
+            window.DSEService.startPolling(gen, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
+          } else {
+            window.DSEService.setGenerator(gen);
+          }
         }
       }
-  
-      render(window.generators);
+      render(window.generators); 
     } catch (err) {
       console.error('Erro ao carregar geradores:', err);
       render([]);
