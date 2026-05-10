@@ -323,7 +323,14 @@
         // Avisa DSEService
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
           const first = allGenerators.find(g => g.serial?.trim());
-          if (first) window.DSEService.setGenerator({ id: first.id, serial: first.serial, moduleId: first.module_id || '' });
+          if (first) {
+            const gen = { id: first.id, serial: first.serial, moduleId: first.module_id || '' };
+            if (window.CONFIG?.DSE?.AUTO_POLL) {
+              window.DSEService.startPolling(gen, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
+            } else {
+              window.DSEService.setGenerator(gen);
+            }
+          }
         }
       } catch(err) {
         console.error('[Dashboard] Erro:', err);
@@ -334,9 +341,6 @@
     if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
       window.DSEService.onStatus(updateStatusBadge);
       window.DSEService.onData(updateGatewayPanel);
-      if (window.CONFIG?.DSE?.AUTO_POLL) {
-        window.DSEService.startPolling(null, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
-      }
     }
 
     window.addEventListener('beforeunload', () => {
