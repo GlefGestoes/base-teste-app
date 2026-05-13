@@ -370,73 +370,75 @@
       window.DSEService.onData(updateGatewayPanel);
     }
 
-    window.addEventListener('beforeunload', () => {
-      if (window.DSEService) window.DSEService.destroy();
-    });
-
-    loadDashboard();
-  })();
+  window.addEventListener('beforeunload', () => {
+        if (window.DSEService) window.DSEService.destroy();
+      });
+  
+      loadDashboard();
+      loadReadingsDashboard();
+    })();
   </script>
-    <script>
-  async function loadReadingsDashboard() {
-    if (!window.GeneratorReadingsService) return;
-    const svc = window.GeneratorReadingsService;
 
-    const status = await svc.getStatus();
-    const statusCard = document.getElementById('generatorStatusCard');
-    if (statusCard) {
-      statusCard.style.display = 'block';
-      document.getElementById('generatorStatusText').textContent =
-        status.online ? '🟢 Gerador Online' : '🔴 Gerador Offline';
-      document.getElementById('generatorStatusSub').textContent =
-        status.ultimaLeitura
-          ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
-          : 'Sem leituras disponíveis';
-      document.getElementById('generatorStatusDot').style.background =
-        status.online ? '#10b981' : '#ef4444';
+  <script>
+    async function loadReadingsDashboard() {
+      if (!window.GeneratorReadingsService) return;
+      const svc = window.GeneratorReadingsService;
+  
+      const status = await svc.getStatus();
+      const statusCard = document.getElementById('generatorStatusCard');
+      if (statusCard) {
+        statusCard.style.display = 'block';
+        document.getElementById('generatorStatusText').textContent =
+          status.online ? '🟢 Gerador Online' : '🔴 Gerador Offline';
+        document.getElementById('generatorStatusSub').textContent =
+          status.ultimaLeitura
+            ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
+            : 'Sem leituras disponíveis';
+        document.getElementById('generatorStatusDot').style.background =
+          status.online ? '#10b981' : '#ef4444';
+      }
+  
+      const camposPrioritarios = [
+        'velocidade_motor','pressao_oleo','temperatura_resfriamento',
+        'nivel_combustivel','tensao_bateria','frequencia_gerador',
+        'gerador_tensao_l1n','gerador_watts_total',
+      ];
+  
+      const iconMap = {
+        velocidade_motor:'⚙️', pressao_oleo:'🔩',
+        temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
+        tensao_bateria:'🔋', frequencia_gerador:'〰️',
+        gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
+      };
+  
+      const resultados = await Promise.all(camposPrioritarios.map(c => svc.getUltimoPorCampo(c)));
+      const grid = document.getElementById('readingsGrid');
+      if (!grid) return;
+  
+      grid.innerHTML = camposPrioritarios.map((campo, i) => {
+        const cfg   = svc.CAMPOS[campo];
+        const dado  = resultados[i];
+        const valor = dado ? parseFloat(dado[campo]) : null;
+        const alerta = svc.getAlerta(campo, valor);
+        const cor   = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+        return `
+          <div class="card stat-card" style="border-top:2px solid ${cor};">
+            <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
+            <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
+              ${svc.formatarValor(valor,'',cfg.decimais)}
+            </div>
+            <div class="stat-label">${cfg.label}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
+          </div>`;
+      }).join('');
+  
+      const ts = document.getElementById('readingsTimestamp');
+      if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+  
+      svc.subscribeRealtime(() => loadReadingsDashboard());
     }
-
-    const camposPrioritarios = [
-      'velocidade_motor','pressao_oleo','temperatura_resfriamento',
-      'nivel_combustivel','tensao_bateria','frequencia_gerador',
-      'gerador_tensao_l1n','gerador_watts_total',
-    ];
-
-    const iconMap = {
-      velocidade_motor:'⚙️', pressao_oleo:'🔩',
-      temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
-      tensao_bateria:'🔋', frequencia_gerador:'〰️',
-      gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
-    };
-
-    const resultados = await Promise.all(camposPrioritarios.map(c => svc.getUltimoPorCampo(c)));
-    const grid = document.getElementById('readingsGrid');
-    if (!grid) return;
-
-    grid.innerHTML = camposPrioritarios.map((campo, i) => {
-      const cfg   = svc.CAMPOS[campo];
-      const dado  = resultados[i];
-      const valor = dado ? parseFloat(dado[campo]) : null;
-      const alerta = svc.getAlerta(campo, valor);
-      const cor   = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
-      return `
-        <div class="card stat-card" style="border-top:2px solid ${cor};">
-          <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
-          <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
-            ${svc.formatarValor(valor,'',cfg.decimais)}
-          </div>
-          <div class="stat-label">${cfg.label}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
-        </div>`;
-    }).join('');
-
-    const ts = document.getElementById('readingsTimestamp');
-    if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
-
-    svc.subscribeRealtime(() => loadReadingsDashboard());
-  }
-
-  setInterval(loadReadingsDashboard, 30000);
+  
+    setInterval(loadReadingsDashboard, 30000);
   </script>
 </body>
 </html>
