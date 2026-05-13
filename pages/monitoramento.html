@@ -352,9 +352,7 @@ window.addEventListener('beforeunload', () => {
     loadGenerators();
     loadMonitoramentoReadings();
   })();
-  </script>
-
-  <script>
+    
     async function loadMonitoramentoReadings() {
       if (!window.GeneratorReadingsService) return;
       const svc = window.GeneratorReadingsService;
