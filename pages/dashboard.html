@@ -106,6 +106,31 @@
         <p style="color:var(--text-muted);font-size:13px;">Aguardando dados do gateway...</p>
       </div>
     </section>
+
+    <!-- LEITURAS DSE REAIS -->
+    <section style="margin-top:var(--space-8);padding:0 var(--space-4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
+        <h2 style="font-size:var(--text-lg);font-weight:var(--font-semibold);">
+          ⚡ Leituras do Gerador — Tempo Real
+        </h2>
+        <span id="readingsTimestamp" style="font-size:11px;color:var(--text-muted);"></span>
+      </div>
+      <div class="grid grid-cols-2 grid-cols-md-4" id="readingsGrid">
+        <p style="color:var(--text-muted);font-size:13px;">Carregando leituras...</p>
+      </div>
+      <div id="generatorStatusCard" style="margin-top:var(--space-4);display:none;">
+        <div class="card" style="border-left:3px solid var(--color-accent);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:600;font-size:14px;" id="generatorStatusText">—</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="generatorStatusSub">—</div>
+            </div>
+            <div id="generatorStatusDot" style="width:12px;height:12px;border-radius:50%;background:#6b7280;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <script src="../config.js"></script>
@@ -351,6 +376,67 @@
 
     loadDashboard();
   })();
+  </script>
+    <script>
+  async function loadReadingsDashboard() {
+    if (!window.GeneratorReadingsService) return;
+    const svc = window.GeneratorReadingsService;
+
+    const status = await svc.getStatus();
+    const statusCard = document.getElementById('generatorStatusCard');
+    if (statusCard) {
+      statusCard.style.display = 'block';
+      document.getElementById('generatorStatusText').textContent =
+        status.online ? '🟢 Gerador Online' : '🔴 Gerador Offline';
+      document.getElementById('generatorStatusSub').textContent =
+        status.ultimaLeitura
+          ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
+          : 'Sem leituras disponíveis';
+      document.getElementById('generatorStatusDot').style.background =
+        status.online ? '#10b981' : '#ef4444';
+    }
+
+    const camposPrioritarios = [
+      'velocidade_motor','pressao_oleo','temperatura_resfriamento',
+      'nivel_combustivel','tensao_bateria','frequencia_gerador',
+      'gerador_tensao_l1n','gerador_watts_total',
+    ];
+
+    const iconMap = {
+      velocidade_motor:'⚙️', pressao_oleo:'🔩',
+      temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
+      tensao_bateria:'🔋', frequencia_gerador:'〰️',
+      gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
+    };
+
+    const resultados = await Promise.all(camposPrioritarios.map(c => svc.getUltimoPorCampo(c)));
+    const grid = document.getElementById('readingsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = camposPrioritarios.map((campo, i) => {
+      const cfg   = svc.CAMPOS[campo];
+      const dado  = resultados[i];
+      const valor = dado ? parseFloat(dado[campo]) : null;
+      const alerta = svc.getAlerta(campo, valor);
+      const cor   = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+      return `
+        <div class="card stat-card" style="border-top:2px solid ${cor};">
+          <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
+          <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
+            ${svc.formatarValor(valor,'',cfg.decimais)}
+          </div>
+          <div class="stat-label">${cfg.label}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
+        </div>`;
+    }).join('');
+
+    const ts = document.getElementById('readingsTimestamp');
+    if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+
+    svc.subscribeRealtime(() => loadReadingsDashboard());
+  }
+
+  setInterval(loadReadingsDashboard, 30000);
   </script>
 </body>
 </html>
