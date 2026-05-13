@@ -100,6 +100,15 @@
           <div class="stat-value" style="font-size:var(--text-xl);">Localização</div>
           <div class="stat-label">GPS e endereços</div>
         </div>
+        <div class="card stat-card" style="cursor:pointer;" onclick="selectReport('instrumentos')">
+          <div class="stat-icon success">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <div class="stat-value" style="font-size:var(--text-xl);">Dados</div>
+          <div class="stat-label">Leituras DSE Reais</div>
+        </div>
       </div>
 
       <!-- Filtros -->
@@ -111,6 +120,13 @@
           </select>
           <select id="filterClient" class="form-select" style="min-width:150px;">
             <option value="">Todos os clientes</option>
+          </select>
+          <select id="filterPeriodo" class="form-select" style="min-width:150px;">
+            <option value="1">Última 1 hora</option>
+            <option value="6">Últimas 6 horas</option>
+            <option value="24" selected>Últimas 24 horas</option>
+            <option value="72">Últimos 3 dias</option>
+            <option value="168">Última semana</option>
           </select>
           <button class="btn btn-primary" onclick="selectReport(window._currentReportType || 'status')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -371,12 +387,90 @@
     if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
       // polling iniciado em loadFilters() após ter o generator
     }
-    window.addEventListener('beforeunload', () => {
-      if (window.DSEService) window.DSEService.destroy();
-    });
+  window.addEventListener('beforeunload', () => {
+        if (window.DSEService) window.DSEService.destroy();
+      });
+  
+      loadFilters();
+    })();
+  </script>
 
-    loadFilters();
-  })();
+  <script>
+    // Injeta o case 'instrumentos' no selectReport existente
+    const _selectReportOriginal = window.selectReport;
+    window.selectReport = async function(type) {
+      if (type === 'instrumentos') {
+        window._currentReportType = 'instrumentos';
+        await gerarRelatorioInstrumentos();
+        return;
+      }
+      return _selectReportOriginal(type);
+    };
+  
+    async function gerarRelatorioInstrumentos() {
+      if (!window.GeneratorReadingsService) return;
+      const svc   = window.GeneratorReadingsService;
+      const horas = parseInt(document.getElementById('filterPeriodo')?.value || '24');
+      const ini   = new Date(Date.now() - horas * 3600000).toISOString();
+      const content = document.getElementById('reportContent');
+      content.innerHTML = '<p style="color:var(--text-muted);padding:16px;">Buscando leituras reais do DSE...</p>';
+  
+      const dados = await svc.getRelatorio(ini, null, 300);
+      if (!dados.length) {
+        content.innerHTML = `<p style="color:var(--text-muted);padding:16px;">Sem leituras nas últimas ${horas} horas.</p>`;
+        return;
+      }
+  
+      const camposStats = ['velocidade_motor','pressao_oleo','temperatura_resfriamento','nivel_combustivel','tensao_bateria','frequencia_gerador'];
+      const cfgs = svc.CAMPOS;
+      const statsHtml = camposStats.map(c => {
+        const vals = dados.map(r => parseFloat(r[c])).filter(v => !isNaN(v) && v > 0);
+        if (!vals.length) return '';
+        const min = Math.min(...vals).toFixed(1);
+        const max = Math.max(...vals).toFixed(1);
+        const med = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+        return `
+          <div class="card" style="padding:10px;">
+            <div style="font-size:11px;color:var(--text-muted);">${cfgs[c]?.label||c}</div>
+            <div style="font-size:13px;margin-top:4px;">
+              Min: <strong>${min}</strong> · Max: <strong>${max}</strong> · Méd: <strong>${med}</strong> ${cfgs[c]?.unidade||''} (${vals.length})
+            </div>
+          </div>`;
+      }).join('');
+  
+      const headers = ['Timestamp','Instrumento','RPM','Pressão','Temp°C','Combust%','Bateria V','Freq Hz','Tensão L1N','Watts'];
+      const rows    = dados.slice(0,200).map(r => [
+        svc.formatarTimestamp(r.reading_timestamp),
+        r.xml_source||'—',
+        r.velocidade_motor??'—', r.pressao_oleo??'—',
+        r.temperatura_resfriamento??'—', r.nivel_combustivel??'—',
+        r.tensao_bateria??'—', r.frequencia_gerador??'—',
+        r.gerador_tensao_l1n??'—', r.gerador_watts_total??'—',
+      ]);
+  
+      content.innerHTML = `
+        <h3 style="margin-bottom:12px;font-size:var(--text-lg);">
+          Leituras DSE — Últimas ${horas}h
+          <span style="font-size:12px;color:var(--text-muted);margin-left:8px;">${dados.length} registros</span>
+        </h3>
+        <div class="grid grid-cols-2 grid-cols-md-3" style="margin-bottom:16px;">${statsHtml}</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--glass-border);">
+                ${headers.map(h=>`<th style="text-align:left;padding:var(--space-3);font-size:11px;color:var(--text-muted);text-transform:uppercase;">${h}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(row=>`
+                <tr style="border-bottom:1px solid var(--glass-border);">
+                  ${row.map(val=>`<td style="padding:var(--space-3);font-size:var(--text-sm);">${val}</td>`).join('')}
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Total: ${dados.length} · Módulo: 6F2F052F62</p>`;
+    }
   </script>
 </body>
 </html>
