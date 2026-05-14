@@ -40,7 +40,7 @@ const CONFIG = {
 
   DSE: {
     AUTO_POLL: true,
-    POLL_INTERVAL: 5000
+    POLL_INTERVAL: 30000  // ← 30s é suficiente para dados de gerador
   },
 
   FEATURES: {
