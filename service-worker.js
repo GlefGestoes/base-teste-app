@@ -136,10 +136,12 @@ self.addEventListener('fetch', (event) => {
 
   // 2. CSS e JS — CACHE FIRST (essencial para offline!)
   if (url.pathname.match(/\.(css|js)$/)) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE));
+    event.respondWith(staleWhileRevalidate(request));  // ← atualiza em background
     return;
   }
-
+  // Incrementa CACHE_VERSION a cada deploy:
+  const CACHE_VERSION = 'v3';
+  
   // 3. Imagens — Cache First
   if (request.destination === 'image') {
     event.respondWith(cacheFirst(request, IMAGE_CACHE));
