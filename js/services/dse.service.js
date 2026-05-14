@@ -48,7 +48,7 @@ const DSEService = {
   _maxFailures: 5,
   _backoffMultiplier: 2,
   _maxInterval: 300000,  // 5 min
-  _baseInterval: 10000,  // 10s
+  _baseInterval: 30000,  // 30s
 
   // -------------------------------------------
   // CONFIG & HELPERS
