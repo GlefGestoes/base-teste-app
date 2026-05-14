@@ -206,10 +206,31 @@ const GeneratorReadingsService = {
     if (!window.CONFIG?.SUPABASE?.URL) return null;
 
     // Usa Supabase Realtime via WebSocket nativo
+    const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
     const wsUrl = this._supabaseUrl
       .replace('https://', 'wss://')
-      .replace('http://',  'ws://')
-      + '/realtime/v1/websocket?apikey=' + this._anonKey + '&vsn=1.0.0';
+      + '/realtime/v1/websocket'
+      + `?apikey=${this._anonKey}`
+      + `&vsn=1.0.0`;
+    
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        topic:   'realtime:public:generator_readings',
+        event:   'phx_join',
+        payload: {
+          config: {
+            postgres_changes: [{
+              event: 'INSERT',
+              schema: 'public',
+              table: 'generator_readings'
+            }]
+          },
+          // Adicionar access_token quando disponível
+          ...(token ? { access_token: token } : {})
+        },
+        ref: '1'
+      }));
+    };
 
     try {
       const ws = new WebSocket(wsUrl);
