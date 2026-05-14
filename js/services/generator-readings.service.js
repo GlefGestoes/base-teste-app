@@ -80,20 +80,24 @@ const GeneratorReadingsService = {
       'rede_tensao_l2n','rede_tensao_l3n','gerador_watts_total',
       'engine_hours','numero_partidas',
     ];
-
     try {
-      // Busca última leitura de cada campo em paralelo
-      const resultados = await Promise.all(
-        campos.map(c => this.getUltimoPorCampo(c))
+      // UMA única requisição com todos os campos
+      const res = await fetch(
+        `${this._supabaseUrl}/rest/v1/generator_readings`
+        + `?select=reading_timestamp,${campos.join(',')}`
+        + `&order=reading_timestamp.desc`
+        + `&limit=1`,
+        { headers: this._headers() }
       );
-
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const row = data?.[0];
+      if (!row) return {};
+  
       const dash = {};
-      campos.forEach((c, i) => {
-        dash[c] = resultados[i]
-          ? { valor: resultados[i][c], timestamp: resultados[i].reading_timestamp }
-          : { valor: null, timestamp: null };
+      campos.forEach(c => {
+        dash[c] = { valor: row[c] ?? null, timestamp: row.reading_timestamp };
       });
-
       return dash;
     } catch (err) {
       console.error('[Readings] getDashboard:', err);
@@ -151,14 +155,15 @@ const GeneratorReadingsService = {
   },
 
   // ── Estatísticas de um campo ──────────────
-  async getEstatisticas(campo, dataInicio, dataFim) {
+  async getEstatisticas(campo, dataInicio, dataFim, limite = 2000) {
     this._init();
     try {
       let url = `${this._supabaseUrl}/rest/v1/generator_readings`
         + `?select=reading_timestamp,${campo}`
         + `&${campo}=not.is.null`
-        + `&order=reading_timestamp.asc`;
-
+        + `&order=reading_timestamp.asc`
+        + `&limit=${limite}`;
+      
       if (dataInicio) url += `&reading_timestamp=gte.${dataInicio}`;
       if (dataFim)    url += `&reading_timestamp=lte.${dataFim}`;
 
