@@ -298,6 +298,7 @@ const DSEService = {
     this._dataListeners   = [];
     this._statusListeners = [];
     this._currentGenerator = null;
+    this._visibilityListenerAdded = false;
     console.log('[DSEService] Destruído e listeners removidos');
   },
 
