@@ -324,20 +324,18 @@
       content.innerHTML = `
         <h3 style="margin-bottom:var(--space-4);font-size:var(--text-lg);">${report.title}${updatedAt}</h3>
         <div style="overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr style="border-bottom:1px solid var(--glass-border);">
-                ${report.headers.map(h => `<th style="text-align:left;padding:var(--space-3);font-size:var(--text-sm);color:var(--text-muted);text-transform:uppercase;">${h}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${report.rows.map(row => `
-                <tr style="border-bottom:1px solid var(--glass-border);">
-                  ${row.map(val => `<td style="padding:var(--space-3);font-size:var(--text-sm);">${val}</td>`).join('')}
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>${report.headers.map(h => `<th>${h}</th>`).join('')}</tr>
+              </thead>
+              <tbody>
+                ${report.rows.map(row =>
+                  `<tr>${row.map(val => `<td>${val}</td>`).join('')}</tr>`
+                ).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
         <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Total: ${report.rows.length} registro(s)</p>
       `;
@@ -393,9 +391,7 @@
   
       loadFilters();
     })();
-  </script>
 
-  <script>
     // Injeta o case 'instrumentos' no selectReport existente
     const _selectReportOriginal = window.selectReport;
     window.selectReport = async function(type) {
@@ -430,11 +426,11 @@
         const max = Math.max(...vals).toFixed(1);
         const med = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
         return `
-          <div class="card" style="padding:10px;">
-            <div style="font-size:11px;color:var(--text-muted);">${cfgs[c]?.label||c}</div>
-            <div style="font-size:13px;margin-top:4px;">
-              Min: <strong>${min}</strong> · Max: <strong>${max}</strong> · Méd: <strong>${med}</strong> ${cfgs[c]?.unidade||''} (${vals.length})
-            </div>
+          <div class="card stat-card">
+            <div class="stat-label">${cfgs[c]?.label||c}</div>
+              <div style="font-size:13px;margin-top:4px;">
+                Min: <strong>${min}</strong> · Max: <strong>${max}</strong> · Méd: <strong>${med}</strong> ${cfgs[c]?.unidade||''} (${vals.length})
+              </div>
           </div>`;
       }).join('');
   
