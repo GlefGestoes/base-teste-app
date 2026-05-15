@@ -81,6 +81,19 @@
         </div>
       </div>
 
+      <!-- Filtros -->
+      <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap;">
+        <select id="filterStatus" class="form-select" style="min-width:150px;">
+          <option value="">Todos os status</option>
+          <option value="Online">Online</option>
+          <option value="Offline">Offline</option>
+          <option value="Aguardando">Aguardando</option>
+        </select>
+        <select id="filterClient" class="form-select" style="min-width:150px;">
+          <option value="">Todos os clientes</option>
+        </select>
+      </div>
+      
       <!-- PAINEL DE INSTRUMENTOS DSE REAIS -->
       <div id="monitorReadingsPanel" style="margin-bottom:var(--space-6);">
         <div class="card" style="margin-bottom:var(--space-4);">
@@ -113,19 +126,6 @@
             Carregando...
           </div>
         </div>
-      </div>
-
-      <!-- Filtros -->
-      <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap;">
-        <select id="filterStatus" class="form-select" style="min-width:150px;">
-          <option value="">Todos os status</option>
-          <option value="Online">Online</option>
-          <option value="Offline">Offline</option>
-          <option value="Aguardando">Aguardando</option>
-        </select>
-        <select id="filterClient" class="form-select" style="min-width:150px;">
-          <option value="">Todos os clientes</option>
-        </select>
       </div>
 
       <!-- Grid de geradores -->
