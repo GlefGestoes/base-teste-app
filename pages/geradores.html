@@ -283,7 +283,7 @@
     (data.modules ?? []).forEach(m => { if (m.serial) moduleMap[m.serial.toUpperCase()] = m; });
     let changed = false;
     (window.generators ?? []).forEach(g => {
-      const mod = moduleMap[g.serial?.toUpperCase()];
+      const mod = moduleMap[g.module_id?.toUpperCase()];
       if (mod) {
         const novoStatus = mod.online ? 'Online' : 'Offline';
         if (g.status !== novoStatus) { g.status = novoStatus; g.firmware = mod.firmware; g.protocol = mod.protocol; changed = true; }
