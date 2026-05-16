@@ -200,7 +200,7 @@
       (data.modules ?? []).forEach(m => { if (m.serial) moduleMap[m.serial.toUpperCase()] = m; });
 
       allGenerators.forEach(g => {
-        const mod = moduleMap[g.serial?.toUpperCase()];
+        const mod = moduleMap[g.module_id?.toUpperCase()];
         if (mod) {
           g.status   = mod.online ? 'Online' : 'Offline';
           g.firmware = mod.firmware || g.firmware;
