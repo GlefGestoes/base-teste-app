@@ -188,18 +188,37 @@ const GeneratorReadingsService = {
 
   // ── Status do gerador ─────────────────────
   async getStatus() {
-    const leit = await this.getUltimoPorCampo('velocidade_motor');
-    if (!leit) return { online: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
+    this._init();
+    try {
+      const res = await fetch(
+        `${this._supabaseUrl}/rest/v1/generator_readings`
+        + `?select=reading_timestamp,velocidade_motor,temperatura_resfriamento,nivel_combustivel,tensao_bateria`
+        + `&order=reading_timestamp.desc`
+        + `&limit=1`,
+        { headers: this._headers() }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const leit = data?.[0] ?? null;
+      if (!leit) return { online: false, standby: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
 
-    const diffMin = Math.round((Date.now() - new Date(leit.reading_timestamp)) / 60000);
-    
-    return {
-      online:       parseFloat(leit.velocidade_motor) > 0 && diffMin < 5,
-      standby:      parseFloat(leit.velocidade_motor) === 0 && diffMin < 5,
-      velocidade:   parseFloat(leit.velocidade_motor),
-      ultimaLeitura: leit.reading_timestamp,
-      atrasoMin:    diffMin,
-    };
+      const rpm        = parseFloat(leit.velocidade_motor)         || 0;
+      const temp       = parseFloat(leit.temperatura_resfriamento) || 0;
+      const combustivel = parseFloat(leit.nivel_combustivel)       || 0;
+      const bateria    = parseFloat(leit.tensao_bateria)           || 0;
+      const comLeituras = temp > 0 && combustivel > 0 && bateria > 0;
+
+      return {
+        online:        rpm > 0 && comLeituras,
+        standby:       rpm === 0 && comLeituras,
+        velocidade:    rpm,
+        ultimaLeitura: leit.reading_timestamp,
+        atrasoMin:     Math.round((Date.now() - new Date(leit.reading_timestamp)) / 60000),
+      };
+    } catch (err) {
+      console.error('[Readings] getStatus:', err);
+      return { online: false, standby: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
+    }
   },
 
   // ── Realtime: ouve novos INSERTs ──────────
