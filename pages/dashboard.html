@@ -390,13 +390,13 @@
         if (statusCard) {
           statusCard.style.display = 'block';
           document.getElementById('generatorStatusText').textContent =
-            status.online ? '🟢 Gerador Online' : '🔴 Gerador Offline';
+            status.online ? '🟢 Gerador Online' : status.standby ? '🟡 Gerador Standby' : '🔴 Gerador Offline';
           document.getElementById('generatorStatusSub').textContent =
             status.ultimaLeitura
               ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
               : 'Sem leituras disponíveis';
           document.getElementById('generatorStatusDot').style.background =
-            status.online ? '#10b981' : '#ef4444';
+            status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
         }
 
         const camposPrioritarios = [
