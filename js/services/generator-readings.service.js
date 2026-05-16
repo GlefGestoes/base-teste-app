@@ -192,8 +192,10 @@ const GeneratorReadingsService = {
     if (!leit) return { online: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
 
     const diffMin = Math.round((Date.now() - new Date(leit.reading_timestamp)) / 60000);
+    
     return {
       online:       parseFloat(leit.velocidade_motor) > 0 && diffMin < 5,
+      standby:      parseFloat(leit.velocidade_motor) === 0 && diffMin < 5,
       velocidade:   parseFloat(leit.velocidade_motor),
       ultimaLeitura: leit.reading_timestamp,
       atrasoMin:    diffMin,
