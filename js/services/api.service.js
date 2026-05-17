@@ -255,14 +255,39 @@ const ApiService = {
     const exp = Math.floor(Date.now()/1000) + data.expires_in;
     localStorage.setItem('amz_token_expiry', exp);
     
+    // Busca dados complementares em public.users
+    let publicProfile = {};
+    try {
+      const profileRes = await fetch(
+        `${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${data.user.id}&select=*`,
+        {
+          headers: {
+            'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+            'Authorization': `Bearer ${data.access_token}`
+          }
+        }
+      );
+      const profiles = await profileRes.json();
+      if (Array.isArray(profiles) && profiles.length > 0) {
+        publicProfile = profiles[0];
+      }
+    } catch (e) {
+      console.warn('[ApiService] Não foi possível carregar public.users:', e.message);
+    }
+
     return {
       success: true,
       data: {
         user: {
-          id:    data.user.id,
-          email: data.user.email,
-          name:  data.user.user_metadata?.name || data.user.email,
-          role:  data.user.user_metadata?.role  || 'administrador'
+          id:        data.user.id,
+          email:     data.user.email,
+          name:      publicProfile.name      || data.user.user_metadata?.name || data.user.email,
+          role:      publicProfile.role      || data.user.user_metadata?.role || 'cliente',
+          isPending: data.user.user_metadata?.isPending === true,
+          phone:     publicProfile.phone     || '',
+          company:   publicProfile.company   || '',
+          bio:       publicProfile.bio       || '',
+          avatarUrl: publicProfile.avatar_url || '',
         },
         token:        data.access_token,
         refreshToken: data.refresh_token,
@@ -274,6 +299,7 @@ const ApiService = {
   async register(user) {
     const url = `${window.CONFIG.SUPABASE.URL}/auth/v1/signup`;
 
+    // 1. Cria o usuário na autenticação do Supabase
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -286,7 +312,7 @@ const ApiService = {
         data: {
           name:      user.name,
           role:      user.role      || 'cliente',
-          isPending: user.isPending || false
+          isPending: user.isPending !== false
         }
       })
     });
@@ -294,7 +320,38 @@ const ApiService = {
     const data = await response.json();
 
     if (!response.ok) {
-      return { success: false, error: data.error_description || 'Erro ao criar conta' };
+      return { success: false, error: data.error_description || data.msg || 'Erro ao criar conta' };
+    }
+
+    const userId = data.user?.id || data.id;
+
+    // 2. Salva o perfil na tabela public.users
+    // Usa o token do novo usuário se disponível, senão usa anon key
+    if (userId) {
+      const authToken = data.access_token || localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+      try {
+        await fetch(`${window.CONFIG.SUPABASE.URL}/rest/v1/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+            'Authorization': `Bearer ${authToken || window.CONFIG.SUPABASE.ANON_KEY}`,
+            'Prefer':        'return=minimal'
+          },
+          body: JSON.stringify({
+            id:        userId,
+            name:      user.name,
+            email:     user.email,
+            role:      user.role || 'cliente',
+          })
+        });
+      } catch (err) {
+        // Não bloqueia o cadastro se falhar aqui.
+        // Se o Supabase tiver email_confirm ativo, o access_token vem null
+        // e o insert falha por RLS — o registro em public.users será feito
+        // quando o usuário completar o perfil no modal (app.js).
+        console.warn('[ApiService] public.users insert adiado (email_confirm ativo ou RLS):', err.message);
+      }
     }
 
     return { success: true, data };
