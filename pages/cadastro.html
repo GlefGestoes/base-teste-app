@@ -129,6 +129,7 @@
 <script src="../js/services/mock.service.js"></script>
 <script src="../js/services/api.service.js"></script>
 <script src="../js/services/auth.service.js"></script>
+  <script src="../js/services/permissions.service.js"></script>
 <script src="../js/services/generator-readings.service.js"></script>
 
 <script>
@@ -210,17 +211,34 @@
 
     setLoading(true);
 
+    const name     = document.getElementById('name').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    // 1. Registra no Supabase com isPending: true
+    //    O perfil será completado após o primeiro login
     const result = await AuthService.register({
-      name:      document.getElementById('name').value.trim(),
-      email:     document.getElementById('email').value.trim(),
-      password:  document.getElementById('password').value,
-      role:      'administrador',
-      isPending: false,
+      name,
+      email,
+      password,
+      role:      'cliente',   // papel padrão — admin pode alterar depois
+      isPending: true,        // flag: perfil incompleto
     });
 
     if (result.success) {
-      showFeedback('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
-      setTimeout(() => window.location.href = '../index.html', 2500);
+      showFeedback('Conta criada! Faça login para completar seu cadastro.', 'success');
+
+      // 2. Tenta login automático para levar ao modal de completar perfil
+      setTimeout(async () => {
+        const loginResult = await AuthService.login(email, password);
+        if (loginResult.success) {
+          // Vai ao dashboard com flag para abrir modal de completar perfil
+          window.location.href = '../pages/dashboard.html?complete_profile=1';
+        } else {
+          // Se não conseguiu login automático, manda para tela de login
+          window.location.href = '../index.html?registered=1';
+        }
+      }, 1200);
     } else {
       showFeedback(result.error || 'Erro ao criar conta. Tente novamente.');
       setLoading(false);
