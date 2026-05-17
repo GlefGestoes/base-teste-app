@@ -91,6 +91,143 @@ const App = {
   },
 
   /**
+   * Verifica se o usuário tem perfil pendente e abre modal de completar cadastro.
+   * Ativado pela query string ?complete_profile=1 ou pelo flag isPending no user.
+   */
+  checkPendingProfile() {
+    const user = window.AuthService?.getCurrentUser?.();
+    if (!user) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const hasFlag = params.get('complete_profile') === '1';
+
+    if (hasFlag || user.isPending) {
+      this._openCompleteProfileModal(user);
+    }
+  },
+
+  /**
+   * Cria e abre o modal de completar perfil.
+   * Bloqueia navegação até que os dados sejam salvos.
+   */
+  _openCompleteProfileModal(user) {
+    if (document.getElementById('completeProfileModal')) return;
+
+    const roles = [
+      { value: 'cliente',       label: 'Cliente'       },
+      { value: 'vendedor',      label: 'Vendedor'      },
+      { value: 'tecnico',       label: 'Técnico'       },
+      { value: 'administrador', label: 'Administrador' },
+    ];
+
+    const roleOptions = roles.map(r =>
+      `<option value="${r.value}" ${user.role === r.value ? 'selected' : ''}>${r.label}</option>`
+    ).join('');
+
+    const el = document.createElement('div');
+    el.id = 'completeProfileModal';
+    el.className = 'modal';
+    el.style.cssText = 'display:flex; z-index:2000;';
+    el.innerHTML = `
+      <div class="modal-container" style="max-width:440px;">
+        <div class="modal-header">
+          <h2 style="font-size:1.1rem;">👋 Complete seu cadastro</h2>
+        </div>
+        <div class="modal-body">
+          <p style="margin:0 0 var(--space-4);color:var(--text-secondary);font-size:.9rem;line-height:1.6;">
+            Para acessar o sistema, preencha as informações abaixo.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Nome completo *</label>
+            <input type="text" id="cpName" class="form-input" value="${user.name || ''}" placeholder="Seu nome completo">
+            <span id="cpNameErr" class="form-error" style="display:none;"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefone</label>
+            <input type="tel" id="cpPhone" class="form-input" value="${user.phone || ''}" placeholder="(00) 00000-0000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Empresa / Organização</label>
+            <input type="text" id="cpCompany" class="form-input" value="${user.company || ''}" placeholder="Nome da empresa">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Perfil de acesso *</label>
+            <select id="cpRole" class="form-select">${roleOptions}</select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cpSaveBtn" class="btn btn-primary" style="flex:1;">Salvar e Acessar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(el);
+
+    document.getElementById('cpSaveBtn').addEventListener('click', async () => {
+      const name = document.getElementById('cpName').value.trim();
+      if (!name || name.length < 2) {
+        const err = document.getElementById('cpNameErr');
+        err.textContent = 'Informe seu nome completo';
+        err.style.display = 'flex';
+        return;
+      }
+
+      const updatedUser = window.AuthService.updateUserLocal({
+        name,
+        phone:   document.getElementById('cpPhone').value.trim(),
+        company: document.getElementById('cpCompany').value.trim(),
+        role:    document.getElementById('cpRole').value,
+        isPending: false,
+      });
+
+      // Tenta salvar no Supabase (produção)
+      if (window.CONFIG?.isProd?.() && window.ApiService) {
+        try {
+          const token = window.AuthService.getToken();
+          await fetch(`${window.CONFIG.SUPABASE.URL}/auth/v1/user`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type':  'application/json',
+              'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              data: {
+                name:      updatedUser.name,
+                phone:     updatedUser.phone,
+                company:   updatedUser.company,
+                role:      updatedUser.role,
+                isPending: false,
+              }
+            }),
+          });
+        } catch(err) {
+          console.warn('[App] Erro ao salvar perfil no Supabase:', err);
+        }
+      }
+
+      el.remove();
+
+      // Remove flag da URL sem recarregar
+      const url = new URL(window.location.href);
+      url.searchParams.delete('complete_profile');
+      window.history.replaceState({}, '', url.toString());
+
+      // Aplica as permissões do novo role
+      window.PermissionsService?.applyToDOM?.();
+    });
+  },
+
+  /**
+   * Aplica as permissões do usuário logado na página atual.
+   */
+  applyPermissions() {
+    if (window.PermissionsService) {
+      // Pequeno delay para garantir que o DOM esteja montado
+      setTimeout(() => window.PermissionsService.applyToDOM(), 150);
+    }
+  },
+
+  /**
    * Mostra badge de modo dev
    */
   showDevBadge() {
@@ -121,6 +258,8 @@ const App = {
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
   App.showDevBadge();
+  App.checkPendingProfile();
+  App.applyPermissions();
 });
 
 // Exporta globalmente
