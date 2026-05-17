@@ -375,16 +375,35 @@ const GeneratorControlsService = (() => {
   // MÓDULO: EVENTOS DE CLIQUE
   // ============================================
 
+  // Mapa de dados dos geradores para lookup rapido por id
+  const _generatorsMap = new Map();
+
+  /**
+   * Instala um unico listener por delegacao no container pai.
+   * Funciona mesmo apos re-renderizacoes do grid.
+   */
+  function _installDelegation(container) {
+    if (container._genDelegationInstalled) return;
+    container._genDelegationInstalled = true;
+
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-gen-btn][data-gen-id]');
+      if (!btn) return;
+      e.stopPropagation();
+
+      const id      = btn.dataset.genId;
+      const command = btn.dataset.genBtn;
+      const data    = _generatorsMap.get(id) || {};
+
+      if (command === 'on')   turnOn(id, data);
+      if (command === 'off')  turnOff(id, data);
+      if (command === 'auto') setAuto(id, data);
+    });
+  }
+
   function bindCardButtons(generatorId, generatorData = {}) {
     const id = String(generatorId);
-
-    const btnOn   = document.querySelector(`[data-gen-btn="on"][data-gen-id="${id}"]`);
-    const btnOff  = document.querySelector(`[data-gen-btn="off"][data-gen-id="${id}"]`);
-    const btnAuto = document.querySelector(`[data-gen-btn="auto"][data-gen-id="${id}"]`);
-
-    if (btnOn)   btnOn.addEventListener('click',   (e) => { e.stopPropagation(); turnOn(id, generatorData);  });
-    if (btnOff)  btnOff.addEventListener('click',  (e) => { e.stopPropagation(); turnOff(id, generatorData); });
-    if (btnAuto) btnAuto.addEventListener('click', (e) => { e.stopPropagation(); setAuto(id, generatorData); });
+    _generatorsMap.set(id, generatorData);
 
     const currentState = getState(id);
     if (currentState !== GENERATOR_STATE.IDLE) {
@@ -395,11 +414,20 @@ const GeneratorControlsService = (() => {
   function bindAll(generators = []) {
     generators.forEach(g => {
       if (!g.id) return;
-      bindCardButtons(String(g.id), {
-        serial:   g.serial    || '',
+      const id = String(g.id);
+      _generatorsMap.set(id, {
+        serial:   g.serial    || g.name || '',
         moduleId: g.module_id || '',
       });
+      const currentState = getState(id);
+      if (currentState !== GENERATOR_STATE.IDLE) {
+        _applyButtonStyles(id, currentState);
+      }
     });
+
+    // Instala delegacao no container pai (apenas uma vez)
+    const container = document.getElementById('generatorsGrid');
+    if (container) _installDelegation(container);
   }
 
   // ============================================
