@@ -97,11 +97,11 @@ const GeneratorControlsService = (() => {
     const serialText = serial ? `<br><small style="color:var(--text-muted);">Gerador: ${serial}</small>` : '';
     msgEl.innerHTML  = (CONFIRM_MESSAGES[command] || 'Confirmar?') + serialText;
 
-    modal.classList.add('active');
+    modal.style.display = 'flex';
 
     return new Promise((resolve) => {
       function cleanup(result) {
-        modal.classList.remove('active');
+        modal.style.display = 'none';
         btnYes.removeEventListener('click', onYes);
         btnNo.removeEventListener('click',  onNo);
         resolve(result);
