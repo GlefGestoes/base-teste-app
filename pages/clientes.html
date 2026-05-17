@@ -425,7 +425,14 @@
 				// Preenche o formulário com dados da sessão
 				if(currentUser) {
 					formFields.nome.value = currentUser.name || '';
-					formFields.email.value = currentUser.email || '';
+					formFields.email.value  = currentUser.email   || '';
+					// Se o usuário novo acabou de completar o cadastro,
+					// pré-preenche os campos disponíveis do perfil
+					if (currentUser.isPending || !formFields.name?.value) {
+					  if (formFields.name)    formFields.name.value    = currentUser.name    || '';
+					  if (formFields.phone)   formFields.phone.value   = currentUser.phone   || '';
+					  if (formFields.company) formFields.company.value = currentUser.company || '';
+					}
 				}
 			};
 		}
@@ -744,5 +751,3 @@
   
 </body>
 </html>
-
-
