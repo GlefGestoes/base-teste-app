@@ -119,6 +119,7 @@
   <script src="./js/services/mock.service.js"></script>
   <script src="./js/services/api.service.js"></script>
   <script src="./js/services/auth.service.js"></script>
+  <script src="./js/services/permissions.service.js"></script>
   <script src="./js/app.js"></script>
   <script src="./js/services/generator-readings.service.js"></script>
 
@@ -150,19 +151,40 @@
         })
         .then(r => r.json())
         .then(u => {
+          // Detecta se é o primeiro acesso via OAuth (sem role definido)
+          const isNewOAuthUser = !u.user_metadata?.role;
           const user = {
-            id:    u.id,
-            email: u.email,
-            name:  u.user_metadata?.full_name || u.user_metadata?.name || u.email,
-            role:  u.user_metadata?.role || 'administrador',
+            id:        u.id,
+            email:     u.email,
+            name:      u.user_metadata?.full_name || u.user_metadata?.name || u.email,
+            role:      u.user_metadata?.role      || 'cliente',
+            isPending: isNewOAuthUser ? true : (u.user_metadata?.isPending === true),
           };
           localStorage.setItem(window.CONFIG.AUTH.USER_KEY, JSON.stringify(user));
-          window.location.href = 'https://glefgestoes.github.io/base-teste-app/pages/dashboard.html';
+          // Mesmo fluxo do login manual: verifica perfil pendente
+          if (user.isPending) {
+            window.location.href = 'pages/dashboard.html?complete_profile=1';
+          } else {
+            window.location.href = 'pages/dashboard.html';
+          }
         })
         .catch(() => {
-          window.location.href = 'https://glefgestoes.github.io/base-teste-app/pages/dashboard.html';
+          window.location.href = 'pages/dashboard.html?complete_profile=1';
         });
         return;
+      }
+    }
+
+    // Mostra mensagem se veio do cadastro
+    const _params = new URLSearchParams(window.location.search);
+    if (_params.get('registered') === '1') {
+      const fb = document.getElementById('feedbackMsg');
+      if (fb) {
+        fb.textContent = '✅ Conta criada! Faça login para continuar.';
+        fb.style.display = 'block';
+        fb.style.background = 'rgba(16,185,129,0.15)';
+        fb.style.color   = '#10b981';
+        fb.style.border  = '1px solid #10b981';
       }
     }
 
@@ -241,7 +263,12 @@
         } else {
           localStorage.removeItem('amz_remember_email');
         }
-        AuthService.redirectAfterLogin();
+        // Verifica se perfil está pendente
+        if (result.user?.isPending) {
+          window.location.href = 'pages/dashboard.html?complete_profile=1';
+        } else {
+          AuthService.redirectAfterLogin();
+        }
       } else {
         showFeedback(result.error || 'E-mail ou senha incorretos');
         setLoading(false);
@@ -300,4 +327,3 @@
   </script>
 </body>
 </html>
-
