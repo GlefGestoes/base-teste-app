@@ -150,18 +150,47 @@
           }
         })
         .then(r => r.json())
-        .then(u => {
-          // Detecta se é o primeiro acesso via OAuth (sem role definido)
-          const isNewOAuthUser = !u.user_metadata?.role;
+        .then(async u => {
+          // Consulta public.users para obter role e dados reais do perfil
+          // (igual ao login manual — evita que metadata do Google sobrescreva o role)
+          let publicProfile = {};
+          try {
+            const profileRes = await fetch(
+              `${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${u.id}&select=*`,
+              {
+                headers: {
+                  'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+                  'Authorization': `Bearer ${accessToken}`
+                }
+              }
+            );
+            const profiles = await profileRes.json();
+            if (Array.isArray(profiles) && profiles.length > 0) {
+              publicProfile = profiles[0];
+            }
+          } catch (e) {
+            console.warn('[OAuth] Não foi possível carregar public.users:', e.message);
+          }
+
+          // Se existe em public.users, usa os dados de lá (mais confiável)
+          // Se não existe, é um novo usuário OAuth — vai completar o perfil
+          const existsInPublic = !!publicProfile.id;
+          const isNewOAuthUser = !existsInPublic && !u.user_metadata?.role;
+
           const user = {
             id:        u.id,
             email:     u.email,
-            name:      u.user_metadata?.full_name || u.user_metadata?.name || u.email,
-            role:      u.user_metadata?.role      || 'cliente',
-            isPending: isNewOAuthUser ? true : (u.user_metadata?.isPending === true),
+            name:      publicProfile.name      || u.user_metadata?.full_name || u.user_metadata?.name || u.email,
+            role:      publicProfile.role      || u.user_metadata?.role      || 'cliente',
+            isPending: isNewOAuthUser ? true   : (u.user_metadata?.isPending === true),
+            phone:     publicProfile.phone     || '',
+            company:   publicProfile.company   || '',
+            bio:       publicProfile.bio       || '',
+            avatarUrl: publicProfile.avatar_url || '',
           };
+
           localStorage.setItem(window.CONFIG.AUTH.USER_KEY, JSON.stringify(user));
-          // Mesmo fluxo do login manual: verifica perfil pendente
+
           if (user.isPending) {
             window.location.href = 'pages/dashboard.html?complete_profile=1';
           } else {
