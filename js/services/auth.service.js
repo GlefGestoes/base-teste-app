@@ -40,6 +40,29 @@ const AuthService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Redireciona o usuário após login considerando isPending
+   * Se perfil incompleto → abre modal de completar perfil na página atual
+   * Se completo → vai ao dashboard
+   */
+  redirectAfterLoginWithCheck() {
+    const user = this.getCurrentUser();
+    if (!user) { this.redirectToLogin(); return; }
+
+    if (user.isPending) {
+      // Vai para o dashboard mas com flag para abrir modal
+      window.location.href = this._buildUrl('../pages/dashboard.html', { complete_profile: '1' });
+    } else {
+      this.redirectAfterLogin();
+    }
+  },
+
+  _buildUrl(base, params = {}) {
+    const url = new URL(base, window.location.href);
+    Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+    return url.toString();
+  },
   
 	  /**
 	 * Registra novo usuário
