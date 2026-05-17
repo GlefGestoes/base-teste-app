@@ -184,9 +184,20 @@
           <div class="card-title">Sobre</div>
         </div>
 
+        <div style="text-align: center; padding: var(--space-6);">
+          <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-gold) 100%); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; font-size: var(--text-3xl); font-weight: var(--font-bold); margin: 0 auto var(--space-4);">A</div>
+          <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">AMZ App</div>
+          <div style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-2);">Versão 1.0.0</div>
+          <div style="font-size: var(--text-xs); color: var(--text-muted);">Sistema de Gerenciamento de Geradores</div>
+          <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--glass-border);">
+            <button id="btnLogout" class="btn btn-secondary btn-sm">Sair da Conta</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Painel de Permissões — visível apenas para administradores -->
       <div id="permissionsPanel" class="card" style="display:none; margin-bottom: var(--space-6);">
-        <div class="card-header">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
           <div class="card-title">🔐 Controle de Acesso</div>
           <span class="badge badge-warning">Admin</span>
         </div>
@@ -195,8 +206,6 @@
             Defina quais páginas, botões e relatórios cada perfil pode acessar.
             As permissões do Administrador não podem ser alteradas.
           </p>
-
-          <!-- Seletor de perfil -->
           <div class="form-group" style="margin-bottom:var(--space-4);">
             <label class="form-label">Perfil</label>
             <select id="permRoleSelect" class="form-select" onchange="loadRolePermissions()">
@@ -205,29 +214,15 @@
               <option value="tecnico">Técnico</option>
             </select>
           </div>
-
-          <!-- Grid de permissões -->
           <div id="permGrid" style="display:flex;flex-direction:column;gap:var(--space-4);"></div>
-
           <div style="display:flex;gap:var(--space-3);margin-top:var(--space-5);">
             <button class="btn btn-secondary btn-sm" onclick="resetRolePermissions()">Restaurar Padrão</button>
             <button class="btn btn-primary" onclick="saveRolePermissions()" style="flex:1;">Salvar Permissões</button>
           </div>
-
           <div id="permFeedback" style="display:none;margin-top:var(--space-3);padding:10px 14px;border-radius:8px;font-size:.85rem;"></div>
         </div>
       </div>
 
-        <div style="text-align: center; padding: var(--space-6);">
-          <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-gold) 100%); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; font-size: var(--text-3xl); font-weight: var(--font-bold); margin: 0 auto var(--space-4);">A</div>
-          <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">AMZ App</div>
-          <div style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-2);">Versão 1.0.0</div>
-          <div style="font-size: var(--text-xs); color: var(--text-muted);">Sistema de Gerenciamento de Geradores</div>
-          <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--glass-border);">
-            <button class="btn btn-secondary btn-sm" onclick="logout()">Sair da Conta</button>
-          </div>
-        </div>
-      </div>
     </div>
   </main>
 
@@ -277,10 +272,16 @@
         loadRolePermissions();
       }
 
-      window.logout = async function() {
-        await AuthService.logout();
-        window.location.href = '../index.html';
-      };
+      // Botão Sair — usa addEventListener para garantir que o elemento já existe
+      const btnLogout = document.getElementById('btnLogout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+          btnLogout.disabled    = true;
+          btnLogout.textContent = 'Saindo...';
+          await AuthService.logout();
+          window.location.href = '../index.html';
+        });
+      }
 
       // ─── Painel de permissões ────────────────────────────────────────────
       window.loadRolePermissions = function() {
