@@ -3,7 +3,7 @@
  * AMZ APP - APP.JS (Entry Point)
  * ============================================
  */
-
+ 
 const App = {
   /**
    * Inicializa aplicação
@@ -13,7 +13,7 @@ const App = {
     this.initServiceWorker();
     this.checkAuth();
   },
-
+ 
   /**
    * Log do modo atual
    */
@@ -32,7 +32,7 @@ const App = {
         'background: #10B981; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
     }
   },
-
+ 
   /**
    * Inicializa Service Worker com path dinâmico
    */
@@ -47,7 +47,7 @@ const App = {
         }
         const basePath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
         const swPath = basePath + 'service-worker.js';
-
+ 
         navigator.serviceWorker.register(swPath, { scope: basePath })
           .then(reg => {
             console.log("[SW] Registrado:", reg.scope);
@@ -84,12 +84,12 @@ const App = {
       window.location.href = loginPath + 'index.html';
       return;
     }
-
+ 
     if (isAuthPage && window.AuthService?.isAuthenticated()) {
       window.AuthService?.redirectAfterLogin();
     }
   },
-
+ 
   /**
    * Verifica se o usuário tem perfil pendente e abre modal de completar cadastro.
    * Ativado pela query string ?complete_profile=1 ou pelo flag isPending no user.
@@ -97,33 +97,33 @@ const App = {
   checkPendingProfile() {
     const user = window.AuthService?.getCurrentUser?.();
     if (!user) return;
-
+ 
     const params = new URLSearchParams(window.location.search);
     const hasFlag = params.get('complete_profile') === '1';
-
+ 
     if (hasFlag || user.isPending) {
       this._openCompleteProfileModal(user);
     }
   },
-
+ 
   /**
    * Cria e abre o modal de completar perfil.
    * Bloqueia navegação até que os dados sejam salvos.
    */
   _openCompleteProfileModal(user) {
     if (document.getElementById('completeProfileModal')) return;
-
+ 
     const roles = [
       { value: 'cliente',       label: 'Cliente'       },
       { value: 'vendedor',      label: 'Vendedor'      },
       { value: 'tecnico',       label: 'Técnico'       },
       { value: 'administrador', label: 'Administrador' },
     ];
-
+ 
     const roleOptions = roles.map(r =>
       `<option value="${r.value}" ${user.role === r.value ? 'selected' : ''}>${r.label}</option>`
     ).join('');
-
+ 
     const el = document.createElement('div');
     el.id = 'completeProfileModal';
     el.className = 'modal';
@@ -161,7 +161,7 @@ const App = {
       </div>
     `;
     document.body.appendChild(el);
-
+ 
     document.getElementById('cpSaveBtn').addEventListener('click', async () => {
       const name = document.getElementById('cpName').value.trim();
       if (!name || name.length < 2) {
@@ -170,7 +170,7 @@ const App = {
         err.style.display = 'flex';
         return;
       }
-
+ 
       const updatedUser = window.AuthService.updateUserLocal({
         name,
         phone:   document.getElementById('cpPhone').value.trim(),
@@ -178,18 +178,21 @@ const App = {
         role:    document.getElementById('cpRole').value,
         isPending: false,
       });
-
+ 
       // Tenta salvar no Supabase (produção)
       if (window.CONFIG?.isProd?.() && window.ApiService) {
+        const token = window.AuthService.getToken();
+        const headers = {
+          'Content-Type':  'application/json',
+          'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+        };
+ 
+        // 1. Atualiza user_metadata em auth.users
         try {
-          const token = window.AuthService.getToken();
           await fetch(`${window.CONFIG.SUPABASE.URL}/auth/v1/user`, {
             method: 'PUT',
-            headers: {
-              'Content-Type':  'application/json',
-              'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
-              'Authorization': `Bearer ${token}`,
-            },
+            headers,
             body: JSON.stringify({
               data: {
                 name:      updatedUser.name,
@@ -201,22 +204,36 @@ const App = {
             }),
           });
         } catch(err) {
-          console.warn('[App] Erro ao salvar perfil no Supabase:', err);
+          console.warn('[App] Erro ao atualizar auth.users:', err);
+        }
+ 
+        // 2. Atualiza (ou insere) em public.users — mantém sincronizado com auth
+        try {
+          await fetch(`${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${updatedUser.id}`, {
+            method: 'PATCH',
+            headers: { ...headers, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({
+              name:    updatedUser.name,
+              role:    updatedUser.role,
+            }),
+          });
+        } catch(err) {
+          console.warn('[App] Erro ao atualizar public.users:', err);
         }
       }
-
+ 
       el.remove();
-
+ 
       // Remove flag da URL sem recarregar
       const url = new URL(window.location.href);
       url.searchParams.delete('complete_profile');
       window.history.replaceState({}, '', url.toString());
-
+ 
       // Aplica as permissões do novo role
       window.PermissionsService?.applyToDOM?.();
     });
   },
-
+ 
   /**
    * Aplica as permissões do usuário logado na página atual.
    */
@@ -226,7 +243,7 @@ const App = {
       setTimeout(() => window.PermissionsService.applyToDOM(), 150);
     }
   },
-
+ 
   /**
    * Mostra badge de modo dev
    */
@@ -253,7 +270,7 @@ const App = {
     (document.body || document.documentElement).appendChild(badge);
   }
 };
-
+ 
 // Inicializa quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
@@ -261,6 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
   App.checkPendingProfile();
   App.applyPermissions();
 });
-
+ 
 // Exporta globalmente
 window.App = App;
