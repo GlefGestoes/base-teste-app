@@ -299,11 +299,7 @@ const ApiService = {
   async register(user) {
     const url = `${window.CONFIG.SUPABASE.URL}/auth/v1/signup`;
 
-    // Cria o usuário em auth.users.
-    // O trigger on_auth_user_created no Supabase cuida automaticamente
-    // de inserir em public.users e public.clients — não fazemos isso aqui
-    // para evitar conflito de chave duplicada e erros de RLS quando
-    // email_confirm está ativo (access_token vem null nesse caso).
+    // 1. Cria o usuário na autenticação do Supabase
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -315,8 +311,8 @@ const ApiService = {
         password: user.password,
         data: {
           name:      user.name,
-          role:      'cliente',   // novos cadastros sempre entram como cliente
-          isPending: true         // admin promove depois pelo painel de configurações
+          role:      user.role      || 'cliente',
+          isPending: user.isPending !== false
         }
       })
     });
@@ -325,6 +321,37 @@ const ApiService = {
 
     if (!response.ok) {
       return { success: false, error: data.error_description || data.msg || 'Erro ao criar conta' };
+    }
+
+    const userId = data.user?.id || data.id;
+
+    // 2. Salva o perfil na tabela public.users
+    // Usa o token do novo usuário se disponível, senão usa anon key
+    if (userId) {
+      const authToken = data.access_token || localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+      try {
+        await fetch(`${window.CONFIG.SUPABASE.URL}/rest/v1/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+            'Authorization': `Bearer ${authToken || window.CONFIG.SUPABASE.ANON_KEY}`,
+            'Prefer':        'return=minimal'
+          },
+          body: JSON.stringify({
+            id:        userId,
+            name:      user.name,
+            email:     user.email,
+            role:      user.role || 'cliente',
+          })
+        });
+      } catch (err) {
+        // Não bloqueia o cadastro se falhar aqui.
+        // Se o Supabase tiver email_confirm ativo, o access_token vem null
+        // e o insert falha por RLS — o registro em public.users será feito
+        // quando o usuário completar o perfil no modal (app.js).
+        console.warn('[ApiService] public.users insert adiado (email_confirm ativo ou RLS):', err.message);
+      }
     }
 
     return { success: true, data };
