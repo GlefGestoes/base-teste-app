@@ -297,10 +297,7 @@ const GeneratorControlsService = (() => {
       }
 
       console.warn('[GeneratorControlsService] Erro na Edge Function:', err);
-
-      // Mock de fallback — remover quando Edge Function estiver em produção
-      await new Promise(r => setTimeout(r, 600));
-      return { success: true, mock: true, message: `Comando "${command}" aceito (mock).` };
+      return { success: false, message: err.message || 'Erro ao conectar com o servidor.' };
 
     } finally {
       _pendingRequests.delete(generatorId);
