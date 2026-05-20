@@ -14,6 +14,9 @@ const GeneratorReadingsService = {
   _supabaseUrl:  null,
   _anonKey:      null,
   _realtimeSub:  null,
+  _heartbeatTimer: null,
+  _reconnectTimer: null,
+  _onNovaCallback: null,
   _listeners:    [],
 
   _init() {
@@ -69,7 +72,9 @@ const GeneratorReadingsService = {
     }
   },
 
-  // ── Dashboard: todos os campos de uma vez ─
+  // ── Dashboard: busca cada campo individualmente ─
+  // NOTA: A edge function insere UMA linha por atributo (1 coluna por row).
+  // Por isso é necessário buscar cada campo separadamente.
   async getDashboard() {
     this._init();
     const campos = [
@@ -78,25 +83,17 @@ const GeneratorReadingsService = {
       'frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n',
       'gerador_tensao_l3n','frequencia_rede','rede_tensao_l1n',
       'rede_tensao_l2n','rede_tensao_l3n','gerador_watts_total',
-      'engine_hours','numero_partidas',
+      'tempo_funcionamento_motor','numero_partidas',
     ];
     try {
-      // UMA única requisição com todos os campos
-      const res = await fetch(
-        `${this._supabaseUrl}/rest/v1/generator_readings`
-        + `?select=reading_timestamp,${campos.join(',')}`
-        + `&order=reading_timestamp.desc`
-        + `&limit=1`,
-        { headers: this._headers() }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const row = data?.[0];
-      if (!row) return {};
-  
+      const resultados = await Promise.all(campos.map(c => this.getUltimoPorCampo(c)));
       const dash = {};
-      campos.forEach(c => {
-        dash[c] = { valor: row[c] ?? null, timestamp: row.reading_timestamp };
+      campos.forEach((c, i) => {
+        const row = resultados[i];
+        dash[c] = {
+          valor:     row ? (row[c] ?? null) : null,
+          timestamp: row?.reading_timestamp ?? null,
+        };
       });
       return dash;
     } catch (err) {
@@ -202,10 +199,10 @@ const GeneratorReadingsService = {
       const leit = data?.[0] ?? null;
       if (!leit) return { online: false, standby: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
 
-      const rpm        = parseFloat(leit.velocidade_motor)         || 0;
-      const temp       = parseFloat(leit.temperatura_resfriamento) || 0;
-      const combustivel = parseFloat(leit.nivel_combustivel)       || 0;
-      const bateria    = parseFloat(leit.tensao_bateria)           || 0;
+      const rpm         = parseFloat(leit.velocidade_motor)         || 0;
+      const temp        = parseFloat(leit.temperatura_resfriamento) || 0;
+      const combustivel = parseFloat(leit.nivel_combustivel)        || 0;
+      const bateria     = parseFloat(leit.tensao_bateria)           || 0;
       const comLeituras = temp > 0 && combustivel > 0 && bateria > 0;
 
       return {
@@ -222,74 +219,143 @@ const GeneratorReadingsService = {
   },
 
   // ── Realtime: ouve novos INSERTs ──────────
+  // CORREÇÃO: ws era usado antes de ser declarado (ReferenceError).
+  // Adicionado: heartbeat a cada 25s e auto-reconnect em caso de queda.
   subscribeRealtime(onNova) {
     this._init();
     if (!window.CONFIG?.SUPABASE?.URL) return null;
 
-    // Usa Supabase Realtime via WebSocket nativo
-    const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    const wsUrl = this._supabaseUrl
+    this._onNovaCallback = onNova;
+    this._conectarRealtime();
+    return this._realtimeSub;
+  },
+
+  _conectarRealtime() {
+    // Limpa conexão anterior se existir
+    this._limparRealtime(false);
+
+    const token  = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
+    const wsUrl  = this._supabaseUrl
       .replace('https://', 'wss://')
       + '/realtime/v1/websocket'
       + `?apikey=${this._anonKey}`
       + `&vsn=1.0.0`;
-    
+
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (err) {
+      console.error('[Realtime] Falha ao criar WebSocket:', err);
+      this._agendarReconexao();
+      return null;
+    }
+
+    // ── onopen: JOIN no canal + heartbeat ──────────────────────────────
     ws.onopen = () => {
+      console.log('[Realtime] Conectado — ouvindo generator_readings ✓');
+
       ws.send(JSON.stringify({
         topic:   'realtime:public:generator_readings',
         event:   'phx_join',
         payload: {
           config: {
+            broadcast:        { self: true },
+            presence:         { key: '' },
             postgres_changes: [{
-              event: 'INSERT',
+              event:  'INSERT',
               schema: 'public',
-              table: 'generator_readings'
-            }]
+              table:  'generator_readings',
+            }],
           },
-          // Adicionar access_token quando disponível
-          ...(token ? { access_token: token } : {})
+          ...(token ? { access_token: token } : {}),
         },
-        ref: '1'
+        ref: '1',
       }));
+
+      // Heartbeat a cada 25s para manter a conexão viva no Supabase
+      this._heartbeatTimer = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            topic:   'phoenix',
+            event:   'heartbeat',
+            payload: {},
+            ref:     String(Date.now()),
+          }));
+        }
+      }, 25_000);
     };
 
-    try {
-      const ws = new WebSocket(wsUrl);
+    // ── onmessage: dispara callback quando chega novo INSERT ───────────
+    ws.onmessage = (msg) => {
+      try {
+        const parsed = JSON.parse(msg.data);
 
-      ws.onopen = () => {
-        ws.send(JSON.stringify({
-          topic:   'realtime:public:generator_readings',
-          event:   'phx_join',
-          payload: { config: { broadcast: { self: true }, presence: { key: '' }, postgres_changes: [{ event: 'INSERT', schema: 'public', table: 'generator_readings' }] } },
-          ref:     '1'
-        }));
-        console.log('[Realtime] Conectado — ouvindo generator_readings');
-      };
+        // Confirmação de JOIN
+        if (parsed?.event === 'phx_reply' && parsed?.ref === '1') {
+          console.log('[Realtime] Canal confirmado ✓');
+          return;
+        }
 
-      ws.onmessage = (msg) => {
-        try {
-          const parsed = JSON.parse(msg.data);
-          if (parsed?.payload?.data?.record) {
-            onNova(parsed.payload.data.record);
+        // Novo dado inserido
+        if (parsed?.payload?.data?.record) {
+          console.log('[Realtime] Nova leitura recebida:', parsed.payload.data.record);
+          if (typeof this._onNovaCallback === 'function') {
+            this._onNovaCallback(parsed.payload.data.record);
           }
-        } catch (_) {}
-      };
+        }
+      } catch (_) {}
+    };
 
-      ws.onerror = (e) => console.warn('[Realtime] Erro WS:', e);
+    ws.onerror = (e) => {
+      console.warn('[Realtime] Erro WebSocket:', e);
+    };
 
-      this._realtimeSub = ws;
-      return ws;
-    } catch (err) {
-      console.error('[Realtime] Falha ao conectar:', err);
-      return null;
+    // ── onclose: reconecta automaticamente após 5s ─────────────────────
+    ws.onclose = (e) => {
+      console.warn(`[Realtime] Conexão fechada (code=${e.code}) — reconectando em 5s…`);
+      clearInterval(this._heartbeatTimer);
+      this._heartbeatTimer = null;
+      // Só reconecta se ainda há callback registrado (não foi unsubscribe intencional)
+      if (this._onNovaCallback) {
+        this._agendarReconexao();
+      }
+    };
+
+    this._realtimeSub = ws;
+    return ws;
+  },
+
+  _agendarReconexao() {
+    clearTimeout(this._reconnectTimer);
+    this._reconnectTimer = setTimeout(() => {
+      if (this._onNovaCallback) {
+        console.log('[Realtime] Tentando reconectar…');
+        this._conectarRealtime();
+      }
+    }, 5_000);
+  },
+
+  _limparRealtime(limparCallback = true) {
+    clearInterval(this._heartbeatTimer);
+    clearTimeout(this._reconnectTimer);
+    this._heartbeatTimer = null;
+    this._reconnectTimer = null;
+
+    if (this._realtimeSub) {
+      // Remove onclose para não disparar reconexão ao fechar manualmente
+      this._realtimeSub.onclose = null;
+      this._realtimeSub.close();
+      this._realtimeSub = null;
+    }
+
+    if (limparCallback) {
+      this._onNovaCallback = null;
     }
   },
 
   unsubscribeRealtime() {
-    if (this._realtimeSub) {
-      this._realtimeSub.close();
-      this._realtimeSub = null;
-    }
+    console.log('[Realtime] Desconectando…');
+    this._limparRealtime(true);
   },
 
   // ── Helpers de formatação ─────────────────
