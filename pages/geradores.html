@@ -409,6 +409,20 @@
     if (window.GeneratorControlsService) {
       window.GeneratorControlsService.bindAll(list);
     }
+
+    // ── Realtime DSE→PWA: atualiza botões quando DSE muda de estado ──────
+    if (window.GeneratorReadingsService && !window._geradoresRealtimeInit) {
+      window._geradoresRealtimeInit = true;
+      window.GeneratorReadingsService.subscribeRealtime((record) => {
+        // Quando chega leitura de velocidade_motor, sincroniza botões
+        if (record?.velocidade_motor !== undefined && record?.velocidade_motor !== null) {
+          const moduleId = record.module_id || record.moduleId || null;
+          if (moduleId && window.GeneratorControlsService) {
+            window.GeneratorControlsService.syncFromModuleId(moduleId, record.velocidade_motor);
+          }
+        }
+      });
+    }
   }
 
   // --- AÇÕES GLOBAIS ---
@@ -467,6 +481,8 @@
   window.addEventListener('beforeunload', () => {
     if (window.DSEService)               window.DSEService.destroy();
     if (window.GeneratorControlsService) window.GeneratorControlsService.destroy();
+    if (window.GeneratorReadingsService)  window.GeneratorReadingsService.unsubscribeRealtime();
+    window._geradoresRealtimeInit = false;
   });
 
   // --- INIT ---
