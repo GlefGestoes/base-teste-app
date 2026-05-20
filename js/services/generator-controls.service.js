@@ -38,12 +38,25 @@ const GeneratorControlsService = (() => {
   };
 
   // ============================================
-  // ESTADO INTERNO
+  // ESTADO INTERNO — persistido no localStorage
   // ============================================
 
-  const _state            = new Map();
+  const _STATE_KEY        = 'amz_gen_states'; // chave no localStorage
   const _pendingRequests  = new Map();
   const _stateListeners   = new Map();
+  const _moduleIdToGenId  = new Map(); // module_id (DSE) → generator UUID (Supabase)
+
+  // Lê todos os estados persistidos
+  function _loadStates() {
+    try { return JSON.parse(localStorage.getItem(_STATE_KEY) || '{}'); }
+    catch (_) { return {}; }
+  }
+
+  // Salva todos os estados no localStorage
+  function _saveStates(states) {
+    try { localStorage.setItem(_STATE_KEY, JSON.stringify(states)); }
+    catch (_) {}
+  }
 
   // ============================================
   // MÓDULO: MODAL DE CONFIRMAÇÃO
@@ -163,14 +176,17 @@ const GeneratorControlsService = (() => {
   // ============================================
 
   function getState(generatorId) {
-    return _state.get(String(generatorId)) || GENERATOR_STATE.IDLE;
+    const states = _loadStates();
+    return states[String(generatorId)] || GENERATOR_STATE.IDLE;
   }
 
   function _setState(generatorId, newState) {
-    const id = String(generatorId);
-    const prev = _state.get(id);
+    const id     = String(generatorId);
+    const states = _loadStates();
+    const prev   = states[id] || GENERATOR_STATE.IDLE;
     if (prev === newState) return;
-    _state.set(id, newState);
+    states[id] = newState;
+    _saveStates(states);
     _notifyStateChange(id, newState, prev);
     _applyButtonStyles(id, newState);
   }
@@ -416,6 +432,10 @@ const GeneratorControlsService = (() => {
         serial:   g.serial    || g.name || '',
         moduleId: g.module_id || '',
       });
+      // Mapa reverso: module_id → generator UUID (usado pelo sync DSE→PWA)
+      if (g.module_id) {
+        _moduleIdToGenId.set(g.module_id.toUpperCase(), id);
+      }
       const currentState = getState(id);
       if (currentState !== GENERATOR_STATE.IDLE) {
         _applyButtonStyles(id, currentState);
@@ -425,6 +445,47 @@ const GeneratorControlsService = (() => {
     // Instala delegacao no container pai (apenas uma vez)
     const container = document.getElementById('generatorsGrid');
     if (container) _installDelegation(container);
+  }
+
+
+  // ============================================
+  // MÓDULO: SINCRONIZAÇÃO DSE → PWA
+  // ============================================
+
+  /**
+   * Atualiza o estado dos botões com base em uma leitura real do DSE.
+   * Chamado pelo Realtime toda vez que chega um novo registro de leitura.
+   *
+   * Regras:
+   *  - velocidade_motor > 0  → gerador LIGADO  (exceto se estiver em AUTO)
+   *  - velocidade_motor = 0  → gerador DESLIGADO (exceto se estiver em AUTO)
+   *  - estado AUTO           → mantido sempre (auto gerencia sozinho)
+   *
+   * @param {string} moduleId       — module_id do DSE (ex: "6F2F052F62")
+   * @param {number} velocidadeRpm  — valor de velocidade_motor da leitura
+   */
+  function syncFromModuleId(moduleId, velocidadeRpm) {
+    if (!moduleId) return;
+
+    const generatorId = _moduleIdToGenId.get(moduleId.toUpperCase());
+    if (!generatorId) return; // módulo ainda não mapeado (bindAll não foi chamado)
+
+    const estadoAtual = getState(generatorId);
+
+    // AUTO mode: o DSE gerencia o ciclo — não sobrescrevemos com ON/OFF
+    if (estadoAtual === GENERATOR_STATE.AUTO) return;
+
+    const rpm      = parseFloat(velocidadeRpm);
+    const ligado   = !isNaN(rpm) && rpm > 0;
+    const novoEstado = ligado ? GENERATOR_STATE.ON : GENERATOR_STATE.OFF;
+
+    // Só atualiza se realmente mudou para evitar re-renders desnecessários
+    if (estadoAtual !== novoEstado) {
+      console.info(
+        `[GeneratorControls] Sync DSE→PWA: módulo ${moduleId} → ${novoEstado} (${rpm} RPM)`
+      );
+      _setState(generatorId, novoEstado);
+    }
   }
 
   // ============================================
@@ -443,6 +504,7 @@ const GeneratorControlsService = (() => {
   return {
     GENERATOR_STATE,
     getState,
+    syncFromModuleId,
     turnOn,
     turnOff,
     setAuto,
