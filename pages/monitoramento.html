@@ -422,6 +422,14 @@
       cardEl.classList.add('card-pulse');
     }
 
+    // Sincroniza estado dos botões de controle com o DSE (bidirecional DSE→PWA)
+    if (campoAtualizado === 'velocidade_motor' && window.GeneratorControlsService) {
+      const moduleId = record.module_id || record.moduleId || null;
+      if (moduleId) {
+        window.GeneratorControlsService.syncFromModuleId(moduleId, record.velocidade_motor);
+      }
+    }
+
     // Se o campo é velocidade_motor, atualiza o status e adiciona ao histórico inline
     if (campoAtualizado === 'velocidade_motor') {
       const vel    = parseFloat(record.velocidade_motor);
