@@ -18,7 +18,7 @@
       <div class="navbar-brand-icon">
         <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
       </div>
-      <span class="navbar-brand-text"><span></span></span>
+      <span class="navbar-brand-text">AMZ App</span>
     </a>
     <div class="navbar-actions">
       <!-- Badge DSE no topo -->
@@ -130,7 +130,6 @@
         </div>
       </div>
     </section>
-
   </main>
 
   <script src="../config.js"></script>
@@ -382,8 +381,6 @@
   // BUG #11 CORRIGIDO: debounce impede que múltiplos INSERTs rápidos
   // (ex: DSE inserindo vários instrumentos em sequência) disparem
   // loadReadingsDashboard() múltiplas vezes simultaneamente.
-  // Antes: cada INSERT via Realtime disparava 8 fetch em paralelo.
-  // Agora: agrupa os INSERTs em uma janela de 800ms e faz 1 reload.
   let _debounceTimer = null;
   function _debounceReload() {
     clearTimeout(_debounceTimer);
@@ -467,8 +464,7 @@
       svc.unsubscribeRealtime();
     }
 
-    // BUG #11 CORRIGIDO: usa _debounceReload em vez de chamar
-    // loadReadingsDashboard() diretamente a cada INSERT.
+    // BUG #11 CORRIGIDO: usa _debounceReload em vez de chamar diretamente
     svc.subscribeRealtime(() => _debounceReload());
     _realtimeInitialized = true;
     console.log('[Dashboard] Realtime inscrito ✓');
@@ -478,7 +474,7 @@
   loadReadingsDashboard();
   iniciarRealtime();
 
-  // Polling de fallback a cada 60s (era 30s — reduzido pois Realtime cobre atualizações)
+  // Polling de fallback a cada 60s
   setInterval(loadReadingsDashboard, 60000);
 
   window.addEventListener('beforeunload', () => {
@@ -490,5 +486,3 @@
   </script>
 </body>
 </html>
-
-
