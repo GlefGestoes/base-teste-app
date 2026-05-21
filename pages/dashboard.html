@@ -378,97 +378,115 @@
   </script>
 
   <script>
-    let _realtimeInitialized = false;
+  let _realtimeInitialized = false;
+  // BUG #11 CORRIGIDO: debounce impede que múltiplos INSERTs rápidos
+  // (ex: DSE inserindo vários instrumentos em sequência) disparem
+  // loadReadingsDashboard() múltiplas vezes simultaneamente.
+  // Antes: cada INSERT via Realtime disparava 8 fetch em paralelo.
+  // Agora: agrupa os INSERTs em uma janela de 800ms e faz 1 reload.
+  let _debounceTimer = null;
+  function _debounceReload() {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(() => loadReadingsDashboard(), 800);
+  }
 
-    async function loadReadingsDashboard() {
-      if (!window.GeneratorReadingsService) return;
-      const svc = window.GeneratorReadingsService;
+  async function loadReadingsDashboard() {
+    if (!window.GeneratorReadingsService) return;
+    const svc = window.GeneratorReadingsService;
 
-      try {
-        const status = await svc.getStatus();
-        const statusCard = document.getElementById('generatorStatusCard');
-        if (statusCard) {
-          statusCard.style.display = 'block';
-          document.getElementById('generatorStatusText').textContent =
-            status.online ? '🟢 Gerador Online' : status.standby ? '🟡 Gerador Standby' : '🔴 Gerador Offline';
-          document.getElementById('generatorStatusSub').textContent =
-            status.ultimaLeitura
-              ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
-              : 'Sem leituras disponíveis';
-          document.getElementById('generatorStatusDot').style.background =
-            status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
-        }
+    try {
+      // BUG #3 CORRIGIDO: usa getDashboard() que faz 1 query em vez de
+      // 8 chamadas individuais getUltimoPorCampo() separadas.
+      const [status, dash] = await Promise.all([
+        svc.getStatus(),
+        svc.getDashboard(),
+      ]);
 
-        const camposPrioritarios = [
-          'velocidade_motor','pressao_oleo','temperatura_resfriamento',
-          'nivel_combustivel','tensao_bateria','frequencia_gerador',
-          'gerador_tensao_l1n','gerador_watts_total',
-        ];
-
-        const iconMap = {
-          velocidade_motor:'⚙️', pressao_oleo:'🔩',
-          temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
-          tensao_bateria:'🔋', frequencia_gerador:'〰️',
-          gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
-        };
-
-        const resultados = await Promise.all(camposPrioritarios.map(c => svc.getUltimoPorCampo(c)));
-        const grid = document.getElementById('readingsGrid');
-        if (!grid) return;
-
-        grid.innerHTML = camposPrioritarios.map((campo, i) => {
-          const cfg   = svc.CAMPOS[campo];
-          const dado  = resultados[i];
-          const valor = dado ? parseFloat(dado[campo]) : null;
-          const alerta = svc.getAlerta(campo, valor);
-          const cor   = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
-          return `
-            <div class="card stat-card" style="border-top:2px solid ${cor};">
-              <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
-              <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
-                ${svc.formatarValor(valor,'',cfg.decimais)}
-              </div>
-              <div class="stat-label">${cfg.label}</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
-            </div>`;
-        }).join('');
-
-        const ts = document.getElementById('readingsTimestamp');
-        if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
-      } catch (error) {
-        console.error('[Dashboard Leituras] Erro ao carregar dados:', error);
+      // ── Status card ──────────────────────────────────────────────
+      const statusCard = document.getElementById('generatorStatusCard');
+      if (statusCard) {
+        statusCard.style.display = 'block';
+        document.getElementById('generatorStatusText').textContent =
+          status.online ? '🟢 Gerador Online' : status.standby ? '🟡 Gerador Standby' : '🔴 Gerador Offline';
+        document.getElementById('generatorStatusSub').textContent =
+          status.ultimaLeitura
+            ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
+            : 'Sem leituras disponíveis';
+        document.getElementById('generatorStatusDot').style.background =
+          status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
       }
+
+      // ── Cards de leituras ────────────────────────────────────────
+      const camposPrioritarios = [
+        'velocidade_motor','pressao_oleo','temperatura_resfriamento',
+        'nivel_combustivel','tensao_bateria','frequencia_gerador',
+        'gerador_tensao_l1n','gerador_watts_total',
+      ];
+
+      const iconMap = {
+        velocidade_motor:'⚙️', pressao_oleo:'🔩',
+        temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
+        tensao_bateria:'🔋', frequencia_gerador:'〰️',
+        gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
+      };
+
+      const grid = document.getElementById('readingsGrid');
+      if (!grid) return;
+
+      grid.innerHTML = camposPrioritarios.map(campo => {
+        const cfg    = svc.CAMPOS[campo];
+        const dado   = dash[campo];
+        const valor  = dado?.valor ?? null;
+        const alerta = svc.getAlerta(campo, valor);
+        const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+        return `
+          <div class="card stat-card" style="border-top:2px solid ${cor};">
+            <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
+            <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
+              ${svc.formatarValor(valor, '', cfg.decimais)}
+            </div>
+            <div class="stat-label">${cfg.label}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
+          </div>`;
+      }).join('');
+
+      const ts = document.getElementById('readingsTimestamp');
+      if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+
+    } catch (error) {
+      console.error('[Dashboard Leituras] Erro ao carregar dados:', error);
+    }
+  }
+
+  function iniciarRealtime() {
+    if (_realtimeInitialized) return;
+    const svc = window.GeneratorReadingsService;
+    if (!svc) return;
+
+    if (typeof svc.unsubscribeRealtime === 'function') {
+      svc.unsubscribeRealtime();
     }
 
-    function iniciarRealtime() {
-      if (_realtimeInitialized) return;
-      const svc = window.GeneratorReadingsService;
-      if (!svc) return;
+    // BUG #11 CORRIGIDO: usa _debounceReload em vez de chamar
+    // loadReadingsDashboard() diretamente a cada INSERT.
+    svc.subscribeRealtime(() => _debounceReload());
+    _realtimeInitialized = true;
+    console.log('[Dashboard] Realtime inscrito ✓');
+  }
 
-      // Garante que o WebSocket anterior seja fechado se existir
-      if (typeof svc.unsubscribeRealtime === 'function') {
-        svc.unsubscribeRealtime();
-      }
-      
-      svc.subscribeRealtime(() => loadReadingsDashboard());
-      _realtimeInitialized = true;
+  // Carga inicial
+  loadReadingsDashboard();
+  iniciarRealtime();
+
+  // Polling de fallback a cada 60s (era 30s — reduzido pois Realtime cobre atualizações)
+  setInterval(loadReadingsDashboard, 60000);
+
+  window.addEventListener('beforeunload', () => {
+    clearTimeout(_debounceTimer);
+    if (window.GeneratorReadingsService) {
+      window.GeneratorReadingsService.unsubscribeRealtime();
     }
-
-    // Chama a carga inicial
-    loadReadingsDashboard();
-    
-    // Inicia o realtime uma única vez
-    iniciarRealtime();
-    
-    // Mantém o Polling de fallback
-    setInterval(loadReadingsDashboard, 30000);
-
-    // Limpa a conexão WebSocket antes de descarregar a página
-    window.addEventListener('beforeunload', () => {
-      if (window.GeneratorReadingsService && typeof window.GeneratorReadingsService.unsubscribeRealtime === 'function') {
-        window.GeneratorReadingsService.unsubscribeRealtime();
-      }
-    });
+  });
   </script>
 </body>
 </html>
