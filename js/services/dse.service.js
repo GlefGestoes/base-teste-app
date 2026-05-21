@@ -83,46 +83,59 @@ const DSEService = {
   // -------------------------------------------
   // SINCRONIZAÇÃO (CHAMA EDGE FUNCTION)
   // -------------------------------------------
+  // BUG #8 CORRIGIDO: sync() agora tem AbortController com timeout.
+  // Sem timeout, fetch para sync-generator podia travar indefinidamente,
+  // acumulando conexões pendentes e bloqueando o loop de polling.
   async sync(generator) {
-    // BUG #1 CORRIGIDO: valida generator antes de fazer a requisição
     if (!generator || !generator.serial) {
       throw new Error('Generator inválido ou sem serial para sync()');
     }
 
+    const cfg        = this._getConfig();
+    const timeoutMs  = window.CONFIG?.SYNC?.TIMEOUT ?? 8000;
+    const controller = new AbortController();
+    const timer      = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
       this._emitStatus('syncing');
-
-      const cfg = this._getConfig();
 
       const res = await fetch(
         `${cfg.FUNCTIONS_URL}/sync-generator`,
         {
-          method: 'POST',
+          method:  'POST',
           headers: this._getAuthHeaders(),
-          body: JSON.stringify({
+          body:    JSON.stringify({
             serial:       generator.serial,
             module_id:    generator.moduleId || generator.module_id || null,
             generator_id: generator.id       || null,
-          })
+          }),
+          signal: controller.signal,
         }
       );
 
+      clearTimeout(timer);
+
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errorText}`);
+        console.warn(`[DSEService] sync-generator HTTP ${res.status} serial=${generator.serial}`);
+        throw new Error(`HTTP ${res.status}`);
       }
 
       const data = await res.json();
-
       this._lastData = data;
       this._emit(data);
       this._emitStatus('online');
-
       return data;
 
     } catch (err) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        const msg = `Timeout (${timeoutMs}ms) ao chamar sync-generator`;
+        this._emitStatus('error', msg);
+        console.warn('[DSEService]', msg);
+        throw new Error(msg);
+      }
       this._emitStatus('error', err.message);
-      console.error('[DSEService] sync error:', err);
+      console.error('[DSEService] sync error:', err.message);
       throw err;
     }
   },
