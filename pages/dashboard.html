@@ -2,31 +2,29 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B1F33">
-  <title>Dashboard - AMZ App</title>
+  <title>Monitoramento - AMZ App</title>
   <link rel="manifest" href="../manifest.json">
   <link rel="icon" type="image/svg+xml" href="../assets/icons/logoamz.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <header class="navbar">
-    <a href="../pages/dashboard.html" class="navbar-brand">
+    <a href="../pages/dashboard.html" class="navbar-brand" data-page="dashboard">
       <div class="navbar-brand-icon">
         <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
       </div>
-      <span class="navbar-brand-text">AMZ App</span>
+      <span class="navbar-brand-text"><span></span></span>
     </a>
     <div class="navbar-actions">
-      <!-- Badge DSE no topo -->
-      <div id="dseStatusBadge" class="dse-badge">
-        <span id="dseStatusDot" class="status-dot"></span>
+      <!-- Badge status DSE -->
+      <div id="dseStatusBadge" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);margin-right:8px;">
+        <span id="dseStatusDot" style="width:8px;height:8px;border-radius:50%;background:#6b7280;display:inline-block;"></span>
         <span id="dseStatusText">Gateway</span>
-      </div>      
-      <button type="button" id="menuToggle" class="menu-toggle btn btn-secondary btn-sm" aria-label="Menu">
+      </div>
+      <button type="button" id="menuToggle" class="btn btn-secondary btn-sm">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -40,96 +38,103 @@
   <aside id="sidebar" class="sidebar">
     <nav>
       <ul class="sidebar-menu">
-        <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/geradores.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>Geradores</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link" data-page="dashboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link active" data-page="monitoramento"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link" data-page="relatorios"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link" data-page="clientes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/geradores.html" class="sidebar-menu-link" data-page="geradores"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>Geradores</a></li>
+        <li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link" data-page="configuracoes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
       </ul>
     </nav>
   </aside>
 
   <nav class="bottom-nav">
-    <a href="../pages/dashboard.html" class="bottom-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
-    <a href="../pages/monitoramento.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
-    <a href="../pages/relatorios.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
-    <a href="../pages/clientes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
-    <a href="../pages/geradores.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg><span>Geradores</span></a>
-    <a href="../pages/configuracoes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
+    <a href="../pages/dashboard.html" class="bottom-nav-item" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
+    <a href="../pages/monitoramento.html" class="bottom-nav-item active" data-page="monitoramento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
+    <a href="../pages/relatorios.html" class="bottom-nav-item" data-page="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
+    <a href="../pages/clientes.html" class="bottom-nav-item" data-page="clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
+    <a href="../pages/geradores.html" class="bottom-nav-item" data-page="geradores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg><span>Geradores</span></a>
+    <a href="../pages/configuracoes.html" class="bottom-nav-item" data-page="configuracoes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
   </nav>
 
   <main class="main-content">
     <header class="page-header">
-      <h1 class="page-title">Dashboard</h1>
-      <p class="page-subtitle">Visão geral do sistema</p>
+      <h1 class="page-title">Monitoramento</h1>
+      <p class="page-subtitle">Acompanhamento em tempo real</p>
     </header>
+    
+    <div style="padding: 0 var(--space-4);">
+      
+      <!-- Filtros -->
+      <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap;">
+        <select id="filterStatus" class="form-select" style="min-width:150px;">
+          <option value="">Todos os status</option>
+          <option value="Online">Online</option>
+          <option value="Offline">Offline</option>
+          <option value="Aguardando">Aguardando</option>
+        </select>
+        <select id="filterClient" class="form-select" style="min-width:150px;">
+          <option value="">Todos os clientes</option>
+        </select>
+      </div>
 
-    <!-- Stats DSE em tempo real -->
-    <div class="grid grid-cols-2 grid-cols-md-4" id="statsGrid"></div>
+    <div style="padding: 0 var(--space-4);">
 
-    <!-- Painel Gateway DSE -->
-    <section style="margin-top:var(--space-6);padding:0 var(--space-4);">
-      <div id="gatewayPanel" style="display:none;">
-        <div class="card" style="border-left:3px solid var(--color-accent);margin-bottom:var(--space-4);">
+      <!-- Painel Gateway DSE -->
+      <div id="gatewayPanel" style="display:none; margin-bottom: var(--space-4);">
+        <div class="card" style="border-left: 3px solid var(--color-accent);">
           <div class="card-header" style="margin-bottom:8px;">
-            <div class="card-title">🔌 Gateway DSE — <span id="gwSerial">—</span></div>
+            <div class="card-title" style="font-size:14px;">🔌 Gateway DSE — <span id="gwSerial">—</span></div>
             <span id="gwUpdateTime" style="font-size:11px;color:var(--text-muted);"></span>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:13px;">
-            <div>📶 <strong id="gwSignal">—</strong></div>
-            <div>📡 MQTT: <strong id="gwMqtt">—</strong></div>
+            <div>📶 <strong id="gwSignal">—</strong> (<span id="gwOperator">—</span>)</div>
             <div>🌐 IP: <strong id="gwIp">—</strong></div>
+            <div>📡 MQTT: <strong id="gwMqtt">—</strong></div>
             <div>📍 GPS: <strong id="gwGps">—</strong></div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Geradores -->
-    <section class="section-content" style="margin-top:var(--space-6);">
-      <div class="section-header">
-        <h2 class="section-title">Geradores</h2>
-        <a href="../pages/monitoramento.html">Ver todos</a>
-      </div>    
-      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
-        <p style="color:var(--text-muted);">Carregando...</p>
-      </div>
-    </section>
-
-    <!-- Alertas DSE -->
-    <section style="margin-top:var(--space-8);padding:0 var(--space-4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
-        <h2 style="font-size:var(--text-lg);font-weight:var(--font-semibold);">Status dos Módulos DSE</h2>
-      </div>
-      <div id="modulesPanel">
-        <p style="color:var(--text-muted);font-size:13px;">Aguardando dados do gateway...</p>
-      </div>
-    </section>
-
-    <!-- LEITURAS DSE REAIS -->
-    <section style="margin-top:var(--space-8);padding:0 var(--space-4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
-        <h2 style="font-size:var(--text-lg);font-weight:var(--font-semibold);">
-          ⚡ Leituras do Gerador — Tempo Real
-        </h2>
-        <span id="readingsTimestamp" style="font-size:11px;color:var(--text-muted);"></span>
-      </div>
-      <div class="grid grid-cols-2 grid-cols-md-4" id="readingsGrid">
-        <p style="color:var(--text-muted);font-size:13px;">Carregando leituras...</p>
-      </div>
-      <div id="generatorStatusCard" style="margin-top:var(--space-4);display:none;">
-        <div class="card" style="border-left:3px solid var(--color-accent);">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div style="font-weight:600;font-size:14px;" id="generatorStatusText">—</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="generatorStatusSub">—</div>
+   
+      <!-- PAINEL DE INSTRUMENTOS DSE REAIS -->
+      <div id="monitorReadingsPanel" style="margin-bottom:var(--space-6);">
+        <div class="card" style="margin-bottom:var(--space-4);">
+          <div class="card-header" style="margin-bottom:12px;">
+            <div class="card-title">⚡ Instrumentos — Módulo 6F2F052F62</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="monitorStatusDot" style="width:8px;height:8px;border-radius:50%;background:#6b7280;display:inline-block;"></span>
+              <span id="monitorStatusText" style="font-size:12px;color:var(--text-muted);">Carregando...</span>
             </div>
-            <div id="generatorStatusDot" style="width:12px;height:12px;border-radius:50%;background:#6b7280;"></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Motor</div>
+            <div class="grid grid-cols-2 grid-cols-md-4" id="motorGrid"></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Gerador Elétrico</div>
+            <div class="grid grid-cols-2 grid-cols-md-4" id="geradorGrid"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Rede</div>
+            <div class="grid grid-cols-2 grid-cols-md-4" id="redeGrid"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="margin-bottom:8px;">
+            <div class="card-title" style="font-size:13px;">📈 Velocidade Motor — Últimas 2h</div>
+            <span id="historicoCount" style="font-size:11px;color:var(--text-muted);"></span>
+          </div>
+          <div id="historicoVelocidade" style="font-size:12px;color:var(--text-muted);overflow-x:auto;white-space:nowrap;padding:4px 0;">
+            Carregando...
           </div>
         </div>
       </div>
-    </section>
+
+      <!-- Grid de geradores -->
+      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
+        <p style="color:var(--text-muted);padding:20px;">Carregando...</p>
+      </div>
+    </div>
   </main>
 
   <script src="../config.js"></script>
@@ -137,17 +142,28 @@
   <script src="../js/services/mock.service.js"></script>
   <script src="../js/services/api.service.js"></script>
   <script src="../js/services/auth.service.js"></script>
+  <script src="../js/services/permissions.service.js"></script>
   <script src="../js/services/dse.service.js"></script>
   <script src="../js/services/generator-readings.service.js"></script>
   <script src="../js/app.js"></script>
-
+  
   <script>
+  let _realtimeInitialized = false;
+  // BUG #11 CORRIGIDO (igual dashboard): debounce de 800ms para agrupar
+  // múltiplos INSERTs consecutivos em um único reload de leituras.
+  let _debounceTimerMonit = null;
+  function _debounceReloadMonit() {
+    clearTimeout(_debounceTimerMonit);
+    _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 800);
+  }
+
   (function() {
     if (!AuthService.isAuthenticated()) {
       window.location.href = '../index.html';
       return;
     }
 
+    // Sidebar
     document.getElementById('menuToggle').addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebarOverlay').classList.toggle('open');
@@ -157,10 +173,13 @@
       document.getElementById('sidebarOverlay').classList.remove('open');
     });
 
+    // Estado
     let allGenerators = [];
+    let dseData       = null;
 
-    // ─── STATUS BADGE ─────────────────────────────────────────────────────
+    // ─── DSE STATUS BADGE ─────────────────────────────────────────────────
     const STATUS_COLOR = { online:'#10b981', offline:'#ef4444', syncing:'#f59e0b', error:'#ef4444' };
+
     function updateStatusBadge(status) {
       document.getElementById('dseStatusDot').style.background = STATUS_COLOR[status] || '#6b7280';
       document.getElementById('dseStatusText').textContent = {
@@ -169,183 +188,144 @@
       }[status] || 'Gateway';
     }
 
-    // ─── PAINEL GATEWAY ──────────────────────────────────────────────────
+    // ─── PAINEL GATEWAY ───────────────────────────────────────────────────
     function updateGatewayPanel(data) {
+      dseData = data;
       document.getElementById('gatewayPanel').style.display = 'block';
       document.getElementById('gwSerial').textContent    = data.device?.serial ?? '—';
       document.getElementById('gwIp').textContent        = data.gsm?.ip        ?? '—';
+      document.getElementById('gwOperator').textContent  = data.gsm?.operator  ?? '—';
       document.getElementById('gwMqtt').textContent      = data.mqtt?.connected ? 'Conectado' : 'Desconectado';
       document.getElementById('gwUpdateTime').textContent = 'Atualizado: ' + new Date(data.capturedAt).toLocaleTimeString('pt-BR');
 
       const bars = ['○○○○○','●○○○○','●●○○○','●●●○○','●●●●○','●●●●●'];
-      document.getElementById('gwSignal').textContent = (bars[data.gsm?.signal] || '—') + ' ' + (data.gsm?.operator ?? '');
+      document.getElementById('gwSignal').textContent = (bars[data.gsm?.signal] || '—') + ' ' + (data.gsm?.type ?? '');
       document.getElementById('gwGps').textContent = data.gps?.hasFix
         ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}`
         : 'Sem sinal';
 
-      // Atualiza status dos cards de geradores
       const moduleMap = {};
       (data.modules ?? []).forEach(m => { if (m.serial) moduleMap[m.serial.toUpperCase()] = m; });
+
       allGenerators.forEach(g => {
         const mod = moduleMap[g.module_id?.toUpperCase()];
-        if (mod) g.status = mod.online ? 'Online' : 'Offline';
+        if (mod) {
+          g.status   = mod.online ? 'Online' : 'Offline';
+          g.firmware = mod.firmware || g.firmware;
+          g.protocol = mod.protocol || g.protocol;
+          g.dse_lat  = mod.latitude;
+          g.dse_lon  = mod.longitude;
+        }
       });
-      renderGenerators(allGenerators);
 
-      // Renderiza módulos DSE
-      renderModules(data.modules ?? []);
-
-      // Atualiza stats
-      renderStats(data, allGenerators);
+      renderGenerators(applyFilters());
     }
 
-    // ─── STATS ────────────────────────────────────────────────────────────
-    function renderStats(dseData, generators) {
-      const online  = generators.filter(g => g.status === 'Online').length;
-      const offline = generators.filter(g => g.status === 'Offline').length;
-      const total   = generators.length;
-      const signal  = dseData?.gsm?.signal ?? 0;
-      const bars    = ['○○○○○','●○○○○','●●○○○','●●●○○','●●●●○','●●●●●'];
-
-      document.getElementById('statsGrid').innerHTML = `
-        <div class="card stat-card">
-          <div class="stat-icon success">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
-          </div>
-          <div class="stat-value">${online}</div>
-          <div class="stat-label">Online</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">${total ? Math.round(online/total*100) : 0}% do total</div>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon error">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="15" y1="9" x2="9" y2="15"></line>
-              <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
-          </div>
-          <div class="stat-value">${offline}</div>
-          <div class="stat-label">Offline</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">Sem conexão DSE</div>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon info">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>
-            </svg>
-          </div>
-          <div class="stat-value">${dseData?.mqtt?.connected ? '✅' : '❌'}</div>
-          <div class="stat-label">MQTT</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">${dseData?.mqtt?.broker || '—'}</div>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon warning">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1.42 9a16 16 0 0 1 21.16 0M5 12.55a11 11 0 0 1 14.08 0M10.5 16.05a5 5 0 0 1 3 0M12 20h.01"></path>
-            </svg>
-          </div>
-          <div class="stat-value" style="font-size:var(--text-xl);">${bars[signal]}</div>
-          <div class="stat-label">GSM Signal</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">${dseData?.gsm?.operator || '—'}</div>
-        </div>
-      `;
+    // ─── FILTROS ──────────────────────────────────────────────────────────
+    function applyFilters() {
+      const status = document.getElementById('filterStatus').value;
+      const client = document.getElementById('filterClient').value;
+      return allGenerators.filter(g =>
+        (!status || g.status === status) &&
+        (!client || String(g.client_id) === client)
+      );
     }
 
-    // ─── GERADORES ────────────────────────────────────────────────────────
+    document.getElementById('filterStatus').addEventListener('change', () => renderGenerators(applyFilters()));
+    document.getElementById('filterClient').addEventListener('change', () => renderGenerators(applyFilters()));
+
+    // ─── RENDER GERADORES ─────────────────────────────────────────────────
+    function statusClass(s) {
+      return s === 'Online' ? 'badge-online' : s === 'Offline' ? 'badge-offline' : 'badge-warning';
+    }
+
     function renderGenerators(list) {
       const container = document.getElementById('generatorsGrid');
       if (!list.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);">Nenhum gerador cadastrado.</p>';
+        container.innerHTML = '<p style="color:var(--text-muted);padding:20px;">Nenhum gerador encontrado.</p>';
         return;
       }
-      container.innerHTML = list.slice(0, 6).map(g => `
+
+      container.innerHTML = list.map(g => {
+        const mod = dseData?.modules?.find(m => m.serial?.toUpperCase() === g.serial?.toUpperCase());
+        const isOnline = g.status === 'Online';
+
+        return `
         <div class="card">
           <div class="card-header">
             <div>
               <div class="card-title">${g.serial || '—'}</div>
-              <div style="font-size:var(--text-xs);color:var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
+              <div style="font-size:12px;color:#aaa;">${g.clientName || 'Sem cliente'}</div>
             </div>
-            <span class="badge ${g.status === 'Online' ? 'badge-online' : g.status === 'Offline' ? 'badge-offline' : 'badge-warning'}">${g.status || 'Aguardando'}</span>
+            <span class="badge ${statusClass(g.status)}">${g.status || 'Aguardando'}</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin-top:8px;font-size:13px;">
-            <div>
-              <div style="color:var(--text-muted);font-size:11px;">Módulo</div>
-              <div>${g.module_id || '—'}</div>
-            </div>
-            <div>
-              <div style="color:var(--text-muted);font-size:11px;">Protocolo</div>
-              <div>${g.protocol || 'RS485'}</div>
-            </div>
-            <div>
-              <div style="color:var(--text-muted);font-size:11px;">Local</div>
-              <div>${g.local || '—'}</div>
-            </div>
-            <div>
-              <div style="color:var(--text-muted);font-size:11px;">Cidade/UF</div>
-              <div>${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // ─── MÓDULOS DSE ──────────────────────────────────────────────────────
-    function renderModules(modules) {
-      const container = document.getElementById('modulesPanel');
-      if (!modules.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Nenhum módulo DSE detectado.</p>';
-        return;
-      }
-      container.innerHTML = modules.map(m => `
-        <div class="card" style="margin-bottom:var(--space-3);">
-          <div style="display:flex;gap:var(--space-3);align-items:center;">
-            <div class="stat-icon ${m.online ? 'success' : 'error'}" style="flex-shrink:0;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="7" width="18" height="14" rx="2"></rect>
-                <path d="M7 7V4h2v3M15 7V4h2v3"></path>
-              </svg>
-            </div>
-            <div style="flex:1;">
-              <div style="font-weight:500;">Módulo: ${m.serial || '—'}</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
-                ${m.online ? '🟢 Online' : '🔴 Offline'} &nbsp;·&nbsp;
-                ${m.connected ? '✅ Conectado' : '❌ Desconectado'} &nbsp;·&nbsp;
-                ${m.protocol || 'RS485'}
-                ${m.firmware ? ' &nbsp;·&nbsp; FW: ' + m.firmware : ''}
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin:12px 0;">
+            <div class="stat-card">
+              <div class="stat-icon ${isOnline ? 'success' : 'error'}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
               </div>
-              ${m.latitude ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📍 ${m.latitude.toFixed(4)}, ${m.longitude.toFixed(4)}</div>` : ''}
+              <div class="stat-value" style="font-size:var(--text-lg);">${isOnline ? 'Online' : 'Offline'}</div>
+              <div class="stat-label">Conexão DSE</div>
             </div>
-            <span class="badge ${m.online ? 'badge-online' : 'badge-offline'}">${m.online ? 'Online' : 'Offline'}</span>
+            <div class="stat-card">
+              <div class="stat-icon info">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>
+                </svg>
+              </div>
+              <div class="stat-value" style="font-size:var(--text-lg);">${g.protocol || mod?.protocol || 'RS485'}</div>
+              <div class="stat-label">Protocolo</div>
+            </div>
           </div>
-        </div>
-      `).join('');
+          <div style="background:var(--bg-input);border-radius:var(--radius-lg);padding:var(--space-3);font-size:13px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="color:var(--text-muted);">Módulo ID</span>
+              <span>${g.module_id || '—'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="color:var(--text-muted);">Firmware</span>
+              <span>${g.firmware || mod?.firmware || '—'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="color:var(--text-muted);">Local</span>
+              <span>${g.local || '—'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:var(--text-muted);">Cidade/UF</span>
+              <span>${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</span>
+            </div>
+          </div>
+          ${mod?.latitude ? `
+          <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">
+            📍 GPS: ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
+          </div>` : ''}
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <a href="../pages/geradores.html" class="btn btn-secondary" style="flex:1;text-align:center;" data-page="geradores">Gerenciar</a>
+          </div>
+        </div>`;
+      }).join('');
     }
 
-    // ─── CARREGAR GERADORES ───────────────────────────────────────────────
-    async function loadDashboard() {
+    // ─── CARREGAR DADOS ───────────────────────────────────────────────────
+    async function loadGenerators() {
       try {
         const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
         const res  = await _svc.getGenerators();
         const raw  = res?.data ?? res;
         allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({
-          ...g, clientName: g.clients?.name || 'Sem cliente'
+          ...g,
+          clientName: g.clients?.name || 'Sem cliente',
         }));
 
-        // Mostra geradores mesmo antes do DSE responder
-        renderGenerators(allGenerators);
+        const clients = [...new Map(allGenerators.map(g => [g.client_id, g.clientName])).entries()];
+        const selCli  = document.getElementById('filterClient');
+        selCli.innerHTML = '<option value="">Todos os clientes</option>' +
+          clients.filter(([id]) => id).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
 
-        // Stats iniciais sem DSE
-        document.getElementById('statsGrid').innerHTML = `
-          <div class="card stat-card">
-            <div class="stat-icon success"></div>
-            <div class="stat-value">${allGenerators.length}</div>
-            <div class="stat-label">Geradores</div>
-            <div style="font-size:11px;color:var(--text-muted);">Cadastrados</div>
-          </div>`;
+        renderGenerators(applyFilters());
 
-        // Avisa DSEService
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
           const first = allGenerators.find(g => g.serial?.trim());
           if (first) {
@@ -357,8 +337,11 @@
             }
           }
         }
-      } catch(err) {
-        console.error('[Dashboard] Erro:', err);
+
+      } catch (err) {
+        console.error('[Monitoramento] Erro ao carregar geradores:', err);
+        document.getElementById('generatorsGrid').innerHTML =
+          '<p style="color:var(--text-muted);padding:20px;">Erro ao carregar geradores.</p>';
       }
     }
 
@@ -369,120 +352,196 @@
     }
 
     window.addEventListener('beforeunload', () => {
+      clearTimeout(_debounceTimerMonit);
       if (window.DSEService) window.DSEService.destroy();
+      if (window.GeneratorReadingsService && typeof window.GeneratorReadingsService.unsubscribeRealtime === 'function') {
+        window.GeneratorReadingsService.unsubscribeRealtime();
+      }
     });
 
-    loadDashboard();
+    loadGenerators();
+    loadMonitoramentoReadings();
+    iniciarRealtime();
   })();
-  </script>
-
-  <script>
-  let _realtimeInitialized = false;
-  // BUG #11 CORRIGIDO: debounce impede que múltiplos INSERTs rápidos
-  // (ex: DSE inserindo vários instrumentos em sequência) disparem
-  // loadReadingsDashboard() múltiplas vezes simultaneamente.
-  let _debounceTimer = null;
-  function _debounceReload() {
-    clearTimeout(_debounceTimer);
-    _debounceTimer = setTimeout(() => loadReadingsDashboard(), 800);
-  }
-
-  async function loadReadingsDashboard() {
-    if (!window.GeneratorReadingsService) return;
-    const svc = window.GeneratorReadingsService;
-
-    try {
-      // BUG #3 CORRIGIDO: usa getDashboard() que faz 1 query em vez de
-      // 8 chamadas individuais getUltimoPorCampo() separadas.
-      const [status, dash] = await Promise.all([
-        svc.getStatus(),
-        svc.getDashboard(),
-      ]);
-
-      // ── Status card ──────────────────────────────────────────────
-      const statusCard = document.getElementById('generatorStatusCard');
-      if (statusCard) {
-        statusCard.style.display = 'block';
-        document.getElementById('generatorStatusText').textContent =
-          status.online ? '🟢 Gerador Online' : status.standby ? '🟡 Gerador Standby' : '🔴 Gerador Offline';
-        document.getElementById('generatorStatusSub').textContent =
-          status.ultimaLeitura
-            ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
-            : 'Sem leituras disponíveis';
-        document.getElementById('generatorStatusDot').style.background =
-          status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
-      }
-
-      // ── Cards de leituras ────────────────────────────────────────
-      const camposPrioritarios = [
-        'velocidade_motor','pressao_oleo','temperatura_resfriamento',
-        'nivel_combustivel','tensao_bateria','frequencia_gerador',
-        'gerador_tensao_l1n','gerador_watts_total',
-      ];
-
-      const iconMap = {
-        velocidade_motor:'⚙️', pressao_oleo:'🔩',
-        temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
-        tensao_bateria:'🔋', frequencia_gerador:'〰️',
-        gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
-      };
-
-      const grid = document.getElementById('readingsGrid');
-      if (!grid) return;
-
-      grid.innerHTML = camposPrioritarios.map(campo => {
-        const cfg    = svc.CAMPOS[campo];
-        const dado   = dash[campo];
-        const valor  = dado?.valor ?? null;
-        const alerta = svc.getAlerta(campo, valor);
-        const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
-        return `
-          <div class="card stat-card" style="border-top:2px solid ${cor};">
-            <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
-            <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
-              ${svc.formatarValor(valor, '', cfg.decimais)}
-            </div>
-            <div class="stat-label">${cfg.label}</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
-          </div>`;
-      }).join('');
-
-      const ts = document.getElementById('readingsTimestamp');
-      if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
-
-    } catch (error) {
-      console.error('[Dashboard Leituras] Erro ao carregar dados:', error);
-    }
-  }
+    
+  // Cache dos últimos valores conhecidos de cada campo
+  const _ultimosValores = {};
 
   function iniciarRealtime() {
     if (_realtimeInitialized) return;
     const svc = window.GeneratorReadingsService;
     if (!svc) return;
 
-    if (typeof svc.unsubscribeRealtime === 'function') {
+    // FIX-WS: só unsubscribe se houver WS aberto — evita log enganoso
+    if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) {
       svc.unsubscribeRealtime();
     }
 
-    // BUG #11 CORRIGIDO: usa _debounceReload em vez de chamar diretamente
-    svc.subscribeRealtime(() => _debounceReload());
+    if (typeof svc.subscribeRealtime === 'function') {
+      svc.subscribeRealtime((record) => {
+        atualizarCardDireto(record);
+        _debounceReloadMonit();
+      });
+    }
+
     _realtimeInitialized = true;
-    console.log('[Dashboard] Realtime inscrito ✓');
+    console.log('[Monitoramento] Realtime inscrito ✓');
   }
 
-  // Carga inicial
-  loadReadingsDashboard();
-  iniciarRealtime();
+  // Atualiza apenas o card cujo campo chegou no INSERT, sem nova requisição HTTP
+  function atualizarCardDireto(record) {
+    const svc = window.GeneratorReadingsService;
+    if (!svc || !record) return;
 
-  // Polling de fallback a cada 60s
-  setInterval(loadReadingsDashboard, 60000);
+    // Detecta qual campo veio neste INSERT (a edge function insere 1 campo por row)
+    const todosCampos = [
+      'velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo',
+      'nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor',
+      'frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n',
+      'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total',
+      'frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+    ];
 
-  window.addEventListener('beforeunload', () => {
-    clearTimeout(_debounceTimer);
-    if (window.GeneratorReadingsService) {
-      window.GeneratorReadingsService.unsubscribeRealtime();
+    let campoAtualizado = null;
+    for (const c of todosCampos) {
+      if (record[c] !== null && record[c] !== undefined) {
+        _ultimosValores[c] = { valor: record[c], timestamp: record.reading_timestamp };
+        campoAtualizado = c;
+        break;
+      }
     }
-  });
+
+    if (!campoAtualizado) return;
+
+    // Atualiza o card visual diretamente pelo data-campo
+    const cardEl = document.querySelector(`[data-campo="${campoAtualizado}"]`);
+    if (cardEl) {
+      const cfg       = svc.CAMPOS[campoAtualizado];
+      const valor     = parseFloat(record[campoAtualizado]);
+      const alerta    = svc.getAlerta(campoAtualizado, valor);
+      const cor       = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+      // FIX-DOM: null guards nos filhos do card (podem não existir se HTML mudou)
+      const elValor   = cardEl.querySelector('.card-valor');
+      const elTs      = cardEl.querySelector('.card-ts');
+
+      cardEl.style.borderLeftColor = cor;
+      if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, cfg.unidade, cfg.decimais); }
+      if (elTs)    { elTs.textContent = svc.formatarTimestamp(record.reading_timestamp); }
+
+      // Pulso visual para indicar atualização em tempo real
+      cardEl.classList.remove('card-pulse');
+      void cardEl.offsetWidth;
+      cardEl.classList.add('card-pulse');
+    }
+
+    // Sincroniza estado dos botões de controle com o DSE (bidirecional DSE→PWA)
+    if (campoAtualizado === 'velocidade_motor' && window.GeneratorControlsService) {
+      const moduleId = record.module_id || record.moduleId || null;
+      if (moduleId) {
+        window.GeneratorControlsService.syncFromModuleId(moduleId, record.velocidade_motor);
+      }
+    }
+
+    // Se o campo é velocidade_motor, atualiza o status e adiciona ao histórico inline
+    if (campoAtualizado === 'velocidade_motor') {
+      const vel    = parseFloat(record.velocidade_motor);
+      const online = vel > 0;
+      document.getElementById('monitorStatusDot').style.background = online ? '#10b981' : '#ef4444';
+      document.getElementById('monitorStatusText').textContent =
+        online
+          ? `Online · ${vel} RPM · ${svc.formatarTimestamp(record.reading_timestamp)}`
+          : `Parado · ${svc.formatarTimestamp(record.reading_timestamp)}`;
+
+      // Adiciona nova entrada no histórico de velocidade sem recarregar
+      const histEl = document.getElementById('historicoVelocidade');
+      const histCount = document.getElementById('historicoCount');
+      if (histEl) {
+        const t   = new Date(record.reading_timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const cor = vel > 0 ? '#10b981' : '#6b7280';
+        const novoSpan = document.createElement('span');
+        novoSpan.style.cssText = `display:inline-block;margin-right:12px;color:${cor};animation:fadeIn .4s ease;`;
+        novoSpan.innerHTML = `${t}: <strong>${vel}</strong> RPM`;
+        histEl.appendChild(novoSpan);
+        histEl.scrollLeft = histEl.scrollWidth; // scroll para o final
+
+        const atual = parseInt(histCount.textContent) || 0;
+        histCount.textContent = `${atual + 1} leituras`;
+      }
+    }
+  }
+
+  async function loadMonitoramentoReadings() {
+    if (!window.GeneratorReadingsService) return;
+    const svc = window.GeneratorReadingsService;
+
+    const grupos = {
+      motor:   ['velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo','nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor'],
+      gerador: ['frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n','gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total'],
+      rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
+    };
+
+    const todosCampos = [...grupos.motor,...grupos.gerador,...grupos.rede];
+    const resultados  = await Promise.all(todosCampos.map(c => svc.getUltimoPorCampo(c)));
+    const mapa = {};
+    todosCampos.forEach((c,i) => { mapa[c] = resultados[i]; });
+
+    const velDado = mapa['velocidade_motor'];
+    const vel     = velDado ? parseFloat(velDado.velocidade_motor) : null;
+    const online  = vel !== null && vel > 0;
+    document.getElementById('monitorStatusDot').style.background = online ? '#10b981' : '#ef4444';
+    document.getElementById('monitorStatusText').textContent = velDado
+      ? (online ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}` : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
+      : 'Sem dados recentes';
+
+    function renderGrupo(id, campos) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = campos.map(campo => {
+        const cfg    = svc.CAMPOS[campo];
+        const dado   = mapa[campo];
+        const valor  = dado ? parseFloat(dado[campo]) : null;
+        const alerta = svc.getAlerta(campo, valor);
+        const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+        // data-campo permite localizar e atualizar o card diretamente via Realtime
+        return `
+          <div class="card" data-campo="${campo}" style="padding:10px;border-left:2px solid ${cor};transition:border-color .3s,box-shadow .3s;">
+            <div style="font-size:11px;color:var(--text-muted);">${cfg.label}</div>
+            <div class="card-valor" style="font-size:18px;font-weight:600;color:${cor};margin:2px 0;transition:color .3s;">
+              ${svc.formatarValor(valor,cfg.unidade,cfg.decimais)}
+            </div>
+            <div class="card-ts" style="font-size:10px;color:var(--text-muted);">${dado ? svc.formatarTimestamp(dado.reading_timestamp) : '—'}</div>
+          </div>`;
+      }).join('');
+      // Preenche o cache com os valores carregados
+      campos.forEach(campo => {
+        const dado = mapa[campo];
+        if (dado) _ultimosValores[campo] = { valor: dado[campo], timestamp: dado.reading_timestamp };
+      });
+    }
+
+    renderGrupo('motorGrid',   grupos.motor);
+    renderGrupo('geradorGrid', grupos.gerador);
+    renderGrupo('redeGrid',    grupos.rede);
+
+    const historico = await svc.getHistorico('velocidade_motor', 2, 30);
+    const histEl    = document.getElementById('historicoVelocidade');
+    const histCount = document.getElementById('historicoCount');
+    if (histEl && historico.length) {
+      histCount.textContent = `${historico.length} leituras`;
+      histEl.innerHTML = historico.map(r => {
+        const v   = parseFloat(r.velocidade_motor);
+        const cor = v > 0 ? '#10b981' : '#6b7280';
+        const t   = new Date(r.reading_timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        return `<span style="display:inline-block;margin-right:12px;color:${cor};">${t}: <strong>${v}</strong> RPM</span>`;
+      }).join('');
+    } else if (histEl) {
+      histEl.textContent = 'Sem leituras nas últimas 2 horas.';
+    }
+  }
+
+  // FIX-INTERVAL: referência para limpeza no beforeunload
+  const _monitorFallback = setInterval(loadMonitoramentoReadings, 30000);
+  window.addEventListener('beforeunload', () => { clearInterval(_monitorFallback); }, { once: true });
   </script>
 </body>
 </html>
