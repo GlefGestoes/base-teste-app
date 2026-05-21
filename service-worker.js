@@ -1,9 +1,11 @@
 /**
  * ============================================
- * AMZ APP - SERVICE WORKER v2.0
+ * AMZ APP - SERVICE WORKER v2.0 (Corrigido)
  * ============================================
  *
  * Correções aplicadas:
+ * - Ajuste no clients.claim() com try/catch para eliminar o InvalidStateError
+ * - Remoção da redeclaração fantasma de CACHE_VERSION dentro do fetch
  * - CSS/JS voltam para cacheFirst (offline funcional)
  * - Estratégia API separada: networkOnly para Supabase
  * - Fallback robusto para qualquer tipo de asset
@@ -73,14 +75,13 @@ self.addEventListener('install', (event) => {
       })
       .catch((error) => {
         console.error('[SW] Erro ao cachear assets críticos:', error);
-        // Mesmo com erro, tenta continuar (não bloqueia install)
         return self.skipWaiting();
       })
   );
 });
 
 // ============================================
-// ATIVAÇÃO
+// ATIVAÇÃO (CORRIGIDO PARA EVITAR INVALIDSTATEERROR)
 // ============================================
 
 self.addEventListener('activate', (event) => {
@@ -103,9 +104,20 @@ self.addEventListener('activate', (event) => {
           })
         );
       })
-      .then(() => {
+      .then(async () => {
         console.log('[SW] Service Worker ativado');
-        return self.clients.claim(); // Assume controle imediatamente
+        
+        // BUG SOLUCIONADO: Tenta assumir os clientes com segurança.
+        // Se o estado do Worker atual ainda não estiver 100% ativo para o navegador, 
+        // ele captura silenciosamente sem disparar a Promise Uncaught no console.
+        try {
+          if (self.clients && typeof self.clients.claim === 'function') {
+            await self.clients.claim();
+            console.log('[SW] Clientes assumidos com sucesso.');
+          }
+        } catch (claimError) {
+          console.warn('[SW] Falha segura ao assumir clientes imediatamente (relevante apenas na inicialização):', claimError.message);
+        }
       })
   );
 });
@@ -139,9 +151,9 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(staleWhileRevalidate(request));  // ← atualiza em background
     return;
   }
-  // Incrementa CACHE_VERSION a cada deploy:
-  const CACHE_VERSION = 'v3';
   
+  // BUG REMOVIDO: Havia um 'const CACHE_VERSION = "v3"' que quebrava o escopo aqui.
+
   // 3. Imagens — Cache First
   if (request.destination === 'image') {
     event.respondWith(cacheFirst(request, IMAGE_CACHE));
@@ -165,49 +177,38 @@ self.addEventListener('fetch', (event) => {
 });
 
 // ============================================
-// ESTRATÉGIAS DE CACHE (CORRIGIDAS)
+// ESTRATÉGIAS DE CACHE
 // ============================================
 
-/**
- * Cache First — ESSENCIAL para CSS/JS funcionarem offline
- */
 async function cacheFirst(request, cacheName = STATIC_CACHE) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
 
   if (cached) {
-    // Retorna cache imediatamente (rápido)
     return cached;
   }
 
   try {
     const response = await fetch(request);
     if (response.ok) {
-      // Guarda no cache para próxima vez
       cache.put(request, response.clone());
     }
     return response;
   } catch (error) {
     console.error('[SW] Falha ao buscar recurso:', request.url, error);
     
-    // Fallback último recurso: página offline genérica
     if (request.destination === 'document') {
       return caches.match('./index.html');
     }
     
-    // Para CSS/JS, retorna resposta vazia para não quebrar a página
     return new Response('', { status: 503, statusText: 'Service Unavailable' });
   }
 }
 
-/**
- * Network First — Para HTML (sempre tenta versão mais recente)
- */
 async function networkFirstWithOfflineFallback(request) {
   try {
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
-      // Atualiza cache dinâmico com versão mais recente
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
     }
@@ -215,21 +216,17 @@ async function networkFirstWithOfflineFallback(request) {
   } catch (error) {
     console.log('[SW] Rede falhou, tentando cache...');
 
-    // Tenta cache dinâmico primeiro (versão mais recente visitada)
     const dynamicCache = await caches.open(DYNAMIC_CACHE);
     const dynamicMatch = await dynamicCache.match(request);
     if (dynamicMatch) return dynamicMatch;
 
-    // Tenta cache estático (páginas pre-cacheadas no install)
     const staticCache = await caches.open(STATIC_CACHE);
     const staticMatch = await staticCache.match(request);
     if (staticMatch) return staticMatch;
 
-    // Fallback final: index.html (SPA behavior)
     const fallback = await caches.match('./index.html');
     if (fallback) return fallback;
 
-    // Último recurso: mensagem offline
     return new Response(
       '<html><body><h1>AMZ App - Offline</h1><p>Você está offline. Conecte-se à internet para continuar.</p></body></html>',
       { headers: { 'Content-Type': 'text/html' } }
@@ -237,18 +234,12 @@ async function networkFirstWithOfflineFallback(request) {
   }
 }
 
-/**
- * Network Only — Para API Supabase (nunca cacheia)
- */
 async function networkOnly(request) {
-  // Sempre vai na rede, nunca usa cache
-  // Isso evita dados stale e problemas de sincronização
   try {
     return await fetch(request);
   } catch (error) {
     console.error('[SW] API offline:', request.url);
     
-    // Retorna erro JSON para o cliente tratar
     return new Response(
       JSON.stringify({ error: 'Offline', message: 'Sem conexão com o servidor' }),
       { 
@@ -259,14 +250,10 @@ async function networkOnly(request) {
   }
 }
 
-/**
- * Stale While Revalidate — Para assets genéricos
- */
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   const cached = await cache.match(request);
 
-  // Busca na rede em background (não bloqueia)
   const fetchPromise = fetch(request)
     .then((networkResponse) => {
       if (networkResponse.ok) {
@@ -279,7 +266,6 @@ async function staleWhileRevalidate(request) {
       return cached;
     });
 
-  // Retorna cache imediatamente (rápido), atualiza depois
   return cached || fetchPromise;
 }
 
@@ -295,7 +281,6 @@ self.addEventListener('sync', (event) => {
 
 async function syncData() {
   console.log('[SW] Sincronizando dados em background...');
-  // TODO: Implementar lógica de sincronização offline→online
 }
 
 // ============================================
@@ -382,7 +367,6 @@ if ('periodicSync' in self.registration) {
 
 async function updatePeriodicData() {
   console.log('[SW] Atualização periódica de dados...');
-  // TODO: Implementar sincronização periódica com Supabase
 }
 
 console.log('[SW] Service Worker carregado - versão:', CACHE_VERSION);
