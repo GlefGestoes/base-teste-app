@@ -448,16 +448,26 @@
         const cfg    = svc.CAMPOS[campo];
         const dado   = dash[campo];
         const valor  = dado?.valor ?? null;
+        const stale  = dado?.stale ?? false;
+        const ageMin = dado?.ageMin ?? null;
         const alerta = svc.getAlerta(campo, valor);
-        const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+        // FIX-STALENESS: cor âmbar para dados > 2h
+        const cor = stale ? '#d97706'
+          : alerta === 'critico' ? '#ef4444'
+          : alerta === 'atencao' ? '#f59e0b'
+          : 'var(--color-accent)';
+        const staleTag = stale && ageMin !== null
+          ? `<div style="font-size:9px;color:#d97706;margin-top:2px;">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h atrás' : ageMin+'min atrás'}</div>`
+          : '';
         return `
-          <div class="card stat-card" style="border-top:2px solid ${cor};">
+          <div class="card stat-card" style="border-top:2px solid ${cor};${stale ? 'opacity:.85;' : ''}">
             <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
             <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
               ${svc.formatarValor(valor, '', cfg.decimais)}
             </div>
             <div class="stat-label">${cfg.label}</div>
             <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
+            ${staleTag}
           </div>`;
       }).join('');
 
