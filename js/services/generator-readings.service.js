@@ -326,8 +326,20 @@ const GeneratorReadingsService = {
       console.warn('[Realtime] Supabase URL não configurada — realtime desativado');
       return null;
     }
-    this._onNovaCallback  = onNova;
-    this._reconnectDelay  = 5000;  // BUG #7: reseta o delay ao subscrever
+
+    // FIX-WS: envolve o callback num wrapper que verifica se a página
+    // ainda está ativa antes de processar — protege contra callbacks
+    // disparados após navegação (stale closure)
+    this._onNovaCallback = (record) => {
+      if (document.hidden) {
+        console.debug('[Realtime] Evento ignorado — página em background');
+        return;
+      }
+      try { onNova(record); }
+      catch (e) { console.error('[Realtime] Erro no callback do subscriber:', e); }
+    };
+
+    this._reconnectDelay = 5000;
     this._conectarRealtime();
     return this._ws;
   },
