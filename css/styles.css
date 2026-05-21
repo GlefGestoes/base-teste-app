@@ -1006,6 +1006,21 @@ a:hover {
 /* ============================================
    ANIMATIONS
    ============================================ */
+/* ============================================================
+ * BUG #9 CORRIGIDO: .card-pulse não existia no CSS.
+ * Usada em monitoramento.html para dar feedback visual imediato
+ * quando um novo valor chega via Realtime WebSocket.
+ * Sem esta regra, o addClass('card-pulse') não tinha efeito visual.
+ * ============================================================ */
+@keyframes cardPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  60%  { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.card-pulse {
+  animation: cardPulse 0.7s ease-out;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
