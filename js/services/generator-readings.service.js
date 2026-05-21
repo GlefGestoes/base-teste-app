@@ -1,44 +1,161 @@
 /**
  * ============================================
- * AMZ APP - GENERATOR READINGS SERVICE
+ * AMZ APP - GENERATOR READINGS SERVICE  v3
  * Leituras reais do DSE via Supabase
  * ============================================
- * Busca dados da tabela generator_readings
  * Usado em: dashboard, monitoramento, relatorios
+ *
+ * CORREÇÕES v3:
+ *
+ *  BUG #1 — cache: 'no-store' ausente nos fetches GET
+ *    → Browser cacheava respostas REST → dados sempre desatualizados.
+ *    → CORRIGIDO: todas as chamadas usam cache:'no-store' + header
+ *      'Cache-Control':'no-cache' para garantir dados frescos.
+ *
+ *  BUG #2 — Sem AbortController / timeout nas requisições
+ *    → Fetch podia travar indefinidamente, bloqueando atualizações.
+ *    → CORRIGIDO: _fetchWithTimeout() envolve todos os fetch com
+ *      AbortController + timeout configurável (default CONFIG.SYNC.TIMEOUT).
+ *
+ *  BUG #3 — getDashboard() fazia 17 requisições HTTP paralelas
+ *    → Cada atualização (incluindo cada INSERT Realtime) disparava
+ *      17 fetch simultâneos. Em dashboard.html chamava 8 por evento.
+ *    → CORRIGIDO: getDashboard() faz UMA única query que busca as
+ *      últimas 50 linhas e pivot em JS para extrair o valor mais
+ *      recente de cada campo. 1 request no lugar de 17.
+ *
+ *  BUG #4 — JOIN do WebSocket sem campo join_ref
+ *    → Protocolo Phoenix Channels exige join_ref no JOIN; sem ele
+ *      o servidor não cria o canal e a subscription falha silenciosamente.
+ *    → CORRIGIDO: join_ref adicionado ao JOIN e a todos os envios.
+ *
+ *  BUG #5 — access_token ausente quando usuário não está logado
+ *    → Sem access_token no JOIN, o Supabase rejeita a subscription
+ *      em tabelas com RLS habilitado.
+ *    → CORRIGIDO: usa token do usuário se disponível, caso contrário
+ *      usa ANON_KEY como fallback — permite subscrição anon.
+ *
+ *  BUG #6 — onmessage sem verificação de event === 'postgres_changes'
+ *    → Mensagens de controle (heartbeat_reply, phx_close etc.) podiam
+ *      ser processadas incorretamente.
+ *    → CORRIGIDO: verifica event === 'postgres_changes' explicitamente.
+ *
+ *  BUG #7 — Reconexão Realtime sem backoff exponencial
+ *    → Falhas contínuas reconectavam a cada 5s fixos, causando
+ *      storm de conexões WebSocket em caso de outage do Supabase.
+ *    → CORRIGIDO: backoff exponencial (5s → 10s → 20s → ... máx 120s).
  * ============================================
  */
 
 const GeneratorReadingsService = {
 
-  // ── Config ────────────────────────────────
+  // ── Configuração ──────────────────────────
   _supabaseUrl:  null,
   _anonKey:      null,
-  _realtimeSub:  null,
-  _heartbeatTimer: null,
-  _reconnectTimer: null,
-  _onNovaCallback: null,
-  _listeners:    [],
+
+  // ── Realtime ──────────────────────────────
+  _ws:              null,
+  _heartbeatTimer:  null,
+  _reconnectTimer:  null,
+  _onNovaCallback:  null,
+  _reconnectDelay:  5000,      // BUG #7: começa em 5s, dobra a cada falha
+  _maxReconnectDelay: 120000,  // BUG #7: máximo de 2 minutos
+  _wsRef:           0,         // BUG #4: contador de ref para mensagens WS
+
+  // ── Timeout padrão ────────────────────────
+  _timeout() {
+    return window.CONFIG?.SYNC?.TIMEOUT ?? 8000;
+  },
 
   _init() {
-    this._supabaseUrl = window.CONFIG?.SUPABASE?.URL;
-    this._anonKey     = window.CONFIG?.SUPABASE?.ANON_KEY;
+    if (!this._supabaseUrl) {
+      this._supabaseUrl = window.CONFIG?.SUPABASE?.URL;
+      this._anonKey     = window.CONFIG?.SUPABASE?.ANON_KEY;
+    }
   },
 
   _headers() {
     const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    const h = {
-      'apikey':       this._anonKey,
-      'Content-Type': 'application/json',
+    return {
+      // BUG #1 CORRIGIDO: sem Cache-Control, o browser cacheia GETs e
+      // retorna dados velhos mesmo depois de novos INSERTs no Supabase.
+      'Cache-Control': 'no-cache',
+      'apikey':        this._anonKey,
+      'Content-Type':  'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
-    if (token) h['Authorization'] = `Bearer ${token}`;
-    return h;
+  },
+
+  // ── BUG #2 CORRIGIDO: fetch com timeout ───
+  async _fetchWithTimeout(url, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this._timeout());
+    try {
+      const res = await fetch(url, {
+        ...options,
+        // BUG #1 CORRIGIDO: cache:'no-store' impede que o browser guarde
+        // a resposta em cache — cada chamada sempre busca do servidor.
+        cache:  'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        throw new Error(`[Readings] Timeout após ${this._timeout()}ms: ${url}`);
+      }
+      throw err;
+    }
+  },
+
+  // ── BUG #3 CORRIGIDO: getDashboard — 1 request em vez de 17 ──────────
+  // Busca as últimas 50 linhas e faz pivot em JS para obter o valor mais
+  // recente de cada campo. Reduz de 17 requisições paralelas para 1.
+  async getDashboard() {
+    this._init();
+    const campos = [
+      'velocidade_motor','pressao_oleo','temperatura_resfriamento',
+      'temperatura_oleo','nivel_combustivel','tensao_bateria',
+      'tensao_carga_alternador','frequencia_gerador','gerador_tensao_l1n',
+      'gerador_tensao_l2n','gerador_tensao_l3n','frequencia_rede',
+      'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+      'gerador_watts_total','tempo_funcionamento_motor','numero_partidas',
+    ];
+    try {
+      const selecao = ['reading_timestamp', ...campos].join(',');
+      const res = await this._fetchWithTimeout(
+        `${this._supabaseUrl}/rest/v1/generator_readings`
+        + `?select=${selecao}`
+        + `&order=reading_timestamp.desc`
+        + `&limit=60`,
+        { headers: this._headers() }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+
+      // Pivot: para cada campo, pega o primeiro row que tem valor não-nulo
+      const dash = {};
+      campos.forEach(c => {
+        const row = rows.find(r => r[c] !== null && r[c] !== undefined);
+        dash[c] = {
+          valor:     row ? parseFloat(row[c]) : null,
+          timestamp: row?.reading_timestamp ?? null,
+        };
+      });
+      console.log('[Readings] getDashboard — 1 query, pivot de', rows.length, 'linhas ✓');
+      return dash;
+    } catch (err) {
+      console.error('[Readings] getDashboard:', err.message);
+      return {};
+    }
   },
 
   // ── Última leitura consolidada (view) ─────
   async getUltimaLeitura() {
     this._init();
     try {
-      const res = await fetch(
+      const res = await this._fetchWithTimeout(
         `${this._supabaseUrl}/rest/v1/vw_ultima_leitura?select=*&limit=1`,
         { headers: this._headers() }
       );
@@ -46,7 +163,7 @@ const GeneratorReadingsService = {
       const data = await res.json();
       return data?.[0] ?? null;
     } catch (err) {
-      console.error('[Readings] getUltimaLeitura:', err);
+      console.error('[Readings] getUltimaLeitura:', err.message);
       return null;
     }
   },
@@ -55,7 +172,7 @@ const GeneratorReadingsService = {
   async getUltimoPorCampo(campo) {
     this._init();
     try {
-      const res = await fetch(
+      const res = await this._fetchWithTimeout(
         `${this._supabaseUrl}/rest/v1/generator_readings`
         + `?select=reading_timestamp,${campo}`
         + `&${campo}=not.is.null`
@@ -67,38 +184,8 @@ const GeneratorReadingsService = {
       const data = await res.json();
       return data?.[0] ?? null;
     } catch (err) {
-      console.error('[Readings] getUltimoPorCampo:', err);
+      console.error('[Readings] getUltimoPorCampo:', err.message);
       return null;
-    }
-  },
-
-  // ── Dashboard: busca cada campo individualmente ─
-  // NOTA: A edge function insere UMA linha por atributo (1 coluna por row).
-  // Por isso é necessário buscar cada campo separadamente.
-  async getDashboard() {
-    this._init();
-    const campos = [
-      'velocidade_motor','pressao_oleo','temperatura_resfriamento',
-      'nivel_combustivel','tensao_bateria','tensao_carga_alternador',
-      'frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n',
-      'gerador_tensao_l3n','frequencia_rede','rede_tensao_l1n',
-      'rede_tensao_l2n','rede_tensao_l3n','gerador_watts_total',
-      'tempo_funcionamento_motor','numero_partidas',
-    ];
-    try {
-      const resultados = await Promise.all(campos.map(c => this.getUltimoPorCampo(c)));
-      const dash = {};
-      campos.forEach((c, i) => {
-        const row = resultados[i];
-        dash[c] = {
-          valor:     row ? (row[c] ?? null) : null,
-          timestamp: row?.reading_timestamp ?? null,
-        };
-      });
-      return dash;
-    } catch (err) {
-      console.error('[Readings] getDashboard:', err);
-      return {};
     }
   },
 
@@ -107,7 +194,7 @@ const GeneratorReadingsService = {
     this._init();
     const since = new Date(Date.now() - horas * 3600000).toISOString();
     try {
-      const res = await fetch(
+      const res = await this._fetchWithTimeout(
         `${this._supabaseUrl}/rest/v1/generator_readings`
         + `?select=reading_timestamp,${campo}`
         + `&${campo}=not.is.null`
@@ -119,7 +206,7 @@ const GeneratorReadingsService = {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
-      console.error('[Readings] getHistorico:', err);
+      console.error('[Readings] getHistorico:', err.message);
       return [];
     }
   },
@@ -142,11 +229,11 @@ const GeneratorReadingsService = {
       if (dataInicio) url += `&reading_timestamp=gte.${dataInicio}`;
       if (dataFim)    url += `&reading_timestamp=lte.${dataFim}`;
 
-      const res = await fetch(url, { headers: this._headers() });
+      const res = await this._fetchWithTimeout(url, { headers: this._headers() });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
-      console.error('[Readings] getRelatorio:', err);
+      console.error('[Readings] getRelatorio:', err.message);
       return [];
     }
   },
@@ -160,11 +247,11 @@ const GeneratorReadingsService = {
         + `&${campo}=not.is.null`
         + `&order=reading_timestamp.asc`
         + `&limit=${limite}`;
-      
+
       if (dataInicio) url += `&reading_timestamp=gte.${dataInicio}`;
       if (dataFim)    url += `&reading_timestamp=lte.${dataFim}`;
 
-      const res  = await fetch(url, { headers: this._headers() });
+      const res  = await this._fetchWithTimeout(url, { headers: this._headers() });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
@@ -178,7 +265,7 @@ const GeneratorReadingsService = {
         total: vals.length,
       };
     } catch (err) {
-      console.error('[Readings] getEstatisticas:', err);
+      console.error('[Readings] getEstatisticas:', err.message);
       return { min: null, max: null, media: null, total: 0 };
     }
   },
@@ -187,7 +274,7 @@ const GeneratorReadingsService = {
   async getStatus() {
     this._init();
     try {
-      const res = await fetch(
+      const res = await this._fetchWithTimeout(
         `${this._supabaseUrl}/rest/v1/generator_readings`
         + `?select=reading_timestamp,velocidade_motor,temperatura_resfriamento,nivel_combustivel,tensao_bateria`
         + `&order=reading_timestamp.desc`
@@ -213,30 +300,48 @@ const GeneratorReadingsService = {
         atrasoMin:     Math.round((Date.now() - new Date(leit.reading_timestamp)) / 60000),
       };
     } catch (err) {
-      console.error('[Readings] getStatus:', err);
+      console.error('[Readings] getStatus:', err.message);
       return { online: false, standby: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
     }
   },
 
-  // ── Realtime: ouve novos INSERTs ──────────
-  // CORREÇÃO: ws era usado antes de ser declarado (ReferenceError).
-  // Adicionado: heartbeat a cada 25s e auto-reconnect em caso de queda.
+  // ══════════════════════════════════════════════════════════════════════
+  // REALTIME — WebSocket Supabase
+  //
+  // BUG #4 CORRIGIDO: join_ref adicionado a JOIN e demais mensagens.
+  //   Sem join_ref, o servidor Phoenix não associa replies ao canal e
+  //   a subscription falha silenciosamente.
+  //
+  // BUG #5 CORRIGIDO: access_token fallback para ANON_KEY.
+  //   Sem access_token no JOIN, Supabase rejeita subscription em tabelas
+  //   com RLS (retorna phx_error sem mensagem clara).
+  //
+  // BUG #6 CORRIGIDO: verificação explícita de event === 'postgres_changes'.
+  //
+  // BUG #7 CORRIGIDO: backoff exponencial na reconexão.
+  // ══════════════════════════════════════════════════════════════════════
   subscribeRealtime(onNova) {
     this._init();
-    if (!window.CONFIG?.SUPABASE?.URL) return null;
-
-    this._onNovaCallback = onNova;
+    if (!this._supabaseUrl) {
+      console.warn('[Realtime] Supabase URL não configurada — realtime desativado');
+      return null;
+    }
+    this._onNovaCallback  = onNova;
+    this._reconnectDelay  = 5000;  // BUG #7: reseta o delay ao subscrever
     this._conectarRealtime();
-    return this._realtimeSub;
+    return this._ws;
   },
 
   _conectarRealtime() {
-    // Limpa conexão anterior se existir
     this._limparRealtime(false);
 
     const token  = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    const wsUrl  = this._supabaseUrl
+    // BUG #5 CORRIGIDO: usa token do usuário OU anon key como fallback
+    const authToken = token || this._anonKey;
+
+    const wsUrl = this._supabaseUrl
       .replace('https://', 'wss://')
+      .replace('http://',  'ws://')
       + '/realtime/v1/websocket'
       + `?apikey=${this._anonKey}`
       + `&vsn=1.0.0`;
@@ -245,21 +350,24 @@ const GeneratorReadingsService = {
     try {
       ws = new WebSocket(wsUrl);
     } catch (err) {
-      console.error('[Realtime] Falha ao criar WebSocket:', err);
+      console.error('[Realtime] Erro ao criar WebSocket:', err.message);
       this._agendarReconexao();
       return null;
     }
 
-    // ── onopen: JOIN no canal + heartbeat ──────────────────────────────
     ws.onopen = () => {
-      console.log('[Realtime] Conectado — ouvindo generator_readings ✓');
+      console.log('[Realtime] WebSocket conectado — enviando JOIN ✓');
+      this._reconnectDelay = 5000;  // BUG #7: reseta backoff em conexão bem-sucedida
+      this._wsRef = 0;
 
+      // BUG #4 CORRIGIDO: join_ref agora incluído no JOIN
+      // BUG #5 CORRIGIDO: access_token com fallback para anon key
       ws.send(JSON.stringify({
-        topic:   'realtime:public:generator_readings',
-        event:   'phx_join',
-        payload: {
+        topic:    'realtime:generator_readings_channel',
+        event:    'phx_join',
+        payload:  {
           config: {
-            broadcast:        { self: true },
+            broadcast:        { self: false },
             presence:         { key: '' },
             postgres_changes: [{
               event:  'INSERT',
@@ -267,72 +375,100 @@ const GeneratorReadingsService = {
               table:  'generator_readings',
             }],
           },
-          ...(token ? { access_token: token } : {}),
+          access_token: authToken,
         },
-        ref: '1',
+        ref:      '1',
+        join_ref: '1',   // BUG #4: campo obrigatório no protocolo Phoenix Channels
       }));
 
-      // Heartbeat a cada 25s para manter a conexão viva no Supabase
+      // Heartbeat a cada 25s — mantém conexão viva no Supabase
       this._heartbeatTimer = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
+          this._wsRef++;
           ws.send(JSON.stringify({
-            topic:   'phoenix',
-            event:   'heartbeat',
-            payload: {},
-            ref:     String(Date.now()),
+            topic:    'phoenix',
+            event:    'heartbeat',
+            payload:  {},
+            ref:      String(this._wsRef),
+            join_ref: null,
           }));
+          console.debug('[Realtime] Heartbeat enviado ref=' + this._wsRef);
         }
       }, 25_000);
     };
 
-    // ── onmessage: dispara callback quando chega novo INSERT ───────────
     ws.onmessage = (msg) => {
       try {
         const parsed = JSON.parse(msg.data);
+        const ev     = parsed?.event;
 
-        // Confirmação de JOIN
-        if (parsed?.event === 'phx_reply' && parsed?.ref === '1') {
-          console.log('[Realtime] Canal confirmado ✓');
+        // Confirmação de JOIN — loga e ignora
+        if (ev === 'phx_reply' && parsed?.ref === '1') {
+          const status = parsed?.payload?.status;
+          if (status === 'ok') {
+            console.log('[Realtime] Canal generator_readings confirmado ✓');
+          } else {
+            console.error('[Realtime] JOIN rejeitado pelo servidor:', JSON.stringify(parsed?.payload));
+          }
           return;
         }
 
-        // Novo dado inserido
-        if (parsed?.payload?.data?.record) {
-          console.log('[Realtime] Nova leitura recebida:', parsed.payload.data.record);
-          if (typeof this._onNovaCallback === 'function') {
-            this._onNovaCallback(parsed.payload.data.record);
-          }
+        // BUG #6 CORRIGIDO: verifica event === 'postgres_changes' explicitamente
+        // Descarta mensagens de controle (heartbeat_reply, system, phx_close etc.)
+        if (ev !== 'postgres_changes') return;
+
+        const record = parsed?.payload?.data?.record;
+        if (!record) {
+          console.warn('[Realtime] Evento postgres_changes sem record:', JSON.stringify(parsed));
+          return;
         }
-      } catch (_) {}
+
+        console.log('[Realtime] INSERT recebido — xml_source:', record.xml_source,
+          '| ts:', record.reading_timestamp);
+
+        if (typeof this._onNovaCallback === 'function') {
+          this._onNovaCallback(record);
+        }
+
+      } catch (err) {
+        console.warn('[Realtime] Erro ao parsear mensagem WS:', err.message);
+      }
     };
 
     ws.onerror = (e) => {
-      console.warn('[Realtime] Erro WebSocket:', e);
+      console.warn('[Realtime] Erro no WebSocket (ver estado de rede)');
     };
 
-    // ── onclose: reconecta automaticamente após 5s ─────────────────────
+    // BUG #7 CORRIGIDO: backoff exponencial ao reconectar
     ws.onclose = (e) => {
-      console.warn(`[Realtime] Conexão fechada (code=${e.code}) — reconectando em 5s…`);
       clearInterval(this._heartbeatTimer);
       this._heartbeatTimer = null;
-      // Só reconecta se ainda há callback registrado (não foi unsubscribe intencional)
+      if (e.wasClean) {
+        console.log(`[Realtime] Conexão encerrada normalmente (code=${e.code})`);
+      } else {
+        console.warn(`[Realtime] Conexão perdida (code=${e.code}) — reconectando em ${this._reconnectDelay / 1000}s`);
+      }
       if (this._onNovaCallback) {
         this._agendarReconexao();
       }
     };
 
-    this._realtimeSub = ws;
+    this._ws = ws;
     return ws;
   },
 
+  // BUG #7 CORRIGIDO: backoff exponencial (5s → 10s → 20s → ... máx 120s)
   _agendarReconexao() {
     clearTimeout(this._reconnectTimer);
+    const delay = this._reconnectDelay;
     this._reconnectTimer = setTimeout(() => {
       if (this._onNovaCallback) {
-        console.log('[Realtime] Tentando reconectar…');
+        console.log(`[Realtime] Tentando reconectar (delay foi ${delay / 1000}s)…`);
         this._conectarRealtime();
       }
-    }, 5_000);
+    }, delay);
+    // Dobra o delay para a próxima tentativa, respeitando o máximo
+    this._reconnectDelay = Math.min(delay * 2, this._maxReconnectDelay);
   },
 
   _limparRealtime(limparCallback = true) {
@@ -341,11 +477,10 @@ const GeneratorReadingsService = {
     this._heartbeatTimer = null;
     this._reconnectTimer = null;
 
-    if (this._realtimeSub) {
-      // Remove onclose para não disparar reconexão ao fechar manualmente
-      this._realtimeSub.onclose = null;
-      this._realtimeSub.close();
-      this._realtimeSub = null;
+    if (this._ws) {
+      this._ws.onclose = null;  // evita reconexão ao fechar manualmente
+      try { this._ws.close(); } catch (_) {}
+      this._ws = null;
     }
 
     if (limparCallback) {
@@ -354,18 +489,25 @@ const GeneratorReadingsService = {
   },
 
   unsubscribeRealtime() {
-    console.log('[Realtime] Desconectando…');
+    console.log('[Realtime] Desconectando manualmente…');
     this._limparRealtime(true);
+    this._reconnectDelay = 5000;  // reseta backoff
   },
+
+  // ── Alias compatível ──────────────────────
+  // Mantido para backward-compatibility com código legado que use _realtimeSub
+  get _realtimeSub() { return this._ws; },
 
   // ── Helpers de formatação ─────────────────
   formatarTimestamp(iso) {
     if (!iso) return '—';
-    return new Date(iso).toLocaleString('pt-BR', {
-      timeZone: 'America/Manaus',
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-    });
+    try {
+      return new Date(iso).toLocaleString('pt-BR', {
+        timeZone: 'America/Manaus',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
+    } catch (_) { return iso; }
   },
 
   formatarValor(valor, unidade = '', decimais = 1) {
@@ -402,8 +544,9 @@ const GeneratorReadingsService = {
 
   getAlerta(campo, valor) {
     const cfg = this.CAMPOS[campo];
-    if (!cfg || valor === null) return null;
+    if (!cfg || valor === null || valor === undefined) return null;
     const v = parseFloat(valor);
+    if (isNaN(v)) return null;
     if (cfg.alertaMax !== null && v > cfg.alertaMax) return 'critico';
     if (cfg.alertaMin !== null && v < cfg.alertaMin && v > 0) return 'atencao';
     return 'normal';
