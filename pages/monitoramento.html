@@ -372,19 +372,15 @@
     const svc = window.GeneratorReadingsService;
     if (!svc) return;
 
-    if (typeof svc.unsubscribeRealtime === 'function') {
+    // FIX-WS: só unsubscribe se houver WS aberto — evita log enganoso
+    if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) {
       svc.unsubscribeRealtime();
     }
 
     if (typeof svc.subscribeRealtime === 'function') {
-      // BUG #11 CORRIGIDO: usa _debounceReloadMonit — evita storm de HTTP
-      // quando vários INSERTs chegam em sequência rápida do DSE.
-      // O atualizarCardDireto() ainda roda instantaneamente para o campo
-      // específico; o _debounceReloadMonit faz o refresh completo só quando
-      // os INSERTs param por 800ms.
       svc.subscribeRealtime((record) => {
-        atualizarCardDireto(record);   // atualização instantânea do card
-        _debounceReloadMonit();        // reload completo debounced
+        atualizarCardDireto(record);
+        _debounceReloadMonit();
       });
     }
 
@@ -420,19 +416,21 @@
     // Atualiza o card visual diretamente pelo data-campo
     const cardEl = document.querySelector(`[data-campo="${campoAtualizado}"]`);
     if (cardEl) {
-      const cfg    = svc.CAMPOS[campoAtualizado];
-      const valor  = parseFloat(record[campoAtualizado]);
-      const alerta = svc.getAlerta(campoAtualizado, valor);
-      const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+      const cfg       = svc.CAMPOS[campoAtualizado];
+      const valor     = parseFloat(record[campoAtualizado]);
+      const alerta    = svc.getAlerta(campoAtualizado, valor);
+      const cor       = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+      // FIX-DOM: null guards nos filhos do card (podem não existir se HTML mudou)
+      const elValor   = cardEl.querySelector('.card-valor');
+      const elTs      = cardEl.querySelector('.card-ts');
 
       cardEl.style.borderLeftColor = cor;
-      cardEl.querySelector('.card-valor').style.color  = cor;
-      cardEl.querySelector('.card-valor').textContent  = svc.formatarValor(valor, cfg.unidade, cfg.decimais);
-      cardEl.querySelector('.card-ts').textContent     = svc.formatarTimestamp(record.reading_timestamp);
+      if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, cfg.unidade, cfg.decimais); }
+      if (elTs)    { elTs.textContent = svc.formatarTimestamp(record.reading_timestamp); }
 
       // Pulso visual para indicar atualização em tempo real
       cardEl.classList.remove('card-pulse');
-      void cardEl.offsetWidth; // força reflow para reiniciar a animação
+      void cardEl.offsetWidth;
       cardEl.classList.add('card-pulse');
     }
 
@@ -482,17 +480,38 @@
       rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
     };
 
+    // FIX-QUERY: getDashboard() — 1 query com limit=300 em vez de 20 paralelas
+    // getDashboard já faz pivot, retorna {campo: {valor, timestamp, stale, ageMin}}
+    const dash = await svc.getDashboard();
+
+    // Adaptador: mapa compatível com a lógica anterior
     const todosCampos = [...grupos.motor,...grupos.gerador,...grupos.rede];
-    const resultados  = await Promise.all(todosCampos.map(c => svc.getUltimoPorCampo(c)));
     const mapa = {};
-    todosCampos.forEach((c,i) => { mapa[c] = resultados[i]; });
+    todosCampos.forEach(c => {
+      const d = dash[c];
+      if (d && d.valor !== null) {
+        // Estrutura compatível com getUltimoPorCampo
+        mapa[c] = { [c]: d.valor, reading_timestamp: d.timestamp, stale: d.stale, ageMin: d.ageMin };
+      } else {
+        mapa[c] = null;
+      }
+    });
 
     const velDado = mapa['velocidade_motor'];
     const vel     = velDado ? parseFloat(velDado.velocidade_motor) : null;
-    const online  = vel !== null && vel > 0;
-    document.getElementById('monitorStatusDot').style.background = online ? '#10b981' : '#ef4444';
-    document.getElementById('monitorStatusText').textContent = velDado
-      ? (online ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}` : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
+    const velStale = velDado?.stale ?? false;
+
+    // FIX-STATUS: mostra aviso de dado antigo no status principal
+    const online  = vel !== null && vel > 0 && !velStale;
+    const statusDot  = document.getElementById('monitorStatusDot');
+    const statusText = document.getElementById('monitorStatusText');
+    if (statusDot)  statusDot.style.background = online ? '#10b981' : velStale ? '#f59e0b' : '#ef4444';
+    if (statusText) statusText.textContent = velDado
+      ? (velStale
+          ? `⚠️ Dado antigo (${velDado.ageMin}min) · Último: ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
+          : online
+            ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
+            : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
       : 'Sem dados recentes';
 
     function renderGrupo(id, campos) {
@@ -502,12 +521,28 @@
         const cfg    = svc.CAMPOS[campo];
         const dado   = mapa[campo];
         const valor  = dado ? parseFloat(dado[campo]) : null;
+        const stale  = dado?.stale ?? false;
+        const ageMin = dado?.ageMin ?? null;
         const alerta = svc.getAlerta(campo, valor);
-        const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
-        // data-campo permite localizar e atualizar o card diretamente via Realtime
+
+        // FIX-COR: dado stale → cor âmbar independente do valor
+        // Dado normal → cor por alerta (verde/amarelo/vermelho)
+        const cor = stale
+          ? '#d97706'
+          : alerta === 'critico' ? '#ef4444'
+          : alerta === 'atencao' ? '#f59e0b'
+          : '#10b981';
+
+        // FIX-STALENESS: tooltip e badge de "dado antigo" nos cards
+        const staleLabel = stale && ageMin !== null
+          ? `<span style="font-size:9px;background:#d97706;color:#fff;border-radius:3px;padding:0 4px;margin-left:4px;">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h' : ageMin+'min'}</span>`
+          : '';
+
         return `
-          <div class="card" data-campo="${campo}" style="padding:10px;border-left:2px solid ${cor};transition:border-color .3s,box-shadow .3s;">
-            <div style="font-size:11px;color:var(--text-muted);">${cfg.label}</div>
+          <div class="card" data-campo="${campo}" style="padding:10px;border-left:2px solid ${cor};transition:border-color .3s,box-shadow .3s;${stale ? 'opacity:.85;' : ''}">
+            <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;">
+              ${cfg.label}${staleLabel}
+            </div>
             <div class="card-valor" style="font-size:18px;font-weight:600;color:${cor};margin:2px 0;transition:color .3s;">
               ${svc.formatarValor(valor,cfg.unidade,cfg.decimais)}
             </div>
@@ -541,7 +576,9 @@
     }
   }
 
-  setInterval(loadMonitoramentoReadings, 30000);
+  // FIX-INTERVAL: referência para limpeza no beforeunload
+  const _monitorFallback = setInterval(loadMonitoramentoReadings, 30000);
+  window.addEventListener('beforeunload', () => { clearInterval(_monitorFallback); }, { once: true });
   </script>
 </body>
 </html>
