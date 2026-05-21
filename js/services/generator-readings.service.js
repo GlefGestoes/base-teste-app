@@ -124,23 +124,50 @@ const GeneratorReadingsService = {
     ];
     try {
       const selecao = ['reading_timestamp', ...campos].join(',');
+      // FIX-LIMIT: aumentado de 60 para 300.
+      // Com 23 campos e ~1 linha por leitura, 60 linhas cobrem no máximo
+      // 3-4 campos quando tensãoDeCargaDoAlternador domina o topo da tabela.
+      // 300 garante cobertura de todos os campos mesmo em dados esparsos.
       const res = await this._fetchWithTimeout(
         `${this._supabaseUrl}/rest/v1/generator_readings`
         + `?select=${selecao}`
         + `&order=reading_timestamp.desc`
-        + `&limit=60`,
+        + `&limit=300`,
         { headers: this._headers() }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rows = await res.json();
 
-      // Pivot: para cada campo, pega o primeiro row que tem valor não-nulo
+      // FIX-PIVOT: pivot melhorado com staleness detection.
+      // Ignora valores zero para campos onde 0 indica "gerador desligado"
+      // e registra se o dado é antigo (stale) para a UI mostrar aviso visual.
+      const STALE_THRESHOLD_MS = 2 * 3600 * 1000; // 2 horas
+      const now = Date.now();
+
+      // Campos onde valor=0 com gerador offline não deve aparecer como leitura "atual"
+      // (correntes, watts, RPM — são 0 só quando desligado; UI já trata via getStatus)
+      const IGNORAR_ZERO = new Set([
+        'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
+        'gerador_watts_l1','gerador_watts_l2','gerador_watts_l3','gerador_watts_total',
+        'temperatura_oleo',  // 0°C é fisicamente impossível em operação — dado corrompido
+      ]);
+
       const dash = {};
       campos.forEach(c => {
-        const row = rows.find(r => r[c] !== null && r[c] !== undefined);
+        const row = rows.find(r => {
+          const v = r[c];
+          if (v === null || v === undefined) return false;
+          // Para campos sensíveis, ignora zeros — evita mostrar 0 de quando desligou
+          if (IGNORAR_ZERO.has(c) && parseFloat(v) === 0) return false;
+          return true;
+        });
+        const ts    = row?.reading_timestamp ?? null;
+        const ageMs = ts ? (now - new Date(ts).getTime()) : Infinity;
         dash[c] = {
-          valor:     row ? parseFloat(row[c]) : null,
-          timestamp: row?.reading_timestamp ?? null,
+          valor:  row ? parseFloat(row[c]) : null,
+          timestamp: ts,
+          stale: ageMs > STALE_THRESHOLD_MS,   // dado com mais de 2h
+          ageMin: ts ? Math.round(ageMs / 60000) : null,
         };
       });
       console.log('[Readings] getDashboard — 1 query, pivot de', rows.length, 'linhas ✓');
