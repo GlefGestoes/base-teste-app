@@ -392,13 +392,96 @@
 
   <script>
   let _realtimeInitialized = false;
-  // BUG #11 CORRIGIDO: debounce impede que múltiplos INSERTs rápidos
-  // (ex: DSE inserindo vários instrumentos em sequência) disparem
-  // loadReadingsDashboard() múltiplas vezes simultaneamente.
+
+  // ─── DEBOUNCE ──────────────────────────────────────────────────────────
+  // CORREÇÃO: debounce reduzido de 800ms → 200ms.
+  // 800ms era excessivo para telemetria: com DSE enviando dados a cada ~5s,
+  // 800ms de debounce significa que 16% do intervalo era desperdiçado só esperando.
+  // 200ms agrupa INSERTs em rajada sem introduzir latência perceptível.
   let _debounceTimer = null;
   function _debounceReload() {
     clearTimeout(_debounceTimer);
-    _debounceTimer = setTimeout(() => loadReadingsDashboard(), 800);
+    _debounceTimer = setTimeout(() => loadReadingsDashboard(), 200);
+  }
+
+  // ─── CAMPOS COM data-campo no DOM ─────────────────────────────────────
+  const _camposPrioritarios = [
+    'velocidade_motor','pressao_oleo','temperatura_resfriamento',
+    'nivel_combustivel','tensao_bateria','frequencia_gerador',
+    'gerador_tensao_l1n','gerador_watts_total',
+  ];
+
+  const _iconMap = {
+    velocidade_motor:'⚙️', pressao_oleo:'🔩',
+    temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
+    tensao_bateria:'🔋', frequencia_gerador:'〰️',
+    gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
+  };
+
+  // ─── ATUALIZAÇÃO DIRETA DE CARD (sem requisição HTTP) ─────────────────
+  // CORREÇÃO PRINCIPAL: o Dashboard não tinha equivalente ao atualizarCardDireto()
+  // do Monitoramento. Cada evento Realtime disparava loadReadingsDashboard()
+  // (uma requisição HTTP completa). Agora: evento Realtime → atualiza o card
+  // diretamente no DOM via data-campo, sem HTTP. O reload completo (HTTP) só
+  // acontece no polling de fallback ou na carga inicial.
+  function atualizarCardDiretoDashboard(record) {
+    const svc = window.GeneratorReadingsService;
+    if (!svc || !record) return;
+
+    let algumAtualizado = false;
+
+    for (const campo of _camposPrioritarios) {
+      if (record[campo] === null || record[campo] === undefined) continue;
+
+      const cardEl = document.querySelector(`[data-campo="${campo}"]`);
+      if (!cardEl) continue;
+
+      const cfg    = svc.CAMPOS[campo];
+      const valor  = parseFloat(record[campo]);
+      const alerta = svc.getAlerta(campo, valor);
+      const cor    = alerta === 'critico' ? '#ef4444'
+                   : alerta === 'atencao' ? '#f59e0b'
+                   : 'var(--color-accent)';
+
+      const elValor = cardEl.querySelector('.card-valor-dash');
+      const elTs    = cardEl.querySelector('.card-ts-dash');
+
+      cardEl.style.borderTopColor = cor;
+      if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, '', cfg.decimais); }
+      if (elTs)    { elTs.textContent = svc.formatarTimestamp(record.reading_timestamp); }
+
+      // Pulso visual — igual ao monitoramento
+      cardEl.classList.remove('card-pulse');
+      void cardEl.offsetWidth;
+      cardEl.classList.add('card-pulse');
+
+      algumAtualizado = true;
+    }
+
+    // Atualiza status card se veio velocidade_motor
+    if (record.velocidade_motor !== null && record.velocidade_motor !== undefined) {
+      const rpm      = parseFloat(record.velocidade_motor) || 0;
+      const online   = rpm > 0;
+      const statusCard = document.getElementById('generatorStatusCard');
+      if (statusCard) {
+        statusCard.style.display = 'block';
+        const elText = document.getElementById('generatorStatusText');
+        const elSub  = document.getElementById('generatorStatusSub');
+        const elDot  = document.getElementById('generatorStatusDot');
+        if (elText) elText.textContent = online ? '🟢 Gerador Online' : '🟡 Gerador Standby';
+        if (elSub)  elSub.textContent  = `Velocidade: ${rpm} RPM · ${window.GeneratorReadingsService.formatarTimestamp(record.reading_timestamp)}`;
+        if (elDot)  elDot.style.background = online ? '#10b981' : '#f59e0b';
+      }
+    }
+
+    if (algumAtualizado) {
+      const ts = document.getElementById('readingsTimestamp');
+      if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+    }
+
+    // Agenda reload completo para sincronizar campos que não vieram neste INSERT
+    // (ex: este INSERT trouxe velocidade_motor, mas pressao_oleo pode estar desatualizada)
+    _debounceReload();
   }
 
   async function loadReadingsDashboard() {
@@ -406,8 +489,6 @@
     const svc = window.GeneratorReadingsService;
 
     try {
-      // BUG #3 CORRIGIDO: usa getDashboard() que faz 1 query em vez de
-      // 8 chamadas individuais getUltimoPorCampo() separadas.
       const [status, dash] = await Promise.all([
         svc.getStatus(),
         svc.getDashboard(),
@@ -417,59 +498,77 @@
       const statusCard = document.getElementById('generatorStatusCard');
       if (statusCard) {
         statusCard.style.display = 'block';
-        document.getElementById('generatorStatusText').textContent =
+        const elText = document.getElementById('generatorStatusText');
+        const elSub  = document.getElementById('generatorStatusSub');
+        const elDot  = document.getElementById('generatorStatusDot');
+        if (elText) elText.textContent =
           status.online ? '🟢 Gerador Online' : status.standby ? '🟡 Gerador Standby' : '🔴 Gerador Offline';
-        document.getElementById('generatorStatusSub').textContent =
+        if (elSub) elSub.textContent =
           status.ultimaLeitura
             ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
             : 'Sem leituras disponíveis';
-        document.getElementById('generatorStatusDot').style.background =
+        if (elDot) elDot.style.background =
           status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
       }
 
-      // ── Cards de leituras ────────────────────────────────────────
-      const camposPrioritarios = [
-        'velocidade_motor','pressao_oleo','temperatura_resfriamento',
-        'nivel_combustivel','tensao_bateria','frequencia_gerador',
-        'gerador_tensao_l1n','gerador_watts_total',
-      ];
-
-      const iconMap = {
-        velocidade_motor:'⚙️', pressao_oleo:'🔩',
-        temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
-        tensao_bateria:'🔋', frequencia_gerador:'〰️',
-        gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
-      };
-
+      // ── Cards de leituras ─────────────────────────────────────────
+      // CORREÇÃO: cards agora têm data-campo, card-valor-dash e card-ts-dash
+      // para permitir atualização direta via atualizarCardDiretoDashboard()
       const grid = document.getElementById('readingsGrid');
       if (!grid) return;
 
-      grid.innerHTML = camposPrioritarios.map(campo => {
-        const cfg    = svc.CAMPOS[campo];
-        const dado   = dash[campo];
-        const valor  = dado?.valor ?? null;
-        const stale  = dado?.stale ?? false;
-        const ageMin = dado?.ageMin ?? null;
-        const alerta = svc.getAlerta(campo, valor);
-        // FIX-STALENESS: cor âmbar para dados > 2h
-        const cor = stale ? '#d97706'
-          : alerta === 'critico' ? '#ef4444'
-          : alerta === 'atencao' ? '#f59e0b'
-          : 'var(--color-accent)';
-        const staleTag = stale && ageMin !== null
-          ? `<div style="font-size:9px;color:#d97706;margin-top:2px;">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h atrás' : ageMin+'min atrás'}</div>`
-          : '';
-        return `
-          <div class="card stat-card" style="border-top:2px solid ${cor};${stale ? 'opacity:.85;' : ''}">
-            <div style="font-size:20px;margin-bottom:4px;">${iconMap[campo]||'📊'}</div>
-            <div class="stat-value" style="font-size:var(--text-xl);color:${cor};">
-              ${svc.formatarValor(valor, '', cfg.decimais)}
-            </div>
-            <div class="stat-label">${cfg.label}</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
-            ${staleTag}
-          </div>`;
-      }).join('');
+      const jaTemCards = grid.querySelectorAll('[data-campo]').length > 0;
+
+      // Só reconstrói o HTML se for a primeira vez (evita piscar o grid a cada INSERT)
+      if (!jaTemCards) {
+        grid.innerHTML = _camposPrioritarios.map(campo => {
+          const cfg    = svc.CAMPOS[campo];
+          const dado   = dash[campo];
+          const valor  = dado?.valor ?? null;
+          const stale  = dado?.stale ?? false;
+          const ageMin = dado?.ageMin ?? null;
+          const alerta = svc.getAlerta(campo, valor);
+          const cor = stale ? '#d97706'
+            : alerta === 'critico' ? '#ef4444'
+            : alerta === 'atencao' ? '#f59e0b'
+            : 'var(--color-accent)';
+          const staleTag = stale && ageMin !== null
+            ? `<div style="font-size:9px;color:#d97706;margin-top:2px;">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h atrás' : ageMin+'min atrás'}</div>`
+            : '';
+          return `
+            <div class="card stat-card" data-campo="${campo}" style="border-top:2px solid ${cor};${stale ? 'opacity:.85;' : ''}">
+              <div style="font-size:20px;margin-bottom:4px;">${_iconMap[campo]||'📊'}</div>
+              <div class="card-valor-dash stat-value" style="font-size:var(--text-xl);color:${cor};">
+                ${svc.formatarValor(valor, '', cfg.decimais)}
+              </div>
+              <div class="stat-label">${cfg.label}</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
+              <div class="card-ts-dash" style="font-size:9px;color:var(--text-muted);margin-top:2px;">${dado?.timestamp ? svc.formatarTimestamp(dado.timestamp) : ''}</div>
+              ${staleTag}
+            </div>`;
+        }).join('');
+      } else {
+        // Cards já existem: atualiza apenas os valores (sem recriar DOM)
+        for (const campo of _camposPrioritarios) {
+          const cardEl = grid.querySelector(`[data-campo="${campo}"]`);
+          if (!cardEl) continue;
+          const cfg    = svc.CAMPOS[campo];
+          const dado   = dash[campo];
+          const valor  = dado?.valor ?? null;
+          const stale  = dado?.stale ?? false;
+          const alerta = svc.getAlerta(campo, valor);
+          const cor = stale ? '#d97706'
+            : alerta === 'critico' ? '#ef4444'
+            : alerta === 'atencao' ? '#f59e0b'
+            : 'var(--color-accent)';
+          const elValor = cardEl.querySelector('.card-valor-dash');
+          const elTs    = cardEl.querySelector('.card-ts-dash');
+          cardEl.style.borderTopColor = cor;
+          cardEl.style.opacity = stale ? '0.85' : '1';
+          if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, '', cfg.decimais); }
+          if (elTs && dado?.timestamp) elTs.textContent = svc.formatarTimestamp(dado.timestamp);
+        }
+      }
 
       const ts = document.getElementById('readingsTimestamp');
       if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
@@ -484,13 +583,15 @@
     const svc = window.GeneratorReadingsService;
     if (!svc) return;
 
-    // FIX-WS: só unsubscribe se houver WS aberto — evita log enganoso
-    // "Desconectando manualmente…" quando não há conexão prévia
     if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) {
       svc.unsubscribeRealtime();
     }
 
-    svc.subscribeRealtime(() => _debounceReload());
+    // CORREÇÃO: callback passa o record para atualizarCardDiretoDashboard()
+    // ANTES: svc.subscribeRealtime(() => _debounceReload())
+    //   → ignorava o record recebido, sempre fazia requisição HTTP
+    // DEPOIS: usa record diretamente para atualizar DOM sem HTTP
+    svc.subscribeRealtime((record) => atualizarCardDiretoDashboard(record));
     _realtimeInitialized = true;
     console.log('[Dashboard] Realtime inscrito ✓');
   }
@@ -499,11 +600,14 @@
   loadReadingsDashboard();
   iniciarRealtime();
 
-  // Polling de fallback a cada 60s
-  setInterval(loadReadingsDashboard, 60000);
+  // CORREÇÃO: polling de fallback reduzido de 60s → 30s
+  // 60s era muito lento para telemetria industrial. 30s garante que,
+  // mesmo se o Realtime WebSocket cair, os dados ficam no máximo 30s atrasados.
+  const _dashFallback = setInterval(loadReadingsDashboard, 30000);
 
   window.addEventListener('beforeunload', () => {
     clearTimeout(_debounceTimer);
+    clearInterval(_dashFallback);
     if (window.GeneratorReadingsService) {
       window.GeneratorReadingsService.unsubscribeRealtime();
     }
