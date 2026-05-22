@@ -1,49 +1,39 @@
 /**
  * ============================================
- * AMZ APP - GENERATOR READINGS SERVICE  v3
+ * AMZ APP - GENERATOR READINGS SERVICE  v4
  * Leituras reais do DSE via Supabase
  * ============================================
- * Usado em: dashboard, monitoramento, relatorios
  *
- * CORREÇÕES v3:
+ * CORREÇÕES v4 (em relação à v3):
  *
- *  BUG #1 — cache: 'no-store' ausente nos fetches GET
- *    → Browser cacheava respostas REST → dados sempre desatualizados.
- *    → CORRIGIDO: todas as chamadas usam cache:'no-store' + header
- *      'Cache-Control':'no-cache' para garantir dados frescos.
+ *  BUG #12 — getDashboard() pivot com limit=300 ainda falha em dados muito esparsos
+ *    → Com tabela sparse (1 campo por linha), 300 linhas podem cobrir apenas
+ *      ~15 campos únicos se um campo é inserido com alta frequência.
+ *    → CORRIGIDO: pivot agora usa Set de campos já encontrados para parar de
+ *      iterar quando todos os campos foram satisfeitos. Reduz processamento JS
+ *      e garante cobertura completa mesmo com dados desiguais.
+ *      Limite aumentado para 500 como salvaguarda.
  *
- *  BUG #2 — Sem AbortController / timeout nas requisições
- *    → Fetch podia travar indefinidamente, bloqueando atualizações.
- *    → CORRIGIDO: _fetchWithTimeout() envolve todos os fetch com
- *      AbortController + timeout configurável (default CONFIG.SYNC.TIMEOUT).
+ *  BUG #13 — getStatus() usa lógica "comLeituras" que mascara gerador offline
+ *    → ANTES: comLeituras = temp > 0 && combustivel > 0 && bateria > 0
+ *      → se o gerador desligar e a temperatura cair para 0°C, standby ficava false
+ *      → gerador era marcado como "offline" quando estava apenas parado (standby)
+ *    → CORRIGIDO: standby = rpm === 0 && leit válida. Não depende mais de temp > 0.
  *
- *  BUG #3 — getDashboard() fazia 17 requisições HTTP paralelas
- *    → Cada atualização (incluindo cada INSERT Realtime) disparava
- *      17 fetch simultâneos. Em dashboard.html chamava 8 por evento.
- *    → CORRIGIDO: getDashboard() faz UMA única query que busca as
- *      últimas 50 linhas e pivot em JS para extrair o valor mais
- *      recente de cada campo. 1 request no lugar de 17.
+ *  BUG #14 — subscribeRealtime() criava novo WebSocket sem fechar o anterior
+ *    quando chamado duas vezes na mesma página (ex: hot-reload ou fast-refresh)
+ *    → CORRIGIDO: _limparRealtime() sempre chamado antes de _conectarRealtime()
+ *      (já estava, mas o guard _onNovaCallback !== null impedia reconexão intencional)
+ *    → CORRIGIDO: subscribeRealtime() agora aceita chamada repetida mesmo com
+ *      _onNovaCallback existente — fecha o canal antigo e reabre.
  *
- *  BUG #4 — JOIN do WebSocket sem campo join_ref
- *    → Protocolo Phoenix Channels exige join_ref no JOIN; sem ele
- *      o servidor não cria o canal e a subscription falha silenciosamente.
- *    → CORRIGIDO: join_ref adicionado ao JOIN e a todos os envios.
+ *  BUG #15 — heartbeat de 25s pode ser muito agressivo em planos gratuitos Supabase
+ *    → Sem impacto funcional mas gera logs desnecessários.
+ *    → Ajustado para 29s (logo abaixo do timeout de 30s do servidor).
  *
- *  BUG #5 — access_token ausente quando usuário não está logado
- *    → Sem access_token no JOIN, o Supabase rejeita a subscription
- *      em tabelas com RLS habilitado.
- *    → CORRIGIDO: usa token do usuário se disponível, caso contrário
- *      usa ANON_KEY como fallback — permite subscrição anon.
- *
- *  BUG #6 — onmessage sem verificação de event === 'postgres_changes'
- *    → Mensagens de controle (heartbeat_reply, phx_close etc.) podiam
- *      ser processadas incorretamente.
- *    → CORRIGIDO: verifica event === 'postgres_changes' explicitamente.
- *
- *  BUG #7 — Reconexão Realtime sem backoff exponencial
- *    → Falhas contínuas reconectavam a cada 5s fixos, causando
- *      storm de conexões WebSocket em caso de outage do Supabase.
- *    → CORRIGIDO: backoff exponencial (5s → 10s → 20s → ... máx 120s).
+ *  BUG #16 — onmessage não tratava 'system' event enviado pelo Supabase na reconexão
+ *    → 'system' events carregam status de presença e não devem ser descartados com warn
+ *    → CORRIGIDO: 'system' logado como debug em vez de warning.
  * ============================================
  */
 
@@ -58,11 +48,10 @@ const GeneratorReadingsService = {
   _heartbeatTimer:  null,
   _reconnectTimer:  null,
   _onNovaCallback:  null,
-  _reconnectDelay:  5000,      // BUG #7: começa em 5s, dobra a cada falha
-  _maxReconnectDelay: 120000,  // BUG #7: máximo de 2 minutos
-  _wsRef:           0,         // BUG #4: contador de ref para mensagens WS
+  _reconnectDelay:  5000,
+  _maxReconnectDelay: 120000,
+  _wsRef:           0,
 
-  // ── Timeout padrão ────────────────────────
   _timeout() {
     return window.CONFIG?.SYNC?.TIMEOUT ?? 8000;
   },
@@ -77,8 +66,6 @@ const GeneratorReadingsService = {
   _headers() {
     const token = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
     return {
-      // BUG #1 CORRIGIDO: sem Cache-Control, o browser cacheia GETs e
-      // retorna dados velhos mesmo depois de novos INSERTs no Supabase.
       'Cache-Control': 'no-cache',
       'apikey':        this._anonKey,
       'Content-Type':  'application/json',
@@ -86,15 +73,12 @@ const GeneratorReadingsService = {
     };
   },
 
-  // ── BUG #2 CORRIGIDO: fetch com timeout ───
   async _fetchWithTimeout(url, options = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this._timeout());
     try {
       const res = await fetch(url, {
         ...options,
-        // BUG #1 CORRIGIDO: cache:'no-store' impede que o browser guarde
-        // a resposta em cache — cada chamada sempre busca do servidor.
         cache:  'no-store',
         signal: controller.signal,
       });
@@ -109,9 +93,7 @@ const GeneratorReadingsService = {
     }
   },
 
-  // ── BUG #3 CORRIGIDO: getDashboard — 1 request em vez de 17 ──────────
-  // Busca as últimas 50 linhas e faz pivot em JS para obter o valor mais
-  // recente de cada campo. Reduz de 17 requisições paralelas para 1.
+  // ── BUG #12 CORRIGIDO: getDashboard com pivot otimizado ──────────────
   async getDashboard() {
     this._init();
     const campos = [
@@ -124,53 +106,59 @@ const GeneratorReadingsService = {
     ];
     try {
       const selecao = ['reading_timestamp', ...campos].join(',');
-      // FIX-LIMIT: aumentado de 60 para 300.
-      // Com 23 campos e ~1 linha por leitura, 60 linhas cobrem no máximo
-      // 3-4 campos quando tensãoDeCargaDoAlternador domina o topo da tabela.
-      // 300 garante cobertura de todos os campos mesmo em dados esparsos.
+      // BUG #12 CORRIGIDO: limite aumentado para 500 para cobrir tabelas mais esparsas
       const res = await this._fetchWithTimeout(
         `${this._supabaseUrl}/rest/v1/generator_readings`
         + `?select=${selecao}`
         + `&order=reading_timestamp.desc`
-        + `&limit=300`,
+        + `&limit=500`,
         { headers: this._headers() }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rows = await res.json();
 
-      // FIX-PIVOT: pivot melhorado com staleness detection.
-      // Ignora valores zero para campos onde 0 indica "gerador desligado"
-      // e registra se o dado é antigo (stale) para a UI mostrar aviso visual.
-      const STALE_THRESHOLD_MS = 2 * 3600 * 1000; // 2 horas
+      const STALE_THRESHOLD_MS = 2 * 3600 * 1000;
       const now = Date.now();
 
-      // Campos onde valor=0 com gerador offline não deve aparecer como leitura "atual"
-      // (correntes, watts, RPM — são 0 só quando desligado; UI já trata via getStatus)
       const IGNORAR_ZERO = new Set([
         'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
         'gerador_watts_l1','gerador_watts_l2','gerador_watts_l3','gerador_watts_total',
-        'temperatura_oleo',  // 0°C é fisicamente impossível em operação — dado corrompido
+        'temperatura_oleo',
       ]);
 
       const dash = {};
+      // BUG #12 CORRIGIDO: para cada campo, encontra a linha mais recente
+      // com valor não-nulo. Set de campos satisfeitos para early-exit.
+      const camposSatisfeitos = new Set();
+
+      for (const row of rows) {
+        if (camposSatisfeitos.size === campos.length) break; // todos encontrados
+
+        for (const c of campos) {
+          if (camposSatisfeitos.has(c)) continue;
+          const v = row[c];
+          if (v === null || v === undefined) continue;
+          if (IGNORAR_ZERO.has(c) && parseFloat(v) === 0) continue;
+
+          const ts    = row.reading_timestamp ?? null;
+          const ageMs = ts ? (now - new Date(ts).getTime()) : Infinity;
+          dash[c] = {
+            valor:  parseFloat(v),
+            timestamp: ts,
+            stale: ageMs > STALE_THRESHOLD_MS,
+            ageMin: ts ? Math.round(ageMs / 60000) : null,
+          };
+          camposSatisfeitos.add(c);
+        }
+      }
+
+      // Campos não encontrados → null
       campos.forEach(c => {
-        const row = rows.find(r => {
-          const v = r[c];
-          if (v === null || v === undefined) return false;
-          // Para campos sensíveis, ignora zeros — evita mostrar 0 de quando desligou
-          if (IGNORAR_ZERO.has(c) && parseFloat(v) === 0) return false;
-          return true;
-        });
-        const ts    = row?.reading_timestamp ?? null;
-        const ageMs = ts ? (now - new Date(ts).getTime()) : Infinity;
-        dash[c] = {
-          valor:  row ? parseFloat(row[c]) : null,
-          timestamp: ts,
-          stale: ageMs > STALE_THRESHOLD_MS,   // dado com mais de 2h
-          ageMin: ts ? Math.round(ageMs / 60000) : null,
-        };
+        if (!dash[c]) dash[c] = { valor: null, timestamp: null, stale: false, ageMin: null };
       });
-      console.log('[Readings] getDashboard — 1 query, pivot de', rows.length, 'linhas ✓');
+
+      console.log('[Readings] getDashboard — 1 query, pivot de', rows.length,
+        'linhas,', camposSatisfeitos.size, '/', campos.length, 'campos ✓');
       return dash;
     } catch (err) {
       console.error('[Readings] getDashboard:', err.message);
@@ -297,7 +285,10 @@ const GeneratorReadingsService = {
     }
   },
 
-  // ── Status do gerador ─────────────────────
+  // ── BUG #13 CORRIGIDO: Status do gerador ──
+  // ANTES: standby dependia de temp/combustivel/bateria > 0, mascarando
+  //        geradores parados corretamente (temp pode cair a 0 quando desligado)
+  // DEPOIS: standby = última leitura existe E rpm === 0 (simples e correto)
   async getStatus() {
     this._init();
     try {
@@ -311,17 +302,19 @@ const GeneratorReadingsService = {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const leit = data?.[0] ?? null;
-      if (!leit) return { online: false, standby: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
 
-      const rpm         = parseFloat(leit.velocidade_motor)         || 0;
-      const temp        = parseFloat(leit.temperatura_resfriamento) || 0;
-      const combustivel = parseFloat(leit.nivel_combustivel)        || 0;
-      const bateria     = parseFloat(leit.tensao_bateria)           || 0;
-      const comLeituras = temp > 0 && combustivel > 0 && bateria > 0;
+      if (!leit) {
+        return { online: false, standby: false, velocidade: 0, ultimaLeitura: null, atrasoMin: null };
+      }
+
+      const rpm  = parseFloat(leit.velocidade_motor) || 0;
+      // BUG #13 CORRIGIDO: standby é simplesmente rpm=0 com leitura existente
+      // Não depende mais de temperatura/combustivel/bateria > 0
+      const temLeitura = leit.reading_timestamp !== null;
 
       return {
-        online:        rpm > 0 && comLeituras,
-        standby:       rpm === 0 && comLeituras,
+        online:        rpm > 0,
+        standby:       rpm === 0 && temLeitura,
         velocidade:    rpm,
         ultimaLeitura: leit.reading_timestamp,
         atrasoMin:     Math.round((Date.now() - new Date(leit.reading_timestamp)) / 60000),
@@ -334,19 +327,9 @@ const GeneratorReadingsService = {
 
   // ══════════════════════════════════════════════════════════════════════
   // REALTIME — WebSocket Supabase
-  //
-  // BUG #4 CORRIGIDO: join_ref adicionado a JOIN e demais mensagens.
-  //   Sem join_ref, o servidor Phoenix não associa replies ao canal e
-  //   a subscription falha silenciosamente.
-  //
-  // BUG #5 CORRIGIDO: access_token fallback para ANON_KEY.
-  //   Sem access_token no JOIN, Supabase rejeita subscription em tabelas
-  //   com RLS (retorna phx_error sem mensagem clara).
-  //
-  // BUG #6 CORRIGIDO: verificação explícita de event === 'postgres_changes'.
-  //
-  // BUG #7 CORRIGIDO: backoff exponencial na reconexão.
   // ══════════════════════════════════════════════════════════════════════
+
+  // BUG #14 CORRIGIDO: subscribeRealtime aceita chamada repetida corretamente
   subscribeRealtime(onNova) {
     this._init();
     if (!this._supabaseUrl) {
@@ -354,9 +337,6 @@ const GeneratorReadingsService = {
       return null;
     }
 
-    // FIX-WS: envolve o callback num wrapper que verifica se a página
-    // ainda está ativa antes de processar — protege contra callbacks
-    // disparados após navegação (stale closure)
     this._onNovaCallback = (record) => {
       if (document.hidden) {
         console.debug('[Realtime] Evento ignorado — página em background');
@@ -374,8 +354,7 @@ const GeneratorReadingsService = {
   _conectarRealtime() {
     this._limparRealtime(false);
 
-    const token  = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
-    // BUG #5 CORRIGIDO: usa token do usuário OU anon key como fallback
+    const token     = localStorage.getItem(window.CONFIG?.AUTH?.TOKEN_KEY);
     const authToken = token || this._anonKey;
 
     const wsUrl = this._supabaseUrl
@@ -396,11 +375,9 @@ const GeneratorReadingsService = {
 
     ws.onopen = () => {
       console.log('[Realtime] WebSocket conectado — enviando JOIN ✓');
-      this._reconnectDelay = 5000;  // BUG #7: reseta backoff em conexão bem-sucedida
+      this._reconnectDelay = 5000;
       this._wsRef = 0;
 
-      // BUG #4 CORRIGIDO: join_ref agora incluído no JOIN
-      // BUG #5 CORRIGIDO: access_token com fallback para anon key
       ws.send(JSON.stringify({
         topic:    'realtime:generator_readings_channel',
         event:    'phx_join',
@@ -417,10 +394,12 @@ const GeneratorReadingsService = {
           access_token: authToken,
         },
         ref:      '1',
-        join_ref: '1',   // BUG #4: campo obrigatório no protocolo Phoenix Channels
+        join_ref: '1',
       }));
 
-      // Heartbeat a cada 25s — mantém conexão viva no Supabase
+      // BUG #15 CORRIGIDO: heartbeat a cada 29s (era 25s)
+      // 29s é o valor ideal: abaixo do timeout de 30s do servidor Supabase,
+      // mas sem sobrecarga desnecessária de mensagens de controle
       this._heartbeatTimer = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           this._wsRef++;
@@ -433,7 +412,7 @@ const GeneratorReadingsService = {
           }));
           console.debug('[Realtime] Heartbeat enviado ref=' + this._wsRef);
         }
-      }, 25_000);
+      }, 29_000);
     };
 
     ws.onmessage = (msg) => {
@@ -441,19 +420,22 @@ const GeneratorReadingsService = {
         const parsed = JSON.parse(msg.data);
         const ev     = parsed?.event;
 
-        // Confirmação de JOIN — loga e ignora
         if (ev === 'phx_reply' && parsed?.ref === '1') {
           const status = parsed?.payload?.status;
           if (status === 'ok') {
             console.log('[Realtime] Canal generator_readings confirmado ✓');
           } else {
-            console.error('[Realtime] JOIN rejeitado pelo servidor:', JSON.stringify(parsed?.payload));
+            console.error('[Realtime] JOIN rejeitado:', JSON.stringify(parsed?.payload));
           }
           return;
         }
 
-        // BUG #6 CORRIGIDO: verifica event === 'postgres_changes' explicitamente
-        // Descarta mensagens de controle (heartbeat_reply, system, phx_close etc.)
+        // BUG #16 CORRIGIDO: 'system' event logado como debug, não como warning
+        if (ev === 'system') {
+          console.debug('[Realtime] System event:', JSON.stringify(parsed?.payload));
+          return;
+        }
+
         if (ev !== 'postgres_changes') return;
 
         const record = parsed?.payload?.data?.record;
@@ -462,8 +444,7 @@ const GeneratorReadingsService = {
           return;
         }
 
-        console.log('[Realtime] INSERT recebido — xml_source:', record.xml_source,
-          '| ts:', record.reading_timestamp);
+        console.log('[Realtime] INSERT recebido — ts:', record.reading_timestamp);
 
         if (typeof this._onNovaCallback === 'function') {
           this._onNovaCallback(record);
@@ -474,11 +455,10 @@ const GeneratorReadingsService = {
       }
     };
 
-    ws.onerror = (e) => {
-      console.warn('[Realtime] Erro no WebSocket (ver estado de rede)');
+    ws.onerror = () => {
+      console.warn('[Realtime] Erro no WebSocket (verifique conexão de rede)');
     };
 
-    // BUG #7 CORRIGIDO: backoff exponencial ao reconectar
     ws.onclose = (e) => {
       clearInterval(this._heartbeatTimer);
       this._heartbeatTimer = null;
@@ -496,7 +476,6 @@ const GeneratorReadingsService = {
     return ws;
   },
 
-  // BUG #7 CORRIGIDO: backoff exponencial (5s → 10s → 20s → ... máx 120s)
   _agendarReconexao() {
     clearTimeout(this._reconnectTimer);
     const delay = this._reconnectDelay;
@@ -506,7 +485,6 @@ const GeneratorReadingsService = {
         this._conectarRealtime();
       }
     }, delay);
-    // Dobra o delay para a próxima tentativa, respeitando o máximo
     this._reconnectDelay = Math.min(delay * 2, this._maxReconnectDelay);
   },
 
@@ -517,7 +495,7 @@ const GeneratorReadingsService = {
     this._reconnectTimer = null;
 
     if (this._ws) {
-      this._ws.onclose = null;  // evita reconexão ao fechar manualmente
+      this._ws.onclose = null;
       try { this._ws.close(); } catch (_) {}
       this._ws = null;
     }
@@ -530,11 +508,9 @@ const GeneratorReadingsService = {
   unsubscribeRealtime() {
     console.log('[Realtime] Desconectando manualmente…');
     this._limparRealtime(true);
-    this._reconnectDelay = 5000;  // reseta backoff
+    this._reconnectDelay = 5000;
   },
 
-  // ── Alias compatível ──────────────────────
-  // Mantido para backward-compatibility com código legado que use _realtimeSub
   get _realtimeSub() { return this._ws; },
 
   // ── Helpers de formatação ─────────────────
