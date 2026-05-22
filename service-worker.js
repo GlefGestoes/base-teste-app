@@ -12,7 +12,7 @@
  * - Scope dinâmico compatível com subpastas
  */
 
-const CACHE_VERSION = 'v2'; // Incrementar a cada deploy
+const CACHE_VERSION = 'v3'; // Incrementado: força limpeza do cache antigo // Incrementar a cada deploy
 const STATIC_CACHE  = `amz-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `amz-dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE   = `amz-images-${CACHE_VERSION}`;
@@ -34,6 +34,9 @@ const OPTIONAL_ASSETS = [
   './js/services/api.service.js',
   './js/services/auth.service.js',
   './js/services/dse.service.js',
+  './js/services/generator-readings.service.js',
+  './js/services/generator-controls.service.js',
+  './js/services/permissions.service.js',
   './pages/dashboard.html',
   './pages/monitoramento.html',
   './pages/relatorios.html',
@@ -146,9 +149,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. CSS e JS — CACHE FIRST (essencial para offline!)
-  if (url.pathname.match(/\.(css|js)$/)) {
-    event.respondWith(staleWhileRevalidate(request));  // ← atualiza em background
+  // 2. CSS — staleWhileRevalidate (visual, tolerante a versão antiga)
+  if (url.pathname.match(/\.css$/)) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // 2b. JS dos services — networkFirst (CRÍTICO: garante lógica de negócio atualizada)
+  // staleWhileRevalidate era problemático aqui: servia código antigo do service worker
+  // para toda a sessão enquanto atualizava silenciosamente em background, causando
+  // comportamento indefinido quando o usuário tinha a aba aberta por horas.
+  if (url.pathname.match(/\.js$/)) {
+    event.respondWith(networkFirstWithOfflineFallback(request));
     return;
   }
   
