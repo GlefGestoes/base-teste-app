@@ -321,7 +321,7 @@
 
         const clients = [...new Map(allGenerators.map(g => [g.client_id, g.clientName])).entries()];
         const selCli  = document.getElementById('filterClient');
-        selCli.innerHTML = '<option value="">Todos os clientes</option>' +
+        if (selCli) selCli.innerHTML = '<option value="">Todos os clientes</option>' +
           clients.filter(([id]) => id).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
 
         renderGenerators(applyFilters());
@@ -340,7 +340,8 @@
 
       } catch (err) {
         console.error('[Monitoramento] Erro ao carregar geradores:', err);
-        document.getElementById('generatorsGrid').innerHTML =
+        const _errGrid = document.getElementById('generatorsGrid');
+        if (_errGrid) _errGrid.innerHTML =
           '<p style="color:var(--text-muted);padding:20px;">Erro ao carregar geradores.</p>';
       }
     }
@@ -359,9 +360,18 @@
       }
     });
 
-    loadGenerators();
-    loadMonitoramentoReadings();
-    iniciarRealtime();
+    // FIX: garante que o DOM está completamente pronto antes de acessar elementos
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        loadGenerators();
+        loadMonitoramentoReadings();
+        iniciarRealtime();
+      });
+    } else {
+      loadGenerators();
+      loadMonitoramentoReadings();
+      iniciarRealtime();
+    }
   })();
     
   // Cache dos últimos valores conhecidos de cada campo
