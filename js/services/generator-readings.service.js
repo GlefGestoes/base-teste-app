@@ -94,6 +94,12 @@ const GeneratorReadingsService = {
   },
 
   // ── BUG #12 CORRIGIDO: getDashboard com pivot otimizado ──────────────
+  // v5 CORRIGIDO: getDashboard usa 1 query por campo (not.is.null + limit=1)
+  // FIX PRINCIPAL: a tabela é SPARSE (cada linha tem só 1 campo preenchido).
+  // O pivot anterior precisava de 500+ linhas e ainda assim falhava em campos
+  // com poucas leituras. Agora cada campo tem sua própria query direta ao banco,
+  // garantindo sempre a leitura mais recente independente da frequência de dados.
+  // As queries são disparadas em paralelo (Promise.all) para manter performance.
   async getDashboard() {
     this._init();
     const campos = [
@@ -104,61 +110,61 @@ const GeneratorReadingsService = {
       'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
       'gerador_watts_total','tempo_funcionamento_motor','numero_partidas',
     ];
+
+    // Campos onde valor=0 é fisicamente impossível quando gerador está ativo
+    // gerador_corrente e watts: podem ser 0 legitimamente (sem carga) — não ignorar
+    // temperatura_oleo: sensor pode não estar presente, não ignorar 0 aqui
+    const IGNORAR_ZERO = new Set([
+      // removido gerador_watts_total e outros que podem ter valor 0 válido
+    ]);
+
+    const STALE_THRESHOLD_MS = 4 * 3600 * 1000; // 4h — tolerante com geradores intermitentes
+    const now = Date.now();
+
     try {
-      const selecao = ['reading_timestamp', ...campos].join(',');
-      // BUG #12 CORRIGIDO: limite aumentado para 500 para cobrir tabelas mais esparsas
-      const res = await this._fetchWithTimeout(
-        `${this._supabaseUrl}/rest/v1/generator_readings`
-        + `?select=${selecao}`
-        + `&order=reading_timestamp.desc`
-        + `&limit=500`,
-        { headers: this._headers() }
+      // Dispara 1 query por campo em paralelo — cada uma retorna a leitura mais recente
+      const resultados = await Promise.all(
+        campos.map(async (c) => {
+          try {
+            const res = await this._fetchWithTimeout(
+              `${this._supabaseUrl}/rest/v1/generator_readings`
+              + `?select=reading_timestamp,${c}`
+              + `&${c}=not.is.null`
+              + `&order=reading_timestamp.desc`
+              + `&limit=1`,
+              { headers: this._headers() }
+            );
+            if (!res.ok) return [c, null];
+            const data = await res.json();
+            const row  = data?.[0];
+            if (!row || row[c] === null || row[c] === undefined) return [c, null];
+
+            const v     = parseFloat(row[c]);
+            if (isNaN(v)) return [c, null];
+            if (IGNORAR_ZERO.has(c) && v === 0) return [c, null];
+
+            const ts    = row.reading_timestamp ?? null;
+            const ageMs = ts ? (now - new Date(ts).getTime()) : Infinity;
+            return [c, {
+              valor:     v,
+              timestamp: ts,
+              stale:     ageMs > STALE_THRESHOLD_MS,
+              ageMin:    ts ? Math.round(ageMs / 60000) : null,
+            }];
+          } catch (_) {
+            return [c, null];
+          }
+        })
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const rows = await res.json();
-
-      const STALE_THRESHOLD_MS = 2 * 3600 * 1000;
-      const now = Date.now();
-
-      const IGNORAR_ZERO = new Set([
-        'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
-        'gerador_watts_l1','gerador_watts_l2','gerador_watts_l3','gerador_watts_total',
-        'temperatura_oleo',
-      ]);
 
       const dash = {};
-      // BUG #12 CORRIGIDO: para cada campo, encontra a linha mais recente
-      // com valor não-nulo. Set de campos satisfeitos para early-exit.
-      const camposSatisfeitos = new Set();
-
-      for (const row of rows) {
-        if (camposSatisfeitos.size === campos.length) break; // todos encontrados
-
-        for (const c of campos) {
-          if (camposSatisfeitos.has(c)) continue;
-          const v = row[c];
-          if (v === null || v === undefined) continue;
-          if (IGNORAR_ZERO.has(c) && parseFloat(v) === 0) continue;
-
-          const ts    = row.reading_timestamp ?? null;
-          const ageMs = ts ? (now - new Date(ts).getTime()) : Infinity;
-          dash[c] = {
-            valor:  parseFloat(v),
-            timestamp: ts,
-            stale: ageMs > STALE_THRESHOLD_MS,
-            ageMin: ts ? Math.round(ageMs / 60000) : null,
-          };
-          camposSatisfeitos.add(c);
-        }
+      let encontrados = 0;
+      for (const [c, dado] of resultados) {
+        if (dado) encontrados++;
+        dash[c] = dado ?? { valor: null, timestamp: null, stale: false, ageMin: null };
       }
 
-      // Campos não encontrados → null
-      campos.forEach(c => {
-        if (!dash[c]) dash[c] = { valor: null, timestamp: null, stale: false, ageMin: null };
-      });
-
-      console.log('[Readings] getDashboard — 1 query, pivot de', rows.length,
-        'linhas,', camposSatisfeitos.size, '/', campos.length, 'campos ✓');
+      console.log(`[Readings] getDashboard v5 — ${campos.length} queries paralelas, ${encontrados}/${campos.length} campos com dados ✓`);
       return dash;
     } catch (err) {
       console.error('[Readings] getDashboard:', err.message);
