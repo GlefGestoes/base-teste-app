@@ -154,7 +154,7 @@
   let _debounceTimerMonit = null;
   function _debounceReloadMonit() {
     clearTimeout(_debounceTimerMonit);
-    _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 800);
+    _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 200); // CORRIGIDO: 800ms → 200ms (latência reduzida 4x)
   }
 
   (function() {
