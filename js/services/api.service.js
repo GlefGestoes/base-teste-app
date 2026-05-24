@@ -247,10 +247,8 @@ const ApiService = {
     const data = await response.json();
 
     if (!response.ok) {
-      // Supabase retorna "Email not confirmed" quando o usuário se cadastrou
-      // manualmente mas a confirmação de e-mail está ativa no projeto.
-      // Traduzimos para uma mensagem clara em português.
-      const rawError = data.error_description || data.error_code || data.msg || '';
+      console.error('[ApiService.login] Supabase 400 body:', JSON.stringify(data));
+      const rawError = data.error_description || data.error_code || data.msg || data.message || '';
       let friendlyError = 'Email ou senha inválidos';
       if (rawError.toLowerCase().includes('not confirmed') || rawError.toLowerCase().includes('email_not_confirmed')) {
         friendlyError = 'E-mail ainda não confirmado. Verifique sua caixa de entrada e clique no link de confirmação antes de fazer login.';
@@ -323,8 +321,13 @@ const ApiService = {
         password: user.password,
         data: {
           name:      user.name,
-          role:      'cliente',   // novos cadastros sempre entram como cliente
-          isPending: true         // admin promove depois pelo painel de configurações
+          role:      'cliente',
+          isPending: true
+        },
+        // Garante que o link de confirmação no e-mail aponte para o app correto.
+        // O Supabase adiciona #access_token=...&type=signup ao retornar.
+        options: {
+          emailRedirectTo: 'https://glefgestoes.github.io/base-teste-app/index.html'
         }
       })
     });
