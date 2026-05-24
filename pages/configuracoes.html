@@ -364,17 +364,52 @@
 
       try {
         const token = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
-        const res = await fetch(
+        const headers = {
+          'apikey': window.CONFIG.SUPABASE.ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        };
+
+        // 1. Busca registros de public.users (usuários com perfil completo)
+        const resPublic = await fetch(
           `${window.CONFIG.SUPABASE.URL}/rest/v1/users?select=id,name,email,role,created_at&order=created_at.desc`,
-          {
-            headers: {
-              'apikey': window.CONFIG.SUPABASE.ANON_KEY,
-              'Authorization': `Bearer ${token}`
-            }
-          }
+          { headers }
         );
-        if (!res.ok) throw new Error('Erro ao buscar usuários');
-        _allUsers = await res.json();
+        const publicUsers = resPublic.ok ? await resPublic.json() : [];
+        const publicIds = new Set(publicUsers.map(u => u.id));
+
+        // 2. Busca todos os usuários de auth via /auth/v1/admin/users
+        //    Isso captura usuários cadastrados manualmente que ainda não têm
+        //    registro em public.users (trigger não configurado ou pendente).
+        let authUsers = [];
+        try {
+          const resAuth = await fetch(
+            `${window.CONFIG.SUPABASE.URL}/auth/v1/admin/users?per_page=200`,
+            { headers }
+          );
+          if (resAuth.ok) {
+            const authData = await resAuth.json();
+            // A API retorna { users: [...] } ou diretamente o array
+            authUsers = Array.isArray(authData) ? authData : (authData.users || []);
+          }
+        } catch (_) { /* endpoint de admin pode não estar acessível com anon key */ }
+
+        // 3. Mescla: adiciona usuários de auth que não estão em public.users
+        //    (esses são os que se cadastraram manualmente sem trigger)
+        const extraUsers = authUsers
+          .filter(au => !publicIds.has(au.id))
+          .map(au => ({
+            id:         au.id,
+            email:      au.email,
+            name:       au.user_metadata?.name || au.email.split('@')[0],
+            role:       au.user_metadata?.role || 'cliente',
+            created_at: au.created_at
+          }));
+
+        _allUsers = [...publicUsers, ...extraUsers];
+
+        // Ordena por data de criação decrescente
+        _allUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
         renderUsers(_allUsers);
       } catch (err) {
         list.innerHTML = `<p style="color:var(--color-danger);font-size:var(--text-sm);">❌ ${err.message}</p>`;
@@ -460,36 +495,52 @@
 
       try {
         const token = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
+        const headers = {
+          'Content-Type': 'application/json',
+          'apikey': window.CONFIG.SUPABASE.ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=minimal'
+        };
 
-        // 1. Atualiza public.users
-        const resUsers = await fetch(
-          `${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${userId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': window.CONFIG.SUPABASE.ANON_KEY,
-              'Authorization': `Bearer ${token}`,
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ role: newRole })
-          }
+        // 1. Verifica se o usuário já existe em public.users
+        const checkRes = await fetch(
+          `${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${userId}&select=id`,
+          { headers: { 'apikey': window.CONFIG.SUPABASE.ANON_KEY, 'Authorization': `Bearer ${token}` } }
         );
-        if (!resUsers.ok) throw new Error('Falha ao atualizar perfil do usuário');
+        const existing = checkRes.ok ? await checkRes.json() : [];
+
+        if (Array.isArray(existing) && existing.length > 0) {
+          // Usuário já tem registro: atualiza via PATCH
+          const resUsers = await fetch(
+            `${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${userId}`,
+            { method: 'PATCH', headers, body: JSON.stringify({ role: newRole }) }
+          );
+          if (!resUsers.ok) throw new Error('Falha ao atualizar perfil do usuário');
+        } else {
+          // Usuário só existe em auth.users (cadastro manual sem trigger):
+          // cria o registro em public.users via INSERT
+          const u = _allUsers.find(x => x.id === userId);
+          const resInsert = await fetch(
+            `${window.CONFIG.SUPABASE.URL}/rest/v1/users`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                id:         userId,
+                email:      u?.email || '',
+                name:       u?.name  || '',
+                role:       newRole,
+                created_at: u?.created_at || new Date().toISOString()
+              })
+            }
+          );
+          if (!resInsert.ok) throw new Error('Falha ao criar perfil do usuário em public.users');
+        }
 
         // 2. Atualiza public.clients (se existir registro vinculado)
         await fetch(
           `${window.CONFIG.SUPABASE.URL}/rest/v1/clients?user_id=eq.${userId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': window.CONFIG.SUPABASE.ANON_KEY,
-              'Authorization': `Bearer ${token}`,
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ type: newRole })
-          }
+          { method: 'PATCH', headers, body: JSON.stringify({ type: newRole }) }
         );
 
         const u = _allUsers.find(x => x.id === userId);
