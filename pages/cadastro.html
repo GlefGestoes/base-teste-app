@@ -215,30 +215,24 @@
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
-    // 1. Registra no Supabase com isPending: true
-    //    O perfil será completado após o primeiro login
     const result = await AuthService.register({
       name,
       email,
       password,
-      role:      'cliente',   // papel padrão — admin pode alterar depois
-      isPending: true,        // flag: perfil incompleto
+      role:      'cliente',
+      isPending: true,
     });
 
     if (result.success) {
-      showFeedback('Conta criada! Faça login para completar seu cadastro.', 'success');
-
-      // 2. Tenta login automático para levar ao modal de completar perfil
-      setTimeout(async () => {
-        const loginResult = await AuthService.login(email, password);
-        if (loginResult.success) {
-          // Vai ao dashboard com flag para abrir modal de completar perfil
-          window.location.href = '../pages/dashboard.html?complete_profile=1';
-        } else {
-          // Se não conseguiu login automático, manda para tela de login
-          window.location.href = '../index.html?registered=1';
-        }
-      }, 1200);
+      // Confirmação de e-mail habilitada no Supabase:
+      // informa o usuário e redireciona para o login após 4 segundos.
+      showFeedback(
+        '✅ Conta criada! Enviamos um e-mail de confirmação para ' + email + '. Clique no link para ativar sua conta e depois faça login.',
+        'success'
+      );
+      setTimeout(() => {
+        window.location.href = '../index.html';
+      }, 4000);
     } else {
       showFeedback(result.error || 'Erro ao criar conta. Tente novamente.');
       setLoading(false);
@@ -251,16 +245,13 @@
       showFeedback('Login com Google não habilitado.'); return;
     }
     try {
-      const res = await fetch(
-        `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + '/pages/dashboard.html')}`,
-        { method: 'GET', headers: { 'apikey': window.CONFIG.SUPABASE.ANON_KEY } }
-      );
-      // Supabase retorna redirect — seguimos a URL
-      if (res.redirected) { window.location.href = res.url; return; }
-      // Alternativa: abre a URL de autorização direto
+      // Deriva o caminho base a partir da localização atual do arquivo cadastro.html
+      // Ex: https://glefgestoes.github.io/base-teste-app/pages/cadastro.html
+      //  → https://glefgestoes.github.io/base-teste-app/pages/dashboard.html
+      const redirectTo = window.location.href.replace('cadastro.html', 'dashboard.html').split('?')[0];
       window.location.href =
         `${window.CONFIG.SUPABASE.URL}/auth/v1/authorize?provider=google` +
-        `&redirect_to=${encodeURIComponent(window.location.origin + '/pages/dashboard.html')}`;
+        `&redirect_to=${encodeURIComponent(redirectTo)}`;
     } catch(err) {
       showFeedback('Erro ao iniciar login com Google: ' + err.message);
     }
