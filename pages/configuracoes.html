@@ -364,52 +364,17 @@
 
       try {
         const token = localStorage.getItem(window.CONFIG.AUTH.TOKEN_KEY);
-        const headers = {
-          'apikey': window.CONFIG.SUPABASE.ANON_KEY,
-          'Authorization': `Bearer ${token}`
-        };
-
-        // 1. Busca registros de public.users (usuários com perfil completo)
-        const resPublic = await fetch(
+        const res = await fetch(
           `${window.CONFIG.SUPABASE.URL}/rest/v1/users?select=id,name,email,role,created_at&order=created_at.desc`,
-          { headers }
-        );
-        const publicUsers = resPublic.ok ? await resPublic.json() : [];
-        const publicIds = new Set(publicUsers.map(u => u.id));
-
-        // 2. Busca todos os usuários de auth via /auth/v1/admin/users
-        //    Isso captura usuários cadastrados manualmente que ainda não têm
-        //    registro em public.users (trigger não configurado ou pendente).
-        let authUsers = [];
-        try {
-          const resAuth = await fetch(
-            `${window.CONFIG.SUPABASE.URL}/auth/v1/admin/users?per_page=200`,
-            { headers }
-          );
-          if (resAuth.ok) {
-            const authData = await resAuth.json();
-            // A API retorna { users: [...] } ou diretamente o array
-            authUsers = Array.isArray(authData) ? authData : (authData.users || []);
+          {
+            headers: {
+              'apikey': window.CONFIG.SUPABASE.ANON_KEY,
+              'Authorization': `Bearer ${token}`
+            }
           }
-        } catch (_) { /* endpoint de admin pode não estar acessível com anon key */ }
-
-        // 3. Mescla: adiciona usuários de auth que não estão em public.users
-        //    (esses são os que se cadastraram manualmente sem trigger)
-        const extraUsers = authUsers
-          .filter(au => !publicIds.has(au.id))
-          .map(au => ({
-            id:         au.id,
-            email:      au.email,
-            name:       au.user_metadata?.name || au.email.split('@')[0],
-            role:       au.user_metadata?.role || 'cliente',
-            created_at: au.created_at
-          }));
-
-        _allUsers = [...publicUsers, ...extraUsers];
-
-        // Ordena por data de criação decrescente
-        _allUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
+        );
+        if (!res.ok) throw new Error('Erro ao buscar usuários');
+        _allUsers = await res.json();
         renderUsers(_allUsers);
       } catch (err) {
         list.innerHTML = `<p style="color:var(--color-danger);font-size:var(--text-sm);">❌ ${err.message}</p>`;
