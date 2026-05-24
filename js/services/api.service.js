@@ -247,7 +247,19 @@ const ApiService = {
     const data = await response.json();
 
     if (!response.ok) {
-      return { success: false, error: data.error_description || 'Email ou senha inválidos' };
+      // Supabase retorna "Email not confirmed" quando o usuário se cadastrou
+      // manualmente mas a confirmação de e-mail está ativa no projeto.
+      // Traduzimos para uma mensagem clara em português.
+      const rawError = data.error_description || data.error_code || data.msg || '';
+      let friendlyError = 'Email ou senha inválidos';
+      if (rawError.toLowerCase().includes('not confirmed') || rawError.toLowerCase().includes('email_not_confirmed')) {
+        friendlyError = 'E-mail ainda não confirmado. Verifique sua caixa de entrada e clique no link de confirmação antes de fazer login.';
+      } else if (rawError.toLowerCase().includes('invalid') || rawError.toLowerCase().includes('credentials')) {
+        friendlyError = 'E-mail ou senha incorretos. Verifique suas credenciais.';
+      } else if (rawError) {
+        friendlyError = rawError;
+      }
+      return { success: false, error: friendlyError };
     }
 
     // Bug #3 — salva a expiração absoluta (epoch em segundos)
@@ -299,11 +311,7 @@ const ApiService = {
   async register(user) {
     const url = `${window.CONFIG.SUPABASE.URL}/auth/v1/signup`;
 
-    // Cria o usuário em auth.users.
-    // O trigger on_auth_user_created no Supabase cuida automaticamente
-    // de inserir em public.users e public.clients — não fazemos isso aqui
-    // para evitar conflito de chave duplicada e erros de RLS quando
-    // email_confirm está ativo (access_token vem null nesse caso).
+    // 1. Cria o usuário em auth.users
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -325,6 +333,53 @@ const ApiService = {
 
     if (!response.ok) {
       return { success: false, error: data.error_description || data.msg || 'Erro ao criar conta' };
+    }
+
+    // 2. Se o Supabase retornou um access_token (confirmação de e-mail desabilitada),
+    //    cria o registro em public.users explicitamente.
+    //    Isso garante que o usuário apareça no painel de configurações mesmo
+    //    quando o trigger on_auth_user_created não está configurado no banco.
+    if (data.access_token && data.user?.id) {
+      try {
+        // Verifica se o registro já foi criado pelo trigger
+        const checkRes = await fetch(
+          `${window.CONFIG.SUPABASE.URL}/rest/v1/users?id=eq.${data.user.id}&select=id`,
+          {
+            headers: {
+              'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+              'Authorization': `Bearer ${data.access_token}`
+            }
+          }
+        );
+        const existing = await checkRes.json();
+
+        // Só insere se o trigger ainda não criou o registro
+        if (!Array.isArray(existing) || existing.length === 0) {
+          await fetch(
+            `${window.CONFIG.SUPABASE.URL}/rest/v1/users`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey':        window.CONFIG.SUPABASE.ANON_KEY,
+                'Authorization': `Bearer ${data.access_token}`,
+                'Prefer':        'return=minimal'
+              },
+              body: JSON.stringify({
+                id:         data.user.id,
+                email:      user.email,
+                name:       user.name,
+                role:       'cliente',
+                created_at: new Date().toISOString()
+              })
+            }
+          );
+        }
+      } catch (e) {
+        // Falha silenciosa: o trigger pode cuidar disso, ou o admin cria manualmente.
+        // Não impede o cadastro de ser considerado bem-sucedido.
+        console.warn('[ApiService] Aviso ao criar public.users:', e.message);
+      }
     }
 
     return { success: true, data };
