@@ -462,9 +462,9 @@ const ApiService = {
   // GENERATOR EVENTS
   // ==========================================
 
-  async getGeneratorEvents(generatorId) {
+  async getGeneratorEvents() {
     return this.request(
-      `/generator_events?generator_id=eq.${generatorId}&order=event_time.desc`
+      `/generator_events?order=event_timestamp.desc&limit=100`
     );
   },
 
