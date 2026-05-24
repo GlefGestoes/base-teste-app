@@ -128,12 +128,14 @@
 
     // ─── Trata callback OAuth (retorno do Google/Apple) ──────────────────
     // Supabase redireciona de volta com #access_token=...&refresh_token=...
+    // Também usado na confirmação de e-mail: type=signup
     const hash = window.location.hash;
     if (hash.includes('access_token')) {
       const params = new URLSearchParams(hash.replace('#', ''));
       const accessToken  = params.get('access_token');
       const refreshToken = params.get('refresh_token');
       const expiresIn    = parseInt(params.get('expires_in') || '3600', 10);
+      const type         = params.get('type'); // 'signup' = confirmação de e-mail
 
       if (accessToken) {
         // Salva sessão OAuth no mesmo formato do login manual
@@ -152,7 +154,6 @@
         .then(r => r.json())
         .then(async u => {
           // Consulta public.users para obter role e dados reais do perfil
-          // (igual ao login manual — evita que metadata do Google sobrescreva o role)
           let publicProfile = {};
           try {
             const profileRes = await fetch(
@@ -172,17 +173,16 @@
             console.warn('[OAuth] Não foi possível carregar public.users:', e.message);
           }
 
-          // Se existe em public.users, usa os dados de lá (mais confiável)
-          // Se não existe, é um novo usuário OAuth — vai completar o perfil
           const existsInPublic = !!publicProfile.id;
-          const isNewOAuthUser = !existsInPublic && !u.user_metadata?.role;
+          // Novo usuário: veio de OAuth sem perfil, ou confirmou e-mail agora (type=signup)
+          const isNewUser = (!existsInPublic && !u.user_metadata?.role) || type === 'signup';
 
           const user = {
             id:        u.id,
             email:     u.email,
             name:      publicProfile.name      || u.user_metadata?.full_name || u.user_metadata?.name || u.email,
             role:      publicProfile.role      || u.user_metadata?.role      || 'cliente',
-            isPending: isNewOAuthUser ? true   : (u.user_metadata?.isPending === true),
+            isPending: isNewUser ? true        : (u.user_metadata?.isPending === true),
             phone:     publicProfile.phone     || '',
             company:   publicProfile.company   || '',
             bio:       publicProfile.bio       || '',
@@ -191,6 +191,8 @@
 
           localStorage.setItem(window.CONFIG.AUTH.USER_KEY, JSON.stringify(user));
 
+          // Se confirmou e-mail agora (type=signup), vai direto ao dashboard
+          // com flag para completar perfil, sem precisar fazer login de novo
           if (user.isPending) {
             window.location.href = 'pages/dashboard.html?complete_profile=1';
           } else {
@@ -209,7 +211,7 @@
     if (_params.get('registered') === '1') {
       const fb = document.getElementById('feedbackMsg');
       if (fb) {
-        fb.textContent = '✅ Conta criada! Faça login para continuar.';
+        fb.textContent = '✅ Conta criada! Verifique seu e-mail e clique no link de confirmação para ativar sua conta.';
         fb.style.display = 'block';
         fb.style.background = 'rgba(16,185,129,0.15)';
         fb.style.color   = '#10b981';
