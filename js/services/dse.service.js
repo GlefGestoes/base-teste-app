@@ -162,11 +162,11 @@ const DSEService = {
   // -------------------------------------------
   // BUSCAR EVENTOS (HISTÓRICO)
   // -------------------------------------------
-  async getEvents(generatorId) {
+  async getEvents() {
     try {
       const cfg = this._getConfig();
       const res = await fetch(
-        `${cfg.URL}/rest/v1/generator_events?generator_id=eq.${generatorId}&order=event_time.desc`,
+        `${cfg.URL}/rest/v1/generator_events?order=event_timestamp.desc&limit=100`,
         { headers: this._getAuthHeaders() }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
