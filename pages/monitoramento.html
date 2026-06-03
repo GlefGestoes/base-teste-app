@@ -11,17 +11,19 @@
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+
+  <!-- Navbar -->
   <header class="navbar">
-    <a href="../pages/dashboard.html" class="navbar-brand" data-page="dashboard">
+    <a href="../pages/dashboard.html" class="navbar-brand">
       <div class="navbar-brand-icon">
         <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
       </div>
-      <span class="navbar-brand-text"><span></span></span>
+      <span class="navbar-brand-text"><span>App</span></span>
     </a>
     <div class="navbar-actions">
-      <!-- Badge status DSE -->
-      <div id="dseStatusBadge" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);margin-right:8px;">
-        <span id="dseStatusDot" style="width:8px;height:8px;border-radius:50%;background:#6b7280;display:inline-block;"></span>
+      <!-- Badge status Gateway DSE (funcionalidade versão atual) -->
+      <div id="dseStatusBadge" class="dse-badge">
+        <span id="dseStatusDot" class="status-dot"></span>
         <span id="dseStatusText">Gateway</span>
       </div>
       <button type="button" id="menuToggle" class="btn btn-secondary btn-sm">
@@ -34,109 +36,206 @@
     </div>
   </header>
 
+  <!-- Sidebar Overlay -->
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
   <aside id="sidebar" class="sidebar">
     <nav>
       <ul class="sidebar-menu">
-        <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link" data-page="dashboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link active" data-page="monitoramento"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link" data-page="relatorios"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link" data-page="clientes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/geradores.html" class="sidebar-menu-link" data-page="geradores"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>Geradores</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link" data-page="configuracoes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/dashboard.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/monitoramento.html" class="sidebar-menu-link active">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            Monitoramento
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/relatorios.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            Relatórios
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/clientes.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+            Clientes
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/geradores.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect>
+              <path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path>
+            </svg>
+            Geradores
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/configuracoes.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Configurações
+          </a>
+        </li>
       </ul>
     </nav>
   </aside>
 
+  <!-- Bottom Nav (Mobile) -->
   <nav class="bottom-nav">
-    <a href="../pages/dashboard.html" class="bottom-nav-item" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
-    <a href="../pages/monitoramento.html" class="bottom-nav-item active" data-page="monitoramento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
-    <a href="../pages/relatorios.html" class="bottom-nav-item" data-page="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
-    <a href="../pages/clientes.html" class="bottom-nav-item" data-page="clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
-    <a href="../pages/geradores.html" class="bottom-nav-item" data-page="geradores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg><span>Geradores</span></a>
-    <a href="../pages/configuracoes.html" class="bottom-nav-item" data-page="configuracoes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
+    <a href="../pages/dashboard.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      <span>Início</span>
+    </a>
+    <a href="../pages/monitoramento.html" class="bottom-nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+      </svg>
+      <span>Monitor</span>
+    </a>
+    <a href="../pages/relatorios.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      <span>Relatórios</span>
+    </a>
+    <a href="../pages/clientes.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+      </svg>
+      <span>Clientes</span>
+    </a>
+    <a href="../pages/configuracoes.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>Ajustes</span>
+    </a>
   </nav>
 
+  <!-- Main Content -->
   <main class="main-content">
+
+    <!-- Header (layout v1) -->
     <header class="page-header">
       <h1 class="page-title">Monitoramento</h1>
       <p class="page-subtitle">Acompanhamento em tempo real</p>
     </header>
-    
+
     <div style="padding: 0 var(--space-4);">
-      
-      <!-- Filtros -->
-      <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap;">
-        <select id="filterStatus" class="form-select" style="min-width:150px;">
+
+      <!-- Filtros (funcionalidade versão atual, layout v1) -->
+      <div style="display: flex; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap;">
+        <select id="filterStatus" class="form-select" style="min-width: 150px;">
           <option value="">Todos os status</option>
           <option value="Online">Online</option>
           <option value="Offline">Offline</option>
           <option value="Aguardando">Aguardando</option>
         </select>
-        <select id="filterClient" class="form-select" style="min-width:150px;">
+        <select id="filterClient" class="form-select" style="min-width: 150px;">
           <option value="">Todos os clientes</option>
         </select>
       </div>
 
-    <div style="padding: 0 var(--space-4);">
-
-      <!-- Painel Gateway DSE -->
-      <div id="gatewayPanel" style="display:none; margin-bottom: var(--space-4);">
+      <!-- Painel Gateway DSE (oculto até dados chegarem — funcionalidade versão atual) -->
+      <div id="gatewayPanel" style="display: none; margin-bottom: var(--space-4);">
         <div class="card" style="border-left: 3px solid var(--color-accent);">
-          <div class="card-header" style="margin-bottom:8px;">
-            <div class="card-title" style="font-size:14px;">🔌 Gateway DSE — <span id="gwSerial">—</span></div>
-            <span id="gwUpdateTime" style="font-size:11px;color:var(--text-muted);"></span>
+          <div class="card-header">
+            <div class="card-title">Gateway DSE — <span id="gwSerial">—</span></div>
+            <span id="gwUpdateTime" style="font-size: var(--text-xs); color: var(--text-muted);"></span>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:13px;">
-            <div>📶 <strong id="gwSignal">—</strong> (<span id="gwOperator">—</span>)</div>
-            <div>🌐 IP: <strong id="gwIp">—</strong></div>
-            <div>📡 MQTT: <strong id="gwMqtt">—</strong></div>
-            <div>📍 GPS: <strong id="gwGps">—</strong></div>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-sm);">
+            <div><strong id="gwSignal">—</strong> (<span id="gwOperator">—</span>)</div>
+            <div>IP: <strong id="gwIp">—</strong></div>
+            <div>MQTT: <strong id="gwMqtt">—</strong></div>
+            <div>GPS: <strong id="gwGps">—</strong></div>
           </div>
         </div>
       </div>
-   
-      <!-- PAINEL DE INSTRUMENTOS DSE REAIS -->
-      <div id="monitorReadingsPanel" style="margin-bottom:var(--space-6);">
-        <div class="card" style="margin-bottom:var(--space-4);">
-          <div class="card-header" style="margin-bottom:12px;">
-            <div class="card-title">⚡ Instrumentos — Módulo 6F2F052F62</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span id="monitorStatusDot" style="width:8px;height:8px;border-radius:50%;background:#6b7280;display:inline-block;"></span>
-              <span id="monitorStatusText" style="font-size:12px;color:var(--text-muted);">Carregando...</span>
+
+      <!-- Painel de Instrumentos DSE (funcionalidade versão atual — layout integrado ao padrão v1) -->
+      <div id="monitorReadingsPanel" style="margin-bottom: var(--space-6);">
+
+        <!-- Card de instrumentos por grupo — layout card v1 -->
+        <div class="card" style="margin-bottom: var(--space-4);">
+          <div class="card-header">
+            <div class="card-title">Instrumentos do Gerador</div>
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <span id="monitorStatusDot" class="status-dot"></span>
+              <span id="monitorStatusText" style="font-size: var(--text-xs); color: var(--text-muted);">Carregando...</span>
             </div>
           </div>
-          <div style="margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Motor</div>
+
+          <!-- Grupo Motor -->
+          <div style="margin-bottom: var(--space-4);">
+            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Motor</div>
             <div class="grid grid-cols-2 grid-cols-md-4" id="motorGrid"></div>
           </div>
-          <div style="margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Gerador Elétrico</div>
+
+          <!-- Grupo Gerador Elétrico -->
+          <div style="margin-bottom: var(--space-4);">
+            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Gerador Elétrico</div>
             <div class="grid grid-cols-2 grid-cols-md-4" id="geradorGrid"></div>
           </div>
+
+          <!-- Grupo Rede -->
           <div>
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Rede</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Rede</div>
             <div class="grid grid-cols-2 grid-cols-md-4" id="redeGrid"></div>
           </div>
         </div>
+
+        <!-- Histórico de velocidade (card v1) -->
         <div class="card">
-          <div class="card-header" style="margin-bottom:8px;">
-            <div class="card-title" style="font-size:13px;">📈 Velocidade Motor — Últimas 2h</div>
-            <span id="historicoCount" style="font-size:11px;color:var(--text-muted);"></span>
+          <div class="card-header">
+            <div class="card-title">Velocidade Motor — Últimas 2h</div>
+            <span id="historicoCount" style="font-size: var(--text-xs); color: var(--text-muted);"></span>
           </div>
-          <div id="historicoVelocidade" style="font-size:12px;color:var(--text-muted);overflow-x:auto;white-space:nowrap;padding:4px 0;">
+          <div id="historicoVelocidade" style="font-size: var(--text-sm); color: var(--text-muted); overflow-x: auto; white-space: nowrap; padding: var(--space-1) 0;">
             Carregando...
           </div>
         </div>
+
       </div>
 
-      <!-- Grid de geradores -->
+      <!-- Grid de Geradores (layout v1 — dados reais da versão atual) -->
       <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
-        <p style="color:var(--text-muted);padding:20px;">Carregando...</p>
+        <!-- Preenchido via JS -->
       </div>
+
     </div>
   </main>
 
+  <!-- Scripts (versão atual — todos preservados) -->
   <script src="../config.js"></script>
   <script src="../js/utils/helpers.js"></script>
   <script src="../js/services/mock.service.js"></script>
@@ -146,15 +245,14 @@
   <script src="../js/services/dse.service.js"></script>
   <script src="../js/services/generator-readings.service.js"></script>
   <script src="../js/app.js"></script>
-  
+
+  <!-- Lógica completa da versão atual — 100% preservada -->
   <script>
   let _realtimeInitialized = false;
-  // BUG #11 CORRIGIDO (igual dashboard): debounce de 800ms para agrupar
-  // múltiplos INSERTs consecutivos em um único reload de leituras.
   let _debounceTimerMonit = null;
   function _debounceReloadMonit() {
     clearTimeout(_debounceTimerMonit);
-    _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 200); // CORRIGIDO: 800ms → 200ms (latência reduzida 4x)
+    _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 200);
   }
 
   (function() {
@@ -242,7 +340,7 @@
     function renderGenerators(list) {
       const container = document.getElementById('generatorsGrid');
       if (!list.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);padding:20px;">Nenhum gerador encontrado.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Nenhum gerador encontrado.</p>';
         return;
       }
 
@@ -255,54 +353,58 @@
           <div class="card-header">
             <div>
               <div class="card-title">${g.serial || '—'}</div>
-              <div style="font-size:12px;color:#aaa;">${g.clientName || 'Sem cliente'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
             </div>
             <span class="badge ${statusClass(g.status)}">${g.status || 'Aguardando'}</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin:12px 0;">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
             <div class="stat-card">
               <div class="stat-icon ${isOnline ? 'success' : 'error'}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
               </div>
-              <div class="stat-value" style="font-size:var(--text-lg);">${isOnline ? 'Online' : 'Offline'}</div>
-              <div class="stat-label">Conexão DSE</div>
+              <div class="stat-value" style="font-size: var(--text-xl);">${isOnline ? 'Online' : 'Offline'}</div>
+              <div class="stat-label">Conexão</div>
             </div>
             <div class="stat-card">
               <div class="stat-icon info">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>
                 </svg>
               </div>
-              <div class="stat-value" style="font-size:var(--text-lg);">${g.protocol || mod?.protocol || 'RS485'}</div>
+              <div class="stat-value" style="font-size: var(--text-xl);">${g.protocol || mod?.protocol || 'RS485'}</div>
               <div class="stat-label">Protocolo</div>
             </div>
           </div>
-          <div style="background:var(--bg-input);border-radius:var(--radius-lg);padding:var(--space-3);font-size:13px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <span style="color:var(--text-muted);">Módulo ID</span>
+          <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3);">
+            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
+              <span>Módulo ID</span>
               <span>${g.module_id || '—'}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <span style="color:var(--text-muted);">Firmware</span>
+            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
+              <span>Firmware</span>
               <span>${g.firmware || mod?.firmware || '—'}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <span style="color:var(--text-muted);">Local</span>
+            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
+              <span>Local</span>
               <span>${g.local || '—'}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span style="color:var(--text-muted);">Cidade/UF</span>
+            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted);">
+              <span>Cidade/UF</span>
               <span>${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</span>
             </div>
           </div>
           ${mod?.latitude ? `
-          <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">
-            📍 GPS: ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
+          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2);">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
           </div>` : ''}
-          <div style="display:flex;gap:8px;margin-top:12px;">
-            <a href="../pages/geradores.html" class="btn btn-secondary" style="flex:1;text-align:center;" data-page="geradores">Gerenciar</a>
+          <div style="display: flex; gap: var(--space-2); margin-top: var(--space-4);">
+            <a href="../pages/geradores.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Detalhes</a>
+            <a href="../pages/relatorios.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Histórico</a>
           </div>
         </div>`;
       }).join('');
@@ -342,7 +444,7 @@
         console.error('[Monitoramento] Erro ao carregar geradores:', err);
         const _errGrid = document.getElementById('generatorsGrid');
         if (_errGrid) _errGrid.innerHTML =
-          '<p style="color:var(--text-muted);padding:20px;">Erro ao carregar geradores.</p>';
+          '<p style="color: var(--text-muted); padding: 20px;">Erro ao carregar geradores.</p>';
       }
     }
 
@@ -360,7 +462,6 @@
       }
     });
 
-    // FIX: garante que o DOM está completamente pronto antes de acessar elementos
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
         loadGenerators();
@@ -373,7 +474,7 @@
       iniciarRealtime();
     }
   })();
-    
+
   // Cache dos últimos valores conhecidos de cada campo
   const _ultimosValores = {};
 
@@ -382,7 +483,6 @@
     const svc = window.GeneratorReadingsService;
     if (!svc) return;
 
-    // FIX-WS: só unsubscribe se houver WS aberto — evita log enganoso
     if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) {
       svc.unsubscribeRealtime();
     }
@@ -398,12 +498,10 @@
     console.log('[Monitoramento] Realtime inscrito ✓');
   }
 
-  // Atualiza apenas o card cujo campo chegou no INSERT, sem nova requisição HTTP
   function atualizarCardDireto(record) {
     const svc = window.GeneratorReadingsService;
     if (!svc || !record) return;
 
-    // Detecta qual campo veio neste INSERT (a edge function insere 1 campo por row)
     const todosCampos = [
       'velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo',
       'nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor',
@@ -423,28 +521,24 @@
 
     if (!campoAtualizado) return;
 
-    // Atualiza o card visual diretamente pelo data-campo
     const cardEl = document.querySelector(`[data-campo="${campoAtualizado}"]`);
     if (cardEl) {
-      const cfg       = svc.CAMPOS[campoAtualizado];
-      const valor     = parseFloat(record[campoAtualizado]);
-      const alerta    = svc.getAlerta(campoAtualizado, valor);
-      const cor       = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
-      // FIX-DOM: null guards nos filhos do card (podem não existir se HTML mudou)
-      const elValor   = cardEl.querySelector('.card-valor');
-      const elTs      = cardEl.querySelector('.card-ts');
+      const cfg     = svc.CAMPOS[campoAtualizado];
+      const valor   = parseFloat(record[campoAtualizado]);
+      const alerta  = svc.getAlerta(campoAtualizado, valor);
+      const cor     = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+      const elValor = cardEl.querySelector('.card-valor');
+      const elTs    = cardEl.querySelector('.card-ts');
 
       cardEl.style.borderLeftColor = cor;
       if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, cfg.unidade, cfg.decimais); }
       if (elTs)    { elTs.textContent = svc.formatarTimestamp(record.reading_timestamp); }
 
-      // Pulso visual para indicar atualização em tempo real
       cardEl.classList.remove('card-pulse');
       void cardEl.offsetWidth;
       cardEl.classList.add('card-pulse');
     }
 
-    // Sincroniza estado dos botões de controle com o DSE (bidirecional DSE→PWA)
     if (campoAtualizado === 'velocidade_motor' && window.GeneratorControlsService) {
       const moduleId = record.module_id || record.moduleId || null;
       if (moduleId) {
@@ -452,7 +546,6 @@
       }
     }
 
-    // Se o campo é velocidade_motor, atualiza o status e adiciona ao histórico inline
     if (campoAtualizado === 'velocidade_motor') {
       const vel    = parseFloat(record.velocidade_motor);
       const online = vel > 0;
@@ -462,17 +555,16 @@
           ? `Online · ${vel} RPM · ${svc.formatarTimestamp(record.reading_timestamp)}`
           : `Parado · ${svc.formatarTimestamp(record.reading_timestamp)}`;
 
-      // Adiciona nova entrada no histórico de velocidade sem recarregar
-      const histEl = document.getElementById('historicoVelocidade');
+      const histEl    = document.getElementById('historicoVelocidade');
       const histCount = document.getElementById('historicoCount');
       if (histEl) {
         const t   = new Date(record.reading_timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const cor = vel > 0 ? '#10b981' : '#6b7280';
         const novoSpan = document.createElement('span');
-        novoSpan.style.cssText = `display:inline-block;margin-right:12px;color:${cor};animation:fadeIn .4s ease;`;
+        novoSpan.style.cssText = `display: inline-block; margin-right: var(--space-3); color: ${cor}; animation: fadeIn .4s ease;`;
         novoSpan.innerHTML = `${t}: <strong>${vel}</strong> RPM`;
         histEl.appendChild(novoSpan);
-        histEl.scrollLeft = histEl.scrollWidth; // scroll para o final
+        histEl.scrollLeft = histEl.scrollWidth;
 
         const atual = parseInt(histCount.textContent) || 0;
         histCount.textContent = `${atual + 1} leituras`;
@@ -490,35 +582,30 @@
       rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
     };
 
-    // FIX-QUERY: getDashboard() — 1 query com limit=300 em vez de 20 paralelas
-    // getDashboard já faz pivot, retorna {campo: {valor, timestamp, stale, ageMin}}
     const dash = await svc.getDashboard();
 
-    // Adaptador: mapa compatível com a lógica anterior
     const todosCampos = [...grupos.motor,...grupos.gerador,...grupos.rede];
     const mapa = {};
     todosCampos.forEach(c => {
       const d = dash[c];
       if (d && d.valor !== null) {
-        // Estrutura compatível com getUltimoPorCampo
         mapa[c] = { [c]: d.valor, reading_timestamp: d.timestamp, stale: d.stale, ageMin: d.ageMin };
       } else {
         mapa[c] = null;
       }
     });
 
-    const velDado = mapa['velocidade_motor'];
-    const vel     = velDado ? parseFloat(velDado.velocidade_motor) : null;
+    const velDado  = mapa['velocidade_motor'];
+    const vel      = velDado ? parseFloat(velDado.velocidade_motor) : null;
     const velStale = velDado?.stale ?? false;
 
-    // FIX-STATUS: mostra aviso de dado antigo no status principal
-    const online  = vel !== null && vel > 0 && !velStale;
+    const online     = vel !== null && vel > 0 && !velStale;
     const statusDot  = document.getElementById('monitorStatusDot');
     const statusText = document.getElementById('monitorStatusText');
     if (statusDot)  statusDot.style.background = online ? '#10b981' : velStale ? '#f59e0b' : '#ef4444';
     if (statusText) statusText.textContent = velDado
       ? (velStale
-          ? `⚠️ Dado antigo (${velDado.ageMin}min) · Último: ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
+          ? `Dado antigo (${velDado.ageMin}min) · Último: ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
           : online
             ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
             : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
@@ -535,31 +622,28 @@
         const ageMin = dado?.ageMin ?? null;
         const alerta = svc.getAlerta(campo, valor);
 
-        // FIX-COR: dado stale → cor âmbar independente do valor
-        // Dado normal → cor por alerta (verde/amarelo/vermelho)
         const cor = stale
           ? '#d97706'
           : alerta === 'critico' ? '#ef4444'
           : alerta === 'atencao' ? '#f59e0b'
           : '#10b981';
 
-        // FIX-STALENESS: tooltip e badge de "dado antigo" nos cards
         const staleLabel = stale && ageMin !== null
-          ? `<span style="font-size:9px;background:#d97706;color:#fff;border-radius:3px;padding:0 4px;margin-left:4px;">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h' : ageMin+'min'}</span>`
+          ? `<span style="font-size: 9px; background: #d97706; color: #fff; border-radius: 3px; padding: 0 4px; margin-left: var(--space-1);">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h' : ageMin+'min'}</span>`
           : '';
 
         return `
-          <div class="card" data-campo="${campo}" style="padding:10px;border-left:2px solid ${cor};transition:border-color .3s,box-shadow .3s;${stale ? 'opacity:.85;' : ''}">
-            <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;">
+          <div class="card" data-campo="${campo}" style="padding: var(--space-3); border-left: 2px solid ${cor}; transition: border-color .3s, box-shadow .3s;${stale ? 'opacity: .85;' : ''}">
+            <div style="font-size: var(--text-xs); color: var(--text-muted); display: flex; align-items: center; gap: var(--space-1);">
               ${cfg.label}${staleLabel}
             </div>
-            <div class="card-valor" style="font-size:18px;font-weight:600;color:${cor};margin:2px 0;transition:color .3s;">
-              ${svc.formatarValor(valor,cfg.unidade,cfg.decimais)}
+            <div class="card-valor" style="font-size: var(--text-xl); font-weight: var(--font-semibold); color: ${cor}; margin: var(--space-1) 0; transition: color .3s;">
+              ${svc.formatarValor(valor, cfg.unidade, cfg.decimais)}
             </div>
-            <div class="card-ts" style="font-size:10px;color:var(--text-muted);">${dado ? svc.formatarTimestamp(dado.reading_timestamp) : '—'}</div>
+            <div class="card-ts" style="font-size: var(--text-xs); color: var(--text-muted);">${dado ? svc.formatarTimestamp(dado.reading_timestamp) : '—'}</div>
           </div>`;
       }).join('');
-      // Preenche o cache com os valores carregados
+
       campos.forEach(campo => {
         const dado = mapa[campo];
         if (dado) _ultimosValores[campo] = { valor: dado[campo], timestamp: dado.reading_timestamp };
@@ -579,16 +663,16 @@
         const v   = parseFloat(r.velocidade_motor);
         const cor = v > 0 ? '#10b981' : '#6b7280';
         const t   = new Date(r.reading_timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        return `<span style="display:inline-block;margin-right:12px;color:${cor};">${t}: <strong>${v}</strong> RPM</span>`;
+        return `<span style="display: inline-block; margin-right: var(--space-3); color: ${cor};">${t}: <strong>${v}</strong> RPM</span>`;
       }).join('');
     } else if (histEl) {
       histEl.textContent = 'Sem leituras nas últimas 2 horas.';
     }
   }
 
-  // FIX-INTERVAL: referência para limpeza no beforeunload
   const _monitorFallback = setInterval(loadMonitoramentoReadings, 30000);
   window.addEventListener('beforeunload', () => { clearInterval(_monitorFallback); }, { once: true });
   </script>
+
 </body>
 </html>
