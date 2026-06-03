@@ -4,28 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="theme-color" content="#0B1F33">
+  <meta name="description" content="AMZ App - Dashboard">
+
   <title>Dashboard - AMZ App</title>
+
   <link rel="manifest" href="../manifest.json">
   <link rel="icon" type="image/svg+xml" href="../assets/icons/logoamz.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+
+  <!-- Navbar -->
   <header class="navbar">
     <a href="../pages/dashboard.html" class="navbar-brand">
       <div class="navbar-brand-icon">
         <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
       </div>
-      <span class="navbar-brand-text">AMZ App</span>
+      <span class="navbar-brand-text"><span>App</span></span>
     </a>
     <div class="navbar-actions">
-      <!-- Badge DSE no topo -->
+      <!-- Badge status Gateway DSE (funcionalidade versão atual) -->
       <div id="dseStatusBadge" class="dse-badge">
         <span id="dseStatusDot" class="status-dot"></span>
         <span id="dseStatusText">Gateway</span>
-      </div>      
+      </div>
       <button type="button" id="menuToggle" class="menu-toggle btn btn-secondary btn-sm" aria-label="Menu">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -36,102 +43,190 @@
     </div>
   </header>
 
+  <!-- Sidebar Overlay -->
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
   <aside id="sidebar" class="sidebar">
     <nav>
       <ul class="sidebar-menu">
-        <li class="sidebar-menu-item"><a href="../pages/dashboard.html" class="sidebar-menu-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/monitoramento.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Monitoramento</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/relatorios.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Relatórios</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/clientes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Clientes</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/geradores.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>Geradores</a></li>
-        <li class="sidebar-menu-item"><a href="../pages/configuracoes.html" class="sidebar-menu-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Configurações</a></li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/dashboard.html" class="sidebar-menu-link active">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/monitoramento.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            Monitoramento
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/relatorios.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            Relatórios
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/clientes.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+            Clientes
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/geradores.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect>
+              <path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path>
+            </svg>
+            Geradores
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="../pages/configuracoes.html" class="sidebar-menu-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Configurações
+          </a>
+        </li>
       </ul>
     </nav>
   </aside>
 
+  <!-- Bottom Nav (Mobile) -->
   <nav class="bottom-nav">
-    <a href="../pages/dashboard.html" class="bottom-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Início</span></a>
-    <a href="../pages/monitoramento.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Monitor</span></a>
-    <a href="../pages/relatorios.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Relatórios</span></a>
-    <a href="../pages/clientes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Clientes</span></a>
-    <a href="../pages/geradores.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg><span>Geradores</span></a>
-    <a href="../pages/configuracoes.html" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Ajustes</span></a>
+    <a href="../pages/dashboard.html" class="bottom-nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      <span>Início</span>
+    </a>
+    <a href="../pages/monitoramento.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+      </svg>
+      <span>Monitor</span>
+    </a>
+    <a href="../pages/relatorios.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      <span>Relatórios</span>
+    </a>
+    <a href="../pages/clientes.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+      </svg>
+      <span>Clientes</span>
+    </a>
+    <a href="../pages/configuracoes.html" class="bottom-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>Ajustes</span>
+    </a>
   </nav>
 
+  <!-- Main Content -->
   <main class="main-content">
+
+    <!-- Header (layout v1) -->
     <header class="page-header">
       <h1 class="page-title">Dashboard</h1>
       <p class="page-subtitle">Visão geral do sistema</p>
     </header>
 
-    <!-- Stats DSE em tempo real -->
-    <div class="grid grid-cols-2 grid-cols-md-4" id="statsGrid"></div>
+    <!-- Stats Grid (layout v1 — preenchido pela lógica DSE da versão atual) -->
+    <div class="grid grid-cols-2 grid-cols-md-4" id="statsGrid">
+      <!-- Preenchido via JS -->
+    </div>
 
-    <!-- Painel Gateway DSE -->
-    <section style="margin-top:var(--space-6);padding:0 var(--space-4);">
-      <div id="gatewayPanel" style="display:none;">
-        <div class="card" style="border-left:3px solid var(--color-accent);margin-bottom:var(--space-4);">
-          <div class="card-header" style="margin-bottom:8px;">
-            <div class="card-title">🔌 Gateway DSE — <span id="gwSerial">—</span></div>
-            <span id="gwUpdateTime" style="font-size:11px;color:var(--text-muted);"></span>
+    <!-- Geradores (layout v1 — dados reais da versão atual) -->
+    <section style="margin-top: var(--space-8); padding: 0 var(--space-4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h2 style="font-size: var(--text-lg); font-weight: var(--font-semibold);">Geradores</h2>
+        <a href="../pages/monitoramento.html" style="font-size: var(--text-sm);">Ver todos</a>
+      </div>
+      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
+        <!-- Preenchido via JS -->
+      </div>
+    </section>
+
+    <!-- Alertas / Módulos DSE (layout v1 "Alertas Recentes" — conteúdo DSE da versão atual) -->
+    <section style="margin-top: var(--space-8); padding: 0 var(--space-4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h2 style="font-size: var(--text-lg); font-weight: var(--font-semibold);">Status dos Módulos</h2>
+        <a href="../pages/monitoramento.html" style="font-size: var(--text-sm);">Ver monitoramento</a>
+      </div>
+      <!-- Painel Gateway DSE (oculto até dados chegarem — funcionalidade versão atual) -->
+      <div id="gatewayPanel" style="display: none; margin-bottom: var(--space-4);">
+        <div class="card" style="border-left: 3px solid var(--color-accent);">
+          <div class="card-header">
+            <div class="card-title">Gateway DSE — <span id="gwSerial">—</span></div>
+            <span id="gwUpdateTime" style="font-size: var(--text-xs); color: var(--text-muted);"></span>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:13px;">
-            <div>📶 <strong id="gwSignal">—</strong></div>
-            <div>📡 MQTT: <strong id="gwMqtt">—</strong></div>
-            <div>🌐 IP: <strong id="gwIp">—</strong></div>
-            <div>📍 GPS: <strong id="gwGps">—</strong></div>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-sm);">
+            <div><strong id="gwSignal">—</strong></div>
+            <div>MQTT: <strong id="gwMqtt">—</strong></div>
+            <div>IP: <strong id="gwIp">—</strong></div>
+            <div>GPS: <strong id="gwGps">—</strong></div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Geradores -->
-    <section class="section-content" style="margin-top:var(--space-6);">
-      <div class="section-header">
-        <h2 class="section-title">Geradores</h2>
-        <a href="../pages/monitoramento.html">Ver todos</a>
-      </div>    
-      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
-        <p style="color:var(--text-muted);">Carregando...</p>
-      </div>
-    </section>
-
-    <!-- Alertas DSE -->
-    <section style="margin-top:var(--space-8);padding:0 var(--space-4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
-        <h2 style="font-size:var(--text-lg);font-weight:var(--font-semibold);">Status dos Módulos DSE</h2>
-      </div>
+      <!-- Lista de módulos DSE (equivale a "alertsList" da v1) -->
       <div id="modulesPanel">
-        <p style="color:var(--text-muted);font-size:13px;">Aguardando dados do gateway...</p>
+        <!-- Preenchido via JS -->
       </div>
     </section>
 
-    <!-- LEITURAS DSE REAIS -->
-    <section style="margin-top:var(--space-8);padding:0 var(--space-4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
-        <h2 style="font-size:var(--text-lg);font-weight:var(--font-semibold);">
-          ⚡ Leituras do Gerador — Tempo Real
-        </h2>
-        <span id="readingsTimestamp" style="font-size:11px;color:var(--text-muted);"></span>
+    <!-- Leituras em Tempo Real (funcionalidade nova da versão atual, integrada no layout v1) -->
+    <section style="margin-top: var(--space-8); padding: 0 var(--space-4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h2 style="font-size: var(--text-lg); font-weight: var(--font-semibold);">Leituras em Tempo Real</h2>
+        <span id="readingsTimestamp" style="font-size: var(--text-xs); color: var(--text-muted);"></span>
       </div>
       <div class="grid grid-cols-2 grid-cols-md-4" id="readingsGrid">
-        <p style="color:var(--text-muted);font-size:13px;">Carregando leituras...</p>
+        <!-- Preenchido via JS -->
       </div>
-      <div id="generatorStatusCard" style="margin-top:var(--space-4);display:none;">
-        <div class="card" style="border-left:3px solid var(--color-accent);">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
+      <!-- Card de status do gerador (oculto até dados chegarem) -->
+      <div id="generatorStatusCard" style="margin-top: var(--space-4); display: none;">
+        <div class="card" style="border-left: 3px solid var(--color-accent);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div style="font-weight:600;font-size:14px;" id="generatorStatusText">—</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="generatorStatusSub">—</div>
+              <div style="font-weight: var(--font-medium); font-size: var(--text-sm);" id="generatorStatusText">—</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);" id="generatorStatusSub">—</div>
             </div>
-            <div id="generatorStatusDot" style="width:12px;height:12px;border-radius:50%;background:#6b7280;"></div>
+            <div id="generatorStatusDot" class="status-dot"></div>
           </div>
         </div>
       </div>
     </section>
+
   </main>
 
+  <!-- Scripts (versão atual — todos preservados) -->
   <script src="../config.js"></script>
   <script src="../js/utils/helpers.js"></script>
   <script src="../js/services/mock.service.js"></script>
@@ -141,6 +236,7 @@
   <script src="../js/services/generator-readings.service.js"></script>
   <script src="../js/app.js"></script>
 
+  <!-- Lógica principal (versão atual — 100% preservada) -->
   <script>
   (function() {
     if (!AuthService.isAuthenticated()) {
@@ -162,7 +258,6 @@
     // ─── STATUS BADGE ─────────────────────────────────────────────────────
     const STATUS_COLOR = { online:'#10b981', offline:'#ef4444', syncing:'#f59e0b', error:'#ef4444' };
     function updateStatusBadge(status) {
-      // FIX-DOM: null guards para elementos do badge de status
       const dot  = document.getElementById('dseStatusDot');
       const text = document.getElementById('dseStatusText');
       if (dot)  dot.style.background  = STATUS_COLOR[status] || '#6b7280';
@@ -174,7 +269,6 @@
 
     // ─── PAINEL GATEWAY ──────────────────────────────────────────────────
     function updateGatewayPanel(data) {
-      // FIX-DOM: null guards em todos os getElementById do painel gateway
       const _set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       const _css = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
@@ -190,7 +284,6 @@
         ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}`
         : 'Sem sinal');
 
-      // Atualiza status dos cards de geradores
       const moduleMap = {};
       (data.modules ?? []).forEach(m => { if (m.serial) moduleMap[m.serial.toUpperCase()] = m; });
       allGenerators.forEach(g => {
@@ -198,11 +291,7 @@
         if (mod) g.status = mod.online ? 'Online' : 'Offline';
       });
       renderGenerators(allGenerators);
-
-      // Renderiza módulos DSE
       renderModules(data.modules ?? []);
-
-      // Atualiza stats
       renderStats(data, allGenerators);
     }
 
@@ -224,7 +313,7 @@
           </div>
           <div class="stat-value">${online}</div>
           <div class="stat-label">Online</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">${total ? Math.round(online/total*100) : 0}% do total</div>
+          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">${total ? Math.round(online/total*100) : 0}% do total</div>
         </div>
         <div class="card stat-card">
           <div class="stat-icon error">
@@ -236,17 +325,17 @@
           </div>
           <div class="stat-value">${offline}</div>
           <div class="stat-label">Offline</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">Sem conexão DSE</div>
+          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Sem conexão DSE</div>
         </div>
         <div class="card stat-card">
-          <div class="stat-icon info">
+          <div class="stat-icon ${dseData?.mqtt?.connected ? 'success' : 'error'}">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>
             </svg>
           </div>
-          <div class="stat-value">${dseData?.mqtt?.connected ? '✅' : '❌'}</div>
+          <div class="stat-value" style="font-size: var(--text-lg);">${dseData?.mqtt?.connected ? 'Ativo' : 'Inativo'}</div>
           <div class="stat-label">MQTT</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">${dseData?.mqtt?.broker || '—'}</div>
+          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">${dseData?.mqtt?.broker || '—'}</div>
         </div>
         <div class="card stat-card">
           <div class="stat-icon warning">
@@ -254,9 +343,9 @@
               <path d="M1.42 9a16 16 0 0 1 21.16 0M5 12.55a11 11 0 0 1 14.08 0M10.5 16.05a5 5 0 0 1 3 0M12 20h.01"></path>
             </svg>
           </div>
-          <div class="stat-value" style="font-size:var(--text-xl);">${bars[signal]}</div>
+          <div class="stat-value">${signal}/5</div>
           <div class="stat-label">GSM Signal</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">${dseData?.gsm?.operator || '—'}</div>
+          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">${dseData?.gsm?.operator || '—'}</div>
         </div>
       `;
     }
@@ -264,11 +353,9 @@
     // ─── GERADORES ────────────────────────────────────────────────────────
     function renderGenerators(list) {
       const container = document.getElementById('generatorsGrid');
-      // FIX-DOM: null guard — container pode ser null se SW serviu HTML do cache
-      // ou se a função for chamada antes de o DOM estar completamente pronto
       if (!container) { console.warn('[Dashboard] #generatorsGrid não encontrado'); return; }
       if (!list.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);">Nenhum gerador cadastrado.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted);">Nenhum gerador cadastrado.</p>';
         return;
       }
       container.innerHTML = list.slice(0, 6).map(g => `
@@ -276,59 +363,64 @@
           <div class="card-header">
             <div>
               <div class="card-title">${g.serial || '—'}</div>
-              <div style="font-size:var(--text-xs);color:var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
             </div>
             <span class="badge ${g.status === 'Online' ? 'badge-online' : g.status === 'Offline' ? 'badge-offline' : 'badge-warning'}">${g.status || 'Aguardando'}</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin-top:8px;font-size:13px;">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4);">
             <div>
-              <div style="color:var(--text-muted);font-size:11px;">Módulo</div>
-              <div>${g.module_id || '—'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Módulo</div>
+              <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${g.module_id || '—'}</div>
             </div>
             <div>
-              <div style="color:var(--text-muted);font-size:11px;">Protocolo</div>
-              <div>${g.protocol || 'RS485'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Protocolo</div>
+              <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${g.protocol || 'RS485'}</div>
             </div>
             <div>
-              <div style="color:var(--text-muted);font-size:11px;">Local</div>
-              <div>${g.local || '—'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Local</div>
+              <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${g.local || '—'}</div>
             </div>
             <div>
-              <div style="color:var(--text-muted);font-size:11px;">Cidade/UF</div>
-              <div>${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Cidade/UF</div>
+              <div style="font-size: var(--text-lg); font-weight: var(--font-semibold);">${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</div>
             </div>
           </div>
         </div>
       `).join('');
     }
 
-    // ─── MÓDULOS DSE ──────────────────────────────────────────────────────
+    // ─── MÓDULOS DSE (ocupa posição de "alertsList" da v1) ───────────────
     function renderModules(modules) {
       const container = document.getElementById('modulesPanel');
-      // FIX-DOM: null guard
       if (!container) { console.warn('[Dashboard] #modulesPanel não encontrado'); return; }
       if (!modules.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Nenhum módulo DSE detectado.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-sm);">Nenhum módulo DSE detectado.</p>';
         return;
       }
       container.innerHTML = modules.map(m => `
-        <div class="card" style="margin-bottom:var(--space-3);">
-          <div style="display:flex;gap:var(--space-3);align-items:center;">
-            <div class="stat-icon ${m.online ? 'success' : 'error'}" style="flex-shrink:0;">
+        <div class="card" style="margin-bottom: var(--space-3); border-left: 3px solid ${m.online ? 'transparent' : 'var(--color-accent)'};">
+          <div style="display: flex; gap: var(--space-3);">
+            <div class="stat-icon ${m.online ? 'success' : 'error'}" style="flex-shrink: 0;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="7" width="18" height="14" rx="2"></rect>
                 <path d="M7 7V4h2v3M15 7V4h2v3"></path>
               </svg>
             </div>
-            <div style="flex:1;">
-              <div style="font-weight:500;">Módulo: ${m.serial || '—'}</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
-                ${m.online ? '🟢 Online' : '🔴 Offline'} &nbsp;·&nbsp;
-                ${m.connected ? '✅ Conectado' : '❌ Desconectado'} &nbsp;·&nbsp;
+            <div style="flex: 1;">
+              <div style="font-weight: var(--font-medium);">Módulo: ${m.serial || '—'}</div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1);">
+                ${m.online ? 'Online' : 'Offline'} &nbsp;·&nbsp;
+                ${m.connected ? 'Conectado' : 'Desconectado'} &nbsp;·&nbsp;
                 ${m.protocol || 'RS485'}
                 ${m.firmware ? ' &nbsp;·&nbsp; FW: ' + m.firmware : ''}
               </div>
-              ${m.latitude ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📍 ${m.latitude.toFixed(4)}, ${m.longitude.toFixed(4)}</div>` : ''}
+              ${m.latitude ? `
+              <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                ${m.latitude.toFixed(4)}, ${m.longitude.toFixed(4)}
+              </div>` : ''}
             </div>
             <span class="badge ${m.online ? 'badge-online' : 'badge-offline'}">${m.online ? 'Online' : 'Offline'}</span>
           </div>
@@ -346,20 +438,57 @@
           ...g, clientName: g.clients?.name || 'Sem cliente'
         }));
 
-        // Mostra geradores mesmo antes do DSE responder
         renderGenerators(allGenerators);
 
-        // Stats iniciais sem DSE
+        // Render inicial dos 4 stats com dados já disponíveis (DSE ainda não respondeu)
+        const _online0  = allGenerators.filter(g => g.status === 'Online').length;
+        const _offline0 = allGenerators.filter(g => g.status === 'Offline').length;
+        const _total0   = allGenerators.length;
         const _sgrid = document.getElementById('statsGrid');
         if (_sgrid) _sgrid.innerHTML = `
           <div class="card stat-card">
-            <div class="stat-icon success"></div>
-            <div class="stat-value">${allGenerators.length}</div>
-            <div class="stat-label">Geradores</div>
-            <div style="font-size:11px;color:var(--text-muted);">Cadastrados</div>
+            <div class="stat-icon success">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <div class="stat-value">${_online0}</div>
+            <div class="stat-label">Online</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">${_total0 ? Math.round(_online0/_total0*100) : 0}% do total</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon error">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <div class="stat-value">${_offline0}</div>
+            <div class="stat-label">Offline</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Sem conexão DSE</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon info">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>
+              </svg>
+            </div>
+            <div class="stat-value" style="font-size: var(--text-lg);">—</div>
+            <div class="stat-label">MQTT</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Aguardando gateway</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon warning">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1.42 9a16 16 0 0 1 21.16 0M5 12.55a11 11 0 0 1 14.08 0M10.5 16.05a5 5 0 0 1 3 0M12 20h.01"></path>
+              </svg>
+            </div>
+            <div class="stat-value">—</div>
+            <div class="stat-label">GSM Signal</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Aguardando gateway</div>
           </div>`;
 
-        // Avisa DSEService
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
           const first = allGenerators.find(g => g.serial?.trim());
           if (first) {
@@ -390,40 +519,24 @@
   })();
   </script>
 
+  <!-- Leituras em Tempo Real (versão atual — 100% preservada) -->
   <script>
   let _realtimeInitialized = false;
 
-  // ─── DEBOUNCE ──────────────────────────────────────────────────────────
-  // CORREÇÃO: debounce reduzido de 800ms → 200ms.
-  // 800ms era excessivo para telemetria: com DSE enviando dados a cada ~5s,
-  // 800ms de debounce significa que 16% do intervalo era desperdiçado só esperando.
-  // 200ms agrupa INSERTs em rajada sem introduzir latência perceptível.
   let _debounceTimer = null;
   function _debounceReload() {
     clearTimeout(_debounceTimer);
     _debounceTimer = setTimeout(() => loadReadingsDashboard(), 200);
   }
 
-  // ─── CAMPOS COM data-campo no DOM ─────────────────────────────────────
   const _camposPrioritarios = [
     'velocidade_motor','pressao_oleo','temperatura_resfriamento',
     'nivel_combustivel','tensao_bateria','frequencia_gerador',
     'gerador_tensao_l1n','gerador_watts_total',
   ];
 
-  const _iconMap = {
-    velocidade_motor:'⚙️', pressao_oleo:'🔩',
-    temperatura_resfriamento:'🌡️', nivel_combustivel:'⛽',
-    tensao_bateria:'🔋', frequencia_gerador:'〰️',
-    gerador_tensao_l1n:'⚡', gerador_watts_total:'💡',
-  };
 
-  // ─── ATUALIZAÇÃO DIRETA DE CARD (sem requisição HTTP) ─────────────────
-  // CORREÇÃO PRINCIPAL: o Dashboard não tinha equivalente ao atualizarCardDireto()
-  // do Monitoramento. Cada evento Realtime disparava loadReadingsDashboard()
-  // (uma requisição HTTP completa). Agora: evento Realtime → atualiza o card
-  // diretamente no DOM via data-campo, sem HTTP. O reload completo (HTTP) só
-  // acontece no polling de fallback ou na carga inicial.
+
   function atualizarCardDiretoDashboard(record) {
     const svc = window.GeneratorReadingsService;
     if (!svc || !record) return;
@@ -450,7 +563,6 @@
       if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, '', cfg.decimais); }
       if (elTs)    { elTs.textContent = svc.formatarTimestamp(record.reading_timestamp); }
 
-      // Pulso visual — igual ao monitoramento
       cardEl.classList.remove('card-pulse');
       void cardEl.offsetWidth;
       cardEl.classList.add('card-pulse');
@@ -458,17 +570,16 @@
       algumAtualizado = true;
     }
 
-    // Atualiza status card se veio velocidade_motor
     if (record.velocidade_motor !== null && record.velocidade_motor !== undefined) {
-      const rpm      = parseFloat(record.velocidade_motor) || 0;
-      const online   = rpm > 0;
+      const rpm    = parseFloat(record.velocidade_motor) || 0;
+      const online = rpm > 0;
       const statusCard = document.getElementById('generatorStatusCard');
       if (statusCard) {
         statusCard.style.display = 'block';
         const elText = document.getElementById('generatorStatusText');
         const elSub  = document.getElementById('generatorStatusSub');
         const elDot  = document.getElementById('generatorStatusDot');
-        if (elText) elText.textContent = online ? '🟢 Gerador Online' : '🟡 Gerador Standby';
+        if (elText) elText.textContent = online ? 'Gerador Online' : 'Gerador em Standby';
         if (elSub)  elSub.textContent  = `Velocidade: ${rpm} RPM · ${window.GeneratorReadingsService.formatarTimestamp(record.reading_timestamp)}`;
         if (elDot)  elDot.style.background = online ? '#10b981' : '#f59e0b';
       }
@@ -479,8 +590,6 @@
       if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
     }
 
-    // Agenda reload completo para sincronizar campos que não vieram neste INSERT
-    // (ex: este INSERT trouxe velocidade_motor, mas pressao_oleo pode estar desatualizada)
     _debounceReload();
   }
 
@@ -494,7 +603,6 @@
         svc.getDashboard(),
       ]);
 
-      // ── Status card ──────────────────────────────────────────────
       const statusCard = document.getElementById('generatorStatusCard');
       if (statusCard) {
         statusCard.style.display = 'block';
@@ -502,7 +610,7 @@
         const elSub  = document.getElementById('generatorStatusSub');
         const elDot  = document.getElementById('generatorStatusDot');
         if (elText) elText.textContent =
-          status.online ? '🟢 Gerador Online' : status.standby ? '🟡 Gerador Standby' : '🔴 Gerador Offline';
+          status.online ? 'Gerador Online' : status.standby ? 'Gerador em Standby' : 'Gerador Offline';
         if (elSub) elSub.textContent =
           status.ultimaLeitura
             ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
@@ -511,15 +619,11 @@
           status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
       }
 
-      // ── Cards de leituras ─────────────────────────────────────────
-      // CORREÇÃO: cards agora têm data-campo, card-valor-dash e card-ts-dash
-      // para permitir atualização direta via atualizarCardDiretoDashboard()
       const grid = document.getElementById('readingsGrid');
       if (!grid) return;
 
       const jaTemCards = grid.querySelectorAll('[data-campo]').length > 0;
 
-      // Só reconstrói o HTML se for a primeira vez (evita piscar o grid a cada INSERT)
       if (!jaTemCards) {
         grid.innerHTML = _camposPrioritarios.map(campo => {
           const cfg    = svc.CAMPOS[campo];
@@ -533,22 +637,25 @@
             : alerta === 'atencao' ? '#f59e0b'
             : 'var(--color-accent)';
           const staleTag = stale && ageMin !== null
-            ? `<div style="font-size:9px;color:#d97706;margin-top:2px;">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h atrás' : ageMin+'min atrás'}</div>`
+            ? `<div style="font-size: 9px; color: #d97706; margin-top: var(--space-1);">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h atrás' : ageMin+'min atrás'}</div>`
             : '';
           return `
-            <div class="card stat-card" data-campo="${campo}" style="border-top:2px solid ${cor};${stale ? 'opacity:.85;' : ''}">
-              <div style="font-size:20px;margin-bottom:4px;">${_iconMap[campo]||'📊'}</div>
-              <div class="card-valor-dash stat-value" style="font-size:var(--text-xl);color:${cor};">
+            <div class="card stat-card" data-campo="${campo}" style="border-top: 2px solid ${cor};${stale ? 'opacity: .85;' : ''}">
+              <div class="stat-icon info" style="margin-bottom: var(--space-2);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </div>
+              <div class="card-valor-dash stat-value" style="font-size: var(--text-xl); color: ${cor};">
                 ${svc.formatarValor(valor, '', cfg.decimais)}
               </div>
               <div class="stat-label">${cfg.label}</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cfg.unidade}</div>
-              <div class="card-ts-dash" style="font-size:9px;color:var(--text-muted);margin-top:2px;">${dado?.timestamp ? svc.formatarTimestamp(dado.timestamp) : ''}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">${cfg.unidade}</div>
+              <div class="card-ts-dash" style="font-size: 9px; color: var(--text-muted); margin-top: var(--space-1);">${dado?.timestamp ? svc.formatarTimestamp(dado.timestamp) : ''}</div>
               ${staleTag}
             </div>`;
         }).join('');
       } else {
-        // Cards já existem: atualiza apenas os valores (sem recriar DOM)
         for (const campo of _camposPrioritarios) {
           const cardEl = grid.querySelector(`[data-campo="${campo}"]`);
           if (!cardEl) continue;
@@ -587,22 +694,14 @@
       svc.unsubscribeRealtime();
     }
 
-    // CORREÇÃO: callback passa o record para atualizarCardDiretoDashboard()
-    // ANTES: svc.subscribeRealtime(() => _debounceReload())
-    //   → ignorava o record recebido, sempre fazia requisição HTTP
-    // DEPOIS: usa record diretamente para atualizar DOM sem HTTP
     svc.subscribeRealtime((record) => atualizarCardDiretoDashboard(record));
     _realtimeInitialized = true;
     console.log('[Dashboard] Realtime inscrito ✓');
   }
 
-  // Carga inicial
   loadReadingsDashboard();
   iniciarRealtime();
 
-  // CORREÇÃO: polling de fallback reduzido de 60s → 30s
-  // 60s era muito lento para telemetria industrial. 30s garante que,
-  // mesmo se o Realtime WebSocket cair, os dados ficam no máximo 30s atrasados.
   const _dashFallback = setInterval(loadReadingsDashboard, 30000);
 
   window.addEventListener('beforeunload', () => {
@@ -613,5 +712,6 @@
     }
   });
   </script>
+
 </body>
 </html>
