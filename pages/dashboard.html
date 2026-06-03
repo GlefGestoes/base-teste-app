@@ -213,7 +213,6 @@
     });
 
     let allGenerators = [];
-    let _latestDash   = {};  // últimos valores de leitura para os cards de gerador
 
     // ── Ícones SVG (padrão v1) ─────────────────────────────────────────────
     function getIcon(name) {
@@ -506,6 +505,7 @@
   <script>
   let _realtimeInitialized = false;
   let _debounceTimer = null;
+  let _latestDash = {};  // escopo global — compartilhado entre IIFE e script de leituras
   function _debounceReload() { clearTimeout(_debounceTimer); _debounceTimer = setTimeout(() => loadReadingsDashboard(), 200); }
 
   const _camposPrioritarios = [
@@ -591,7 +591,7 @@
     const svc = window.GeneratorReadingsService;
     try {
       const [status, dash] = await Promise.all([svc.getStatus(), svc.getDashboard()]);
-      window._latestDash = dash; // expõe para renderAlerts
+      _latestDash = dash;  // atualiza escopo global para renderGenerators e renderAlerts
 
       const sc = document.getElementById('generatorStatusCard');
       if (sc) {
