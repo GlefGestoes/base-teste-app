@@ -198,6 +198,7 @@
   let _realtimeInitialized = false;
   let _debounceTimerMonit  = null;
   const _ultimosValores    = {};
+  let _latestDash          = {};  // escopo global — compartilhado entre IIFE e funções externas
 
   function _debounceReloadMonit() {
     clearTimeout(_debounceTimerMonit);
@@ -243,7 +244,6 @@
 
     let allGenerators = [];
     let dseData       = null;
-    let _latestDash   = {};
 
     // ── DSE Status Badge ─────────────────────────────────────────────────
     const STATUS_COLOR = { online:'#10b981', offline:'#ef4444', syncing:'#f59e0b', error:'#ef4444' };
@@ -283,6 +283,11 @@
     document.getElementById('filterStatus').addEventListener('change', () => renderGenerators(applyFilters()));
     document.getElementById('filterClient').addEventListener('change', () => renderGenerators(applyFilters()));
 
+    // ── Badge helper
+    function statusClass(s) {
+      return s === 'Online' ? 'badge-online' : s === 'Offline' ? 'badge-offline' : 'badge-warning';
+    }
+
     // ── Cards de Geradores — EXATO layout v1 com dados DSE reais ─────────
     function renderGenerators(list) {
       const container = document.getElementById('generatorsGrid');
@@ -301,7 +306,7 @@
         const tempColor = temp === null ? 'success' : temp > 90 ? 'error' : temp > 80 ? 'warning' : 'success';
         const fuelPct   = fuel !== null ? Math.min(100, Math.max(0, fuel)) : null;
         const fuelColor = fuelPct === null ? '#3b82f6' : fuelPct < 10 ? 'var(--color-error)' : fuelPct < 30 ? 'var(--color-warning)' : fuelPct < 60 ? '#3b82f6' : 'var(--color-success)';
-        const badgeClass = isOn ? 'badge-online' : g.status === 'Offline' ? 'badge-offline' : 'badge-warning';
+        const badgeClass = statusClass(g.status);
 
         return `
           <div class="card">
@@ -491,7 +496,7 @@
       rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
     };
     const dash = await svc.getDashboard();
-    window._latestDash = dash;
+    _latestDash = dash;  // atualiza escopo global para renderGenerators
 
     const todos = [...grupos.motor,...grupos.gerador,...grupos.rede];
     const mapa  = {};
