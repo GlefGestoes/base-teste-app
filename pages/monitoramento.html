@@ -21,80 +21,56 @@
       <span class="navbar-brand-text"><span>App</span></span>
     </a>
     <div class="navbar-actions">
-      <!-- Badge status Gateway DSE (funcionalidade versão atual) -->
       <div id="dseStatusBadge" class="dse-badge">
         <span id="dseStatusDot" class="status-dot"></span>
         <span id="dseStatusText">Gateway</span>
       </div>
       <button type="button" id="menuToggle" class="btn btn-secondary btn-sm">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
       </button>
     </div>
   </header>
 
-  <!-- Sidebar Overlay -->
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-  <!-- Sidebar -->
   <aside id="sidebar" class="sidebar">
     <nav>
       <ul class="sidebar-menu">
         <li class="sidebar-menu-item">
           <a href="../pages/dashboard.html" class="sidebar-menu-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             Dashboard
           </a>
         </li>
         <li class="sidebar-menu-item">
           <a href="../pages/monitoramento.html" class="sidebar-menu-link active">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
             Monitoramento
           </a>
         </li>
         <li class="sidebar-menu-item">
           <a href="../pages/relatorios.html" class="sidebar-menu-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
             Relatórios
           </a>
         </li>
         <li class="sidebar-menu-item">
           <a href="../pages/clientes.html" class="sidebar-menu-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
             Clientes
           </a>
         </li>
         <li class="sidebar-menu-item">
           <a href="../pages/geradores.html" class="sidebar-menu-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect>
-              <path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2" ry="2"></rect><path d="M7 7V4h2v3M15 7V4h2v3M6 14h4M8 12v4M14 14h4"></path></svg>
             Geradores
           </a>
         </li>
         <li class="sidebar-menu-item">
           <a href="../pages/configuracoes.html" class="sidebar-menu-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             Configurações
           </a>
         </li>
@@ -102,50 +78,33 @@
     </nav>
   </aside>
 
-  <!-- Bottom Nav (Mobile) -->
   <nav class="bottom-nav">
     <a href="../pages/dashboard.html" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7"></rect>
-        <rect x="14" y="3" width="7" height="7"></rect>
-        <rect x="14" y="14" width="7" height="7"></rect>
-        <rect x="3" y="14" width="7" height="7"></rect>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
       <span>Início</span>
     </a>
     <a href="../pages/monitoramento.html" class="bottom-nav-item active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
       <span>Monitor</span>
     </a>
     <a href="../pages/relatorios.html" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
       <span>Relatórios</span>
     </a>
     <a href="../pages/clientes.html" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
       <span>Clientes</span>
     </a>
     <a href="../pages/configuracoes.html" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       <span>Ajustes</span>
     </a>
   </nav>
 
-  <!-- Main Content -->
+  <!-- ══ MAIN ══════════════════════════════════════════════════════════════ -->
   <main class="main-content">
 
-    <!-- Header (layout v1) -->
+    <!-- Header — idêntico à v1 -->
     <header class="page-header">
       <h1 class="page-title">Monitoramento</h1>
       <p class="page-subtitle">Acompanhamento em tempo real</p>
@@ -153,7 +112,7 @@
 
     <div style="padding: 0 var(--space-4);">
 
-      <!-- Filtros (funcionalidade versão atual, layout v1) -->
+      <!-- Filtros -->
       <div style="display: flex; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap;">
         <select id="filterStatus" class="form-select" style="min-width: 150px;">
           <option value="">Todos os status</option>
@@ -166,7 +125,7 @@
         </select>
       </div>
 
-      <!-- Painel Gateway DSE (oculto até dados chegarem — funcionalidade versão atual) -->
+      <!-- Painel Gateway DSE -->
       <div id="gatewayPanel" style="display: none; margin-bottom: var(--space-4);">
         <div class="card" style="border-left: 3px solid var(--color-accent);">
           <div class="card-header">
@@ -182,10 +141,8 @@
         </div>
       </div>
 
-      <!-- Painel de Instrumentos DSE (funcionalidade versão atual — layout integrado ao padrão v1) -->
+      <!-- Painel Instrumentos DSE -->
       <div id="monitorReadingsPanel" style="margin-bottom: var(--space-6);">
-
-        <!-- Card de instrumentos por grupo — layout card v1 -->
         <div class="card" style="margin-bottom: var(--space-4);">
           <div class="card-header">
             <div class="card-title">Instrumentos do Gerador</div>
@@ -194,27 +151,19 @@
               <span id="monitorStatusText" style="font-size: var(--text-xs); color: var(--text-muted);">Carregando...</span>
             </div>
           </div>
-
-          <!-- Grupo Motor -->
           <div style="margin-bottom: var(--space-4);">
             <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Motor</div>
             <div class="grid grid-cols-2 grid-cols-md-4" id="motorGrid"></div>
           </div>
-
-          <!-- Grupo Gerador Elétrico -->
           <div style="margin-bottom: var(--space-4);">
             <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Gerador Elétrico</div>
             <div class="grid grid-cols-2 grid-cols-md-4" id="geradorGrid"></div>
           </div>
-
-          <!-- Grupo Rede -->
           <div>
             <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Rede</div>
             <div class="grid grid-cols-2 grid-cols-md-4" id="redeGrid"></div>
           </div>
         </div>
-
-        <!-- Histórico de velocidade (card v1) -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">Velocidade Motor — Últimas 2h</div>
@@ -224,18 +173,17 @@
             Carregando...
           </div>
         </div>
-
       </div>
 
-      <!-- Grid de Geradores (layout v1 — dados reais da versão atual) -->
+      <!-- Grid de Geradores — layout EXATO da v1 (stat-card temperatura/potência + barra combustível + botões) -->
       <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
-        <!-- Preenchido via JS -->
+        <!-- preenchido via JS -->
       </div>
 
     </div>
   </main>
 
-  <!-- Scripts (versão atual — todos preservados) -->
+  <!-- Scripts — versão atual, todos preservados -->
   <script src="../config.js"></script>
   <script src="../js/utils/helpers.js"></script>
   <script src="../js/services/mock.service.js"></script>
@@ -246,22 +194,31 @@
   <script src="../js/services/generator-readings.service.js"></script>
   <script src="../js/app.js"></script>
 
-  <!-- Lógica completa da versão atual — 100% preservada -->
   <script>
   let _realtimeInitialized = false;
-  let _debounceTimerMonit = null;
+  let _debounceTimerMonit  = null;
+  const _ultimosValores    = {};
+
   function _debounceReloadMonit() {
     clearTimeout(_debounceTimerMonit);
     _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 200);
   }
 
-  (function() {
-    if (!AuthService.isAuthenticated()) {
-      window.location.href = '../index.html';
-      return;
-    }
+  // ── Ícones SVG (padrão v1) ───────────────────────────────────────────────
+  function getIcon(name) {
+    const icons = {
+      zap:      '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>',
+      thermo:   '<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>',
+      fuel:     '<path d="M3 22V8l9-6 9 6v14H3z"></path><path d="M10 22V12h4v10"></path>',
+      activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
+      terminal: '<path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>',
+    };
+    return icons[name] || icons.activity;
+  }
 
-    // Sidebar
+  (function() {
+    if (!AuthService.isAuthenticated()) { window.location.href = '../index.html'; return; }
+
     document.getElementById('menuToggle').addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebarOverlay').classList.toggle('open');
@@ -271,22 +228,18 @@
       document.getElementById('sidebarOverlay').classList.remove('open');
     });
 
-    // Estado
     let allGenerators = [];
     let dseData       = null;
+    let _latestDash   = {};
 
-    // ─── DSE STATUS BADGE ─────────────────────────────────────────────────
+    // ── DSE Status Badge ─────────────────────────────────────────────────
     const STATUS_COLOR = { online:'#10b981', offline:'#ef4444', syncing:'#f59e0b', error:'#ef4444' };
-
     function updateStatusBadge(status) {
       document.getElementById('dseStatusDot').style.background = STATUS_COLOR[status] || '#6b7280';
-      document.getElementById('dseStatusText').textContent = {
-        online:'Gateway Online', offline:'Gateway Offline',
-        syncing:'Sincronizando…', error:'Erro de conexão'
-      }[status] || 'Gateway';
+      document.getElementById('dseStatusText').textContent = { online:'Gateway Online', offline:'Gateway Offline', syncing:'Sincronizando…', error:'Erro de conexão' }[status] || 'Gateway';
     }
 
-    // ─── PAINEL GATEWAY ───────────────────────────────────────────────────
+    // ── Gateway Panel ────────────────────────────────────────────────────
     function updateGatewayPanel(data) {
       dseData = data;
       document.getElementById('gatewayPanel').style.display = 'block';
@@ -294,132 +247,119 @@
       document.getElementById('gwIp').textContent        = data.gsm?.ip        ?? '—';
       document.getElementById('gwOperator').textContent  = data.gsm?.operator  ?? '—';
       document.getElementById('gwMqtt').textContent      = data.mqtt?.connected ? 'Conectado' : 'Desconectado';
-      document.getElementById('gwUpdateTime').textContent = 'Atualizado: ' + new Date(data.capturedAt).toLocaleTimeString('pt-BR');
-
+      document.getElementById('gwUpdateTime').textContent= 'Atualizado: ' + new Date(data.capturedAt).toLocaleTimeString('pt-BR');
       const bars = ['○○○○○','●○○○○','●●○○○','●●●○○','●●●●○','●●●●●'];
       document.getElementById('gwSignal').textContent = (bars[data.gsm?.signal] || '—') + ' ' + (data.gsm?.type ?? '');
-      document.getElementById('gwGps').textContent = data.gps?.hasFix
-        ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}`
-        : 'Sem sinal';
+      document.getElementById('gwGps').textContent   = data.gps?.hasFix ? `${data.gps.latitude?.toFixed(4)}, ${data.gps.longitude?.toFixed(4)}` : 'Sem sinal';
 
       const moduleMap = {};
       (data.modules ?? []).forEach(m => { if (m.serial) moduleMap[m.serial.toUpperCase()] = m; });
-
       allGenerators.forEach(g => {
         const mod = moduleMap[g.module_id?.toUpperCase()];
-        if (mod) {
-          g.status   = mod.online ? 'Online' : 'Offline';
-          g.firmware = mod.firmware || g.firmware;
-          g.protocol = mod.protocol || g.protocol;
-          g.dse_lat  = mod.latitude;
-          g.dse_lon  = mod.longitude;
-        }
+        if (mod) { g.status = mod.online ? 'Online' : 'Offline'; g.firmware = mod.firmware || g.firmware; }
       });
-
       renderGenerators(applyFilters());
     }
 
-    // ─── FILTROS ──────────────────────────────────────────────────────────
+    // ── Filtros ──────────────────────────────────────────────────────────
     function applyFilters() {
-      const status = document.getElementById('filterStatus').value;
-      const client = document.getElementById('filterClient').value;
-      return allGenerators.filter(g =>
-        (!status || g.status === status) &&
-        (!client || String(g.client_id) === client)
-      );
+      const st = document.getElementById('filterStatus').value;
+      const cl = document.getElementById('filterClient').value;
+      return allGenerators.filter(g => (!st || g.status === st) && (!cl || String(g.client_id) === cl));
     }
-
     document.getElementById('filterStatus').addEventListener('change', () => renderGenerators(applyFilters()));
     document.getElementById('filterClient').addEventListener('change', () => renderGenerators(applyFilters()));
 
-    // ─── RENDER GERADORES ─────────────────────────────────────────────────
-    function statusClass(s) {
-      return s === 'Online' ? 'badge-online' : s === 'Offline' ? 'badge-offline' : 'badge-warning';
-    }
-
+    // ── Cards de Geradores — EXATO layout v1 com dados DSE reais ─────────
     function renderGenerators(list) {
       const container = document.getElementById('generatorsGrid');
       if (!list.length) {
         container.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Nenhum gerador encontrado.</p>';
         return;
       }
-
       container.innerHTML = list.map(g => {
-        const mod = dseData?.modules?.find(m => m.serial?.toUpperCase() === g.serial?.toUpperCase());
-        const isOnline = g.status === 'Online';
+        const mod  = dseData?.modules?.find(m => m.serial?.toUpperCase() === g.module_id?.toUpperCase());
+        const isOn = g.status === 'Online';
+
+        // Dados de leitura reais (quando disponíveis)
+        const temp   = _latestDash.temperatura_resfriamento?.valor ?? null;
+        const fuel   = _latestDash.nivel_combustivel?.valor ?? null;
+        const watts  = _latestDash.gerador_watts_total?.valor ?? null;
+        const tempColor = temp === null ? 'success' : temp > 90 ? 'error' : temp > 80 ? 'warning' : 'success';
+        const fuelPct   = fuel !== null ? Math.min(100, Math.max(0, fuel)) : null;
+        const fuelColor = fuelPct === null ? 'var(--color-success)' : fuelPct < 20 ? 'var(--color-error)' : fuelPct < 40 ? 'var(--color-warning)' : 'var(--color-success)';
+        const badgeClass = isOn ? 'badge-online' : g.status === 'Offline' ? 'badge-offline' : 'badge-warning';
 
         return `
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">${g.serial || '—'}</div>
-              <div style="font-size: var(--text-xs); color: var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
-            </div>
-            <span class="badge ${statusClass(g.status)}">${g.status || 'Aguardando'}</span>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
-            <div class="stat-card">
-              <div class="stat-icon ${isOnline ? 'success' : 'error'}">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">${g.serial || '—'}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
               </div>
-              <div class="stat-value" style="font-size: var(--text-xl);">${isOnline ? 'Online' : 'Offline'}</div>
-              <div class="stat-label">Conexão</div>
+              <span class="badge ${badgeClass}">${g.status || 'Aguardando'}</span>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon info">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>
-                </svg>
+
+            <!-- Stat cards: Temperatura + Potência (padrão v1 exato) -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
+              <div class="stat-card">
+                <div class="stat-icon ${tempColor}">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('thermo')}</svg>
+                </div>
+                <div class="stat-value" style="font-size: var(--text-xl);">${temp !== null ? temp + '°C' : '—'}</div>
+                <div class="stat-label">Temperatura</div>
               </div>
-              <div class="stat-value" style="font-size: var(--text-xl);">${g.protocol || mod?.protocol || 'RS485'}</div>
-              <div class="stat-label">Protocolo</div>
+              <div class="stat-card">
+                <div class="stat-icon info">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('zap')}</svg>
+                </div>
+                <div class="stat-value" style="font-size: var(--text-xl);">${watts !== null ? Math.round(watts) + 'W' : '—'}</div>
+                <div class="stat-label">Potência</div>
+              </div>
             </div>
-          </div>
-          <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3);">
-            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
-              <span>Módulo ID</span>
-              <span>${g.module_id || '—'}</span>
+
+            <!-- Barra de Combustível (padrão v1 exato) -->
+            <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3);">
+              <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
+                <span>Combustível</span>
+                <span>${fuelPct !== null ? fuelPct + '%' : '—'}</span>
+              </div>
+              <div style="height: 8px; background: var(--color-gray-700); border-radius: var(--radius-full); overflow: hidden;">
+                <div style="width: ${fuelPct !== null ? fuelPct : 0}%; height: 100%; background: ${fuelColor}; border-radius: var(--radius-full); transition: width 0.3s;"></div>
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
-              <span>Firmware</span>
-              <span>${g.firmware || mod?.firmware || '—'}</span>
+
+            <!-- Info extra (módulo, protocolo, local) -->
+            <div style="margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); display: flex; flex-wrap: wrap; gap: var(--space-2);">
+              <span>Módulo: <strong style="color: var(--text-primary);">${g.module_id || '—'}</strong></span>
+              <span>·</span>
+              <span>${g.protocol || mod?.protocol || 'RS485'}</span>
+              ${g.firmware || mod?.firmware ? `<span>· FW: ${g.firmware || mod?.firmware}</span>` : ''}
+              ${g.local ? `<span>· ${g.local}</span>` : ''}
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
-              <span>Local</span>
-              <span>${g.local || '—'}</span>
+
+            ${mod?.latitude ? `
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
+            </div>` : ''}
+
+            <!-- Botões (padrão v1 exato) -->
+            <div style="display: flex; gap: var(--space-2); margin-top: var(--space-4);">
+              <a href="../pages/geradores.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Detalhes</a>
+              <a href="../pages/relatorios.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Histórico</a>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted);">
-              <span>Cidade/UF</span>
-              <span>${g.cidade ? g.cidade + (g.uf ? ' - ' + g.uf : '') : '—'}</span>
-            </div>
-          </div>
-          ${mod?.latitude ? `
-          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2);">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
-          </div>` : ''}
-          <div style="display: flex; gap: var(--space-2); margin-top: var(--space-4);">
-            <a href="../pages/geradores.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Detalhes</a>
-            <a href="../pages/relatorios.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Histórico</a>
-          </div>
-        </div>`;
+          </div>`;
       }).join('');
     }
 
-    // ─── CARREGAR DADOS ───────────────────────────────────────────────────
+    // ── Carregar geradores ────────────────────────────────────────────────
     async function loadGenerators() {
       try {
-        const _svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
-        const res  = await _svc.getGenerators();
-        const raw  = res?.data ?? res;
-        allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({
-          ...g,
-          clientName: g.clients?.name || 'Sem cliente',
-        }));
+        const svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+        const res = await svc.getGenerators();
+        const raw = res?.data ?? res;
+        allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({ ...g, clientName: g.clients?.name || 'Sem cliente' }));
 
         const clients = [...new Map(allGenerators.map(g => [g.client_id, g.clientName])).entries()];
         const selCli  = document.getElementById('filterClient');
@@ -432,23 +372,19 @@
           const first = allGenerators.find(g => g.serial?.trim());
           if (first) {
             const gen = { id: first.id, serial: first.serial, moduleId: first.module_id || '' };
-            if (window.CONFIG?.DSE?.AUTO_POLL) {
-              window.DSEService.startPolling(gen, window.CONFIG?.DSE?.POLL_INTERVAL || 10000);
-            } else {
-              window.DSEService.setGenerator(gen);
-            }
+            window.CONFIG?.DSE?.AUTO_POLL
+              ? window.DSEService.startPolling(gen, window.CONFIG?.DSE?.POLL_INTERVAL || 10000)
+              : window.DSEService.setGenerator(gen);
           }
         }
-
-      } catch (err) {
-        console.error('[Monitoramento] Erro ao carregar geradores:', err);
-        const _errGrid = document.getElementById('generatorsGrid');
-        if (_errGrid) _errGrid.innerHTML =
-          '<p style="color: var(--text-muted); padding: 20px;">Erro ao carregar geradores.</p>';
+      } catch(err) {
+        console.error('[Monitoramento] Erro:', err);
+        const g = document.getElementById('generatorsGrid');
+        if (g) g.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Erro ao carregar geradores.</p>';
       }
     }
 
-    // ─── INTEGRAÇÃO DSE ───────────────────────────────────────────────────
+    // ── DSE Integration ───────────────────────────────────────────────────
     if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
       window.DSEService.onStatus(updateStatusBadge);
       window.DSEService.onData(updateGatewayPanel);
@@ -457,51 +393,29 @@
     window.addEventListener('beforeunload', () => {
       clearTimeout(_debounceTimerMonit);
       if (window.DSEService) window.DSEService.destroy();
-      if (window.GeneratorReadingsService && typeof window.GeneratorReadingsService.unsubscribeRealtime === 'function') {
-        window.GeneratorReadingsService.unsubscribeRealtime();
-      }
+      if (window.GeneratorReadingsService?.unsubscribeRealtime) window.GeneratorReadingsService.unsubscribeRealtime();
     });
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        loadGenerators();
-        loadMonitoramentoReadings();
-        iniciarRealtime();
-      });
-    } else {
-      loadGenerators();
-      loadMonitoramentoReadings();
-      iniciarRealtime();
-    }
+    loadGenerators();
+    loadMonitoramentoReadings();
+    iniciarRealtime();
   })();
 
-  // Cache dos últimos valores conhecidos de cada campo
-  const _ultimosValores = {};
-
+  // ── Realtime ─────────────────────────────────────────────────────────────
   function iniciarRealtime() {
     if (_realtimeInitialized) return;
     const svc = window.GeneratorReadingsService;
     if (!svc) return;
-
-    if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) {
-      svc.unsubscribeRealtime();
-    }
-
+    if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) svc.unsubscribeRealtime();
     if (typeof svc.subscribeRealtime === 'function') {
-      svc.subscribeRealtime((record) => {
-        atualizarCardDireto(record);
-        _debounceReloadMonit();
-      });
+      svc.subscribeRealtime(record => { atualizarCardDireto(record); _debounceReloadMonit(); });
     }
-
     _realtimeInitialized = true;
-    console.log('[Monitoramento] Realtime inscrito ✓');
   }
 
   function atualizarCardDireto(record) {
     const svc = window.GeneratorReadingsService;
     if (!svc || !record) return;
-
     const todosCampos = [
       'velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo',
       'nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor',
@@ -509,65 +423,48 @@
       'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total',
       'frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
     ];
-
-    let campoAtualizado = null;
+    let atualizado = null;
     for (const c of todosCampos) {
       if (record[c] !== null && record[c] !== undefined) {
         _ultimosValores[c] = { valor: record[c], timestamp: record.reading_timestamp };
-        campoAtualizado = c;
-        break;
+        atualizado = c; break;
       }
     }
-
-    if (!campoAtualizado) return;
-
-    const cardEl = document.querySelector(`[data-campo="${campoAtualizado}"]`);
+    if (!atualizado) return;
+    const cardEl = document.querySelector(`[data-campo="${atualizado}"]`);
     if (cardEl) {
-      const cfg     = svc.CAMPOS[campoAtualizado];
-      const valor   = parseFloat(record[campoAtualizado]);
-      const alerta  = svc.getAlerta(campoAtualizado, valor);
-      const cor     = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
-      const elValor = cardEl.querySelector('.card-valor');
-      const elTs    = cardEl.querySelector('.card-ts');
-
+      const cfg    = svc.CAMPOS[atualizado];
+      const valor  = parseFloat(record[atualizado]);
+      const alerta = svc.getAlerta(atualizado, valor);
+      const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+      const elV    = cardEl.querySelector('.card-valor');
+      const elT    = cardEl.querySelector('.card-ts');
       cardEl.style.borderLeftColor = cor;
-      if (elValor) { elValor.style.color = cor; elValor.textContent = svc.formatarValor(valor, cfg.unidade, cfg.decimais); }
-      if (elTs)    { elTs.textContent = svc.formatarTimestamp(record.reading_timestamp); }
-
-      cardEl.classList.remove('card-pulse');
-      void cardEl.offsetWidth;
-      cardEl.classList.add('card-pulse');
+      if (elV) { elV.style.color = cor; elV.textContent = svc.formatarValor(valor, cfg.unidade, cfg.decimais); }
+      if (elT) elT.textContent = svc.formatarTimestamp(record.reading_timestamp);
+      cardEl.classList.remove('card-pulse'); void cardEl.offsetWidth; cardEl.classList.add('card-pulse');
     }
-
-    if (campoAtualizado === 'velocidade_motor' && window.GeneratorControlsService) {
-      const moduleId = record.module_id || record.moduleId || null;
-      if (moduleId) {
-        window.GeneratorControlsService.syncFromModuleId(moduleId, record.velocidade_motor);
-      }
-    }
-
-    if (campoAtualizado === 'velocidade_motor') {
-      const vel    = parseFloat(record.velocidade_motor);
-      const online = vel > 0;
-      document.getElementById('monitorStatusDot').style.background = online ? '#10b981' : '#ef4444';
-      document.getElementById('monitorStatusText').textContent =
-        online
-          ? `Online · ${vel} RPM · ${svc.formatarTimestamp(record.reading_timestamp)}`
-          : `Parado · ${svc.formatarTimestamp(record.reading_timestamp)}`;
+    if (atualizado === 'velocidade_motor') {
+      const vel  = parseFloat(record.velocidade_motor);
+      const on   = vel > 0;
+      const dot  = document.getElementById('monitorStatusDot');
+      const txt  = document.getElementById('monitorStatusText');
+      if (dot) dot.style.background = on ? '#10b981' : '#ef4444';
+      if (txt) txt.textContent = on
+        ? `Online · ${vel} RPM · ${svc.formatarTimestamp(record.reading_timestamp)}`
+        : `Parado · ${svc.formatarTimestamp(record.reading_timestamp)}`;
 
       const histEl    = document.getElementById('historicoVelocidade');
       const histCount = document.getElementById('historicoCount');
       if (histEl) {
-        const t   = new Date(record.reading_timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const t   = new Date(record.reading_timestamp).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
         const cor = vel > 0 ? '#10b981' : '#6b7280';
-        const novoSpan = document.createElement('span');
-        novoSpan.style.cssText = `display: inline-block; margin-right: var(--space-3); color: ${cor}; animation: fadeIn .4s ease;`;
-        novoSpan.innerHTML = `${t}: <strong>${vel}</strong> RPM`;
-        histEl.appendChild(novoSpan);
+        const sp  = document.createElement('span');
+        sp.style.cssText = `display:inline-block;margin-right:var(--space-3);color:${cor};`;
+        sp.innerHTML = `${t}: <strong>${vel}</strong> RPM`;
+        histEl.appendChild(sp);
         histEl.scrollLeft = histEl.scrollWidth;
-
-        const atual = parseInt(histCount.textContent) || 0;
-        histCount.textContent = `${atual + 1} leituras`;
+        if (histCount) histCount.textContent = `${(parseInt(histCount.textContent)||0)+1} leituras`;
       }
     }
   }
@@ -575,40 +472,30 @@
   async function loadMonitoramentoReadings() {
     if (!window.GeneratorReadingsService) return;
     const svc = window.GeneratorReadingsService;
-
     const grupos = {
       motor:   ['velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo','nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor'],
       gerador: ['frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n','gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total'],
       rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
     };
-
     const dash = await svc.getDashboard();
+    window._latestDash = dash;
 
-    const todosCampos = [...grupos.motor,...grupos.gerador,...grupos.rede];
-    const mapa = {};
-    todosCampos.forEach(c => {
+    const todos = [...grupos.motor,...grupos.gerador,...grupos.rede];
+    const mapa  = {};
+    todos.forEach(c => {
       const d = dash[c];
-      if (d && d.valor !== null) {
-        mapa[c] = { [c]: d.valor, reading_timestamp: d.timestamp, stale: d.stale, ageMin: d.ageMin };
-      } else {
-        mapa[c] = null;
-      }
+      mapa[c] = d && d.valor !== null ? { [c]: d.valor, reading_timestamp: d.timestamp, stale: d.stale, ageMin: d.ageMin } : null;
     });
 
-    const velDado  = mapa['velocidade_motor'];
-    const vel      = velDado ? parseFloat(velDado.velocidade_motor) : null;
-    const velStale = velDado?.stale ?? false;
-
-    const online     = vel !== null && vel > 0 && !velStale;
-    const statusDot  = document.getElementById('monitorStatusDot');
-    const statusText = document.getElementById('monitorStatusText');
-    if (statusDot)  statusDot.style.background = online ? '#10b981' : velStale ? '#f59e0b' : '#ef4444';
-    if (statusText) statusText.textContent = velDado
-      ? (velStale
-          ? `Dado antigo (${velDado.ageMin}min) · Último: ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
-          : online
-            ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
-            : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
+    const velDado = mapa['velocidade_motor'];
+    const vel     = velDado ? parseFloat(velDado.velocidade_motor) : null;
+    const velStale= velDado?.stale ?? false;
+    const online  = vel !== null && vel > 0 && !velStale;
+    const dot  = document.getElementById('monitorStatusDot');
+    const txt  = document.getElementById('monitorStatusText');
+    if (dot) dot.style.background = online ? '#10b981' : velStale ? '#f59e0b' : '#ef4444';
+    if (txt) txt.textContent = velDado
+      ? (velStale ? `Dado antigo (${velDado.ageMin}min) · Último: ${vel} RPM` : online ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}` : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
       : 'Sem dados recentes';
 
     function renderGrupo(id, campos) {
@@ -621,33 +508,18 @@
         const stale  = dado?.stale ?? false;
         const ageMin = dado?.ageMin ?? null;
         const alerta = svc.getAlerta(campo, valor);
-
-        const cor = stale
-          ? '#d97706'
-          : alerta === 'critico' ? '#ef4444'
-          : alerta === 'atencao' ? '#f59e0b'
-          : '#10b981';
-
+        const cor    = stale ? '#d97706' : alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
         const staleLabel = stale && ageMin !== null
-          ? `<span style="font-size: 9px; background: #d97706; color: #fff; border-radius: 3px; padding: 0 4px; margin-left: var(--space-1);">⏱ ${ageMin >= 60 ? Math.round(ageMin/60)+'h' : ageMin+'min'}</span>`
+          ? `<span style="font-size:9px;background:#d97706;color:#fff;border-radius:3px;padding:0 4px;margin-left:var(--space-1);">⏱ ${ageMin>=60?Math.round(ageMin/60)+'h':ageMin+'min'}</span>`
           : '';
-
         return `
-          <div class="card" data-campo="${campo}" style="padding: var(--space-3); border-left: 2px solid ${cor}; transition: border-color .3s, box-shadow .3s;${stale ? 'opacity: .85;' : ''}">
-            <div style="font-size: var(--text-xs); color: var(--text-muted); display: flex; align-items: center; gap: var(--space-1);">
-              ${cfg.label}${staleLabel}
-            </div>
-            <div class="card-valor" style="font-size: var(--text-xl); font-weight: var(--font-semibold); color: ${cor}; margin: var(--space-1) 0; transition: color .3s;">
-              ${svc.formatarValor(valor, cfg.unidade, cfg.decimais)}
-            </div>
-            <div class="card-ts" style="font-size: var(--text-xs); color: var(--text-muted);">${dado ? svc.formatarTimestamp(dado.reading_timestamp) : '—'}</div>
+          <div class="card" data-campo="${campo}" style="padding:var(--space-3);border-left:2px solid ${cor};transition:border-color .3s;${stale?'opacity:.85;':''}">
+            <div style="font-size:var(--text-xs);color:var(--text-muted);display:flex;align-items:center;gap:var(--space-1);">${cfg.label}${staleLabel}</div>
+            <div class="card-valor" style="font-size:var(--text-xl);font-weight:var(--font-semibold);color:${cor};margin:var(--space-1) 0;">${svc.formatarValor(valor,cfg.unidade,cfg.decimais)}</div>
+            <div class="card-ts" style="font-size:var(--text-xs);color:var(--text-muted);">${dado?svc.formatarTimestamp(dado.reading_timestamp):'—'}</div>
           </div>`;
       }).join('');
-
-      campos.forEach(campo => {
-        const dado = mapa[campo];
-        if (dado) _ultimosValores[campo] = { valor: dado[campo], timestamp: dado.reading_timestamp };
-      });
+      campos.forEach(c => { if (mapa[c]) _ultimosValores[c] = { valor: mapa[c][c], timestamp: mapa[c].reading_timestamp }; });
     }
 
     renderGrupo('motorGrid',   grupos.motor);
@@ -658,12 +530,12 @@
     const histEl    = document.getElementById('historicoVelocidade');
     const histCount = document.getElementById('historicoCount');
     if (histEl && historico.length) {
-      histCount.textContent = `${historico.length} leituras`;
+      if (histCount) histCount.textContent = `${historico.length} leituras`;
       histEl.innerHTML = historico.map(r => {
         const v   = parseFloat(r.velocidade_motor);
         const cor = v > 0 ? '#10b981' : '#6b7280';
         const t   = new Date(r.reading_timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        return `<span style="display: inline-block; margin-right: var(--space-3); color: ${cor};">${t}: <strong>${v}</strong> RPM</span>`;
+        return `<span style="display:inline-block;margin-right:var(--space-3);color:${cor};">${t}: <strong>${v}</strong> RPM</span>`;
       }).join('');
     } else if (histEl) {
       histEl.textContent = 'Sem leituras nas últimas 2 horas.';
@@ -671,7 +543,7 @@
   }
 
   const _monitorFallback = setInterval(loadMonitoramentoReadings, 30000);
-  window.addEventListener('beforeunload', () => { clearInterval(_monitorFallback); }, { once: true });
+  window.addEventListener('beforeunload', () => clearInterval(_monitorFallback), { once: true });
   </script>
 
 </body>
