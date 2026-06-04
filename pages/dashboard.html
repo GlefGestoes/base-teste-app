@@ -512,9 +512,10 @@
       try {
         const svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
 
-        // Busca geradores e summary em paralelo
-        const [genRes, summaryRes] = await Promise.allSettled([
+        // Busca geradores, clientes e summary em paralelo
+        const [genRes, cliRes, summaryRes] = await Promise.allSettled([
           svc.getGenerators(),
+          svc.getClients ? svc.getClients() : Promise.resolve(null),
           svc.getDashboardSummary ? svc.getDashboardSummary() : Promise.resolve(null),
         ]);
 
@@ -522,9 +523,28 @@
         const raw = (genRes.status === 'fulfilled' ? (genRes.value?.data ?? genRes.value) : []);
         allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({ ...g, clientName: g.clients?.name || 'Sem cliente' }));
 
-        // Stats de clientes/manutenções
+        // Clientes — busca direta com getClients() usa select=* e campo correto (status)
+        const cliRaw = cliRes.status === 'fulfilled' ? (cliRes.value?.data ?? cliRes.value) : null;
+        const clientsList = Array.isArray(cliRaw) ? cliRaw : [];
+        const clientsActive = clientsList.filter(c =>
+          (c.status && c.status.toLowerCase() === 'ativo') ||
+          (c.contract && c.contract.toLowerCase() === 'ativo')
+        ).length;
+        const clientsTotal = clientsList.length;
+
+        // Summary (para alertas e manutenções)
         const summary = summaryRes.status === 'fulfilled' ? summaryRes.value : null;
-        _summaryStats = summary?.data?.stats ?? summary?.stats ?? null;
+        const summaryStats = summary?.data?.stats ?? summary?.stats ?? null;
+
+        // Montar _summaryStats combinando fonte direta (clientes) com summary
+        _summaryStats = {
+          ...(summaryStats || {}),
+          clients: {
+            total:  clientsTotal  || summaryStats?.clients?.total  || 0,
+            active: clientsActive || summaryStats?.clients?.active || 0,
+          },
+          maintenance: summaryStats?.maintenance ?? { pending: 0, completed: 0 },
+        };
 
         renderStatsInitial(allGenerators, _summaryStats);
         renderGenerators(allGenerators);
