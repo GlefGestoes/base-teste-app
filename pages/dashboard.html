@@ -243,20 +243,29 @@
     }
 
     // ── Stats Grid (4 cards — padrão v1) ──────────────────────────────────
-    function renderStats(dseData, generators) {
+    function buildStatsData(dseData, generators, summary) {
       const online  = generators.filter(g => g.status === 'Online').length;
       const offline = generators.filter(g => g.status === 'Offline').length;
       const total   = generators.length;
       const mqttOk  = dseData?.mqtt?.connected ?? false;
       const signal  = dseData?.gsm?.signal ?? 0;
-      const statsData = [
-        { icon: 'zap',      color: 'success',          value: online,                          label: 'Online',       sublabel: total ? Math.round(online/total*100)+'% do total' : '0% do total' },
-        { icon: 'alert',    color: 'warning',           value: offline,                         label: 'Alertas',      sublabel: 'Sem conexão DSE' },
-        { icon: 'terminal', color: mqttOk?'success':'error', value: mqttOk ? 'Ativo' : 'Inativo', label: 'MQTT',         sublabel: dseData?.mqtt?.broker || '—' },
-        { icon: 'wifi',     color: 'warning',           value: signal + '/5',                   label: 'GSM Signal',   sublabel: dseData?.gsm?.operator || '—' },
+      const clients = summary?.clients?.active ?? summary?.clients?.total ?? '—';
+      const manut   = summary?.maintenance?.pending ?? '—';
+      return [
+        { icon: 'zap',      color: 'success',               value: online,                   label: 'Online',          sublabel: total ? Math.round(online/total*100)+'% do total' : '0% do total' },
+        { icon: 'alert',    color: 'warning',               value: offline,                  label: 'Alertas',         sublabel: 'Sem conexão DSE' },
+        { icon: 'users',    color: 'info',                  value: clients,                  label: 'Clientes',        sublabel: 'Ativos' },
+        { icon: 'tool',     color: 'error',                 value: manut,                    label: 'Manutenções',     sublabel: 'Pendentes' },
+        { icon: 'terminal', color: mqttOk?'success':'error', value: mqttOk?'Ativo':'Inativo', label: 'MQTT',           sublabel: dseData?.mqtt?.broker || '—' },
+        { icon: 'wifi',     color: 'warning',               value: signal+'/5',              label: 'GSM Signal',      sublabel: dseData?.gsm?.operator || '—' },
       ];
+    }
+
+    function renderStats(dseData, generators) {
+      const statsData = buildStatsData(dseData, generators, _summaryStats);
       const container = document.getElementById('statsGrid');
       if (!container) return;
+      container.className = 'grid grid-cols-2 grid-cols-md-3 grid-cols-lg-6';
       container.innerHTML = statsData.map(s => `
         <div class="card stat-card">
           <div class="stat-icon ${s.color}">
@@ -269,18 +278,23 @@
     }
 
     // Stats iniciais (antes do DSE responder)
-    function renderStatsInitial(generators) {
+    function renderStatsInitial(generators, summary) {
       const online  = generators.filter(g => g.status === 'Online').length;
       const offline = generators.filter(g => g.status === 'Offline').length;
       const total   = generators.length;
+      const clients = summary?.clients?.active ?? summary?.clients?.total ?? '—';
+      const manut   = summary?.maintenance?.pending ?? '—';
       const statsData = [
-        { icon: 'zap',      color: 'success', value: online,  label: 'Online',      sublabel: total ? Math.round(online/total*100)+'% do total' : '0% do total' },
-        { icon: 'alert',    color: 'warning',  value: offline, label: 'Alertas',     sublabel: 'Sem conexão DSE' },
-        { icon: 'terminal', color: 'error',    value: '—',    label: 'MQTT',         sublabel: 'Aguardando gateway' },
-        { icon: 'wifi',     color: 'warning',  value: '—',    label: 'GSM Signal',   sublabel: 'Aguardando gateway' },
+        { icon: 'zap',      color: 'success', value: online,   label: 'Online',      sublabel: total ? Math.round(online/total*100)+'% do total' : '0% do total' },
+        { icon: 'alert',    color: 'warning',  value: offline,  label: 'Alertas',     sublabel: 'Sem conexão DSE' },
+        { icon: 'users',    color: 'info',     value: clients,  label: 'Clientes',    sublabel: 'Ativos' },
+        { icon: 'tool',     color: 'error',    value: manut,    label: 'Manutenções', sublabel: 'Pendentes' },
+        { icon: 'terminal', color: 'error',    value: '—',      label: 'MQTT',        sublabel: 'Aguardando gateway' },
+        { icon: 'wifi',     color: 'warning',  value: '—',      label: 'GSM Signal',  sublabel: 'Aguardando gateway' },
       ];
       const container = document.getElementById('statsGrid');
       if (!container) return;
+      container.className = 'grid grid-cols-2 grid-cols-md-3 grid-cols-lg-6';
       container.innerHTML = statsData.map(s => `
         <div class="card stat-card">
           <div class="stat-icon ${s.color}">
@@ -352,55 +366,83 @@
       }).join('');
     }
 
-    // ── Alertas Recentes (padrão EXATO da v1, gerados a partir de dados reais) ──
-    function renderAlerts(modules, dash) {
+    // ── Alertas Recentes — sempre exibe os 5 tipos, com dados reais quando disponíveis ──
+    // Definição fixa dos 5 alertas da v1 (fallback quando sem dados)
+    const _alertTemplates = [
+      { type: 'error',   icon: 'x-circle', title: 'Temperatura Crítica',      descFallback: 'Nenhuma ocorrência no momento.',       borderColor: 'var(--color-error)' },
+      { type: 'warning', icon: 'alert',    title: 'Nível de Combustível Baixo',descFallback: 'Nenhuma ocorrência no momento.',       borderColor: 'var(--color-warning)' },
+      { type: 'info',    icon: 'info',     title: 'Manutenção Preventiva',     descFallback: 'Nenhum agendamento pendente.',         borderColor: 'transparent' },
+      { type: 'warning', icon: 'alert',    title: 'Queda de Tensão Detectada', descFallback: 'Nenhuma ocorrência no momento.',       borderColor: 'var(--color-warning)' },
+      { type: 'success', icon: 'check',    title: 'Manutenção Concluída',      descFallback: 'Nenhuma manutenção recente registrada.',borderColor: 'transparent' },
+    ];
+
+    const _typeColors = { error:'error', warning:'warning', info:'info', success:'success' };
+    const _borderByType = { error:'var(--color-error)', warning:'var(--color-warning)', info:'transparent', success:'transparent' };
+
+    function formatTimeAgo(date) {
+      if (!date) return '—';
+      const d = date instanceof Date ? date : new Date(date);
+      if (isNaN(d)) return '—';
+      if (window.Utils?.timeAgo) return Utils.timeAgo(d);
+      const diff = Math.floor((Date.now() - d) / 1000);
+      if (diff < 60)   return 'agora';
+      if (diff < 3600) return `há ${Math.floor(diff/60)} minuto${Math.floor(diff/60)>1?'s':''}`;
+      if (diff < 86400)return `há ${Math.floor(diff/3600)} hora${Math.floor(diff/3600)>1?'s':''}`;
+      return `há ${Math.floor(diff/86400)} dia${Math.floor(diff/86400)>1?'s':''}`;
+    }
+
+    function renderAlerts(modules, dash, summaryAlerts) {
       const container = document.getElementById('alertsList');
       if (!container) return;
 
-      const alerts = [];
+      // Monta lista de alertas reais (prioridade: summary > DSE modules > leituras)
+      let realAlerts = [];
 
-      // Gera alertas a partir dos módulos DSE
+      // 1. Alertas do summary (MockService/ApiService)
+      if (Array.isArray(summaryAlerts) && summaryAlerts.length) {
+        realAlerts = summaryAlerts.map(a => ({
+          type: a.type, title: a.title, description: a.description, date: new Date(a.date)
+        }));
+      }
+
+      // 2. Alertas dos módulos DSE (complementam)
       (modules || []).forEach(m => {
-        if (!m.online) {
-          alerts.push({ type: 'error', title: 'Módulo Offline', description: `Módulo ${m.serial} perdeu conexão com o gateway DSE.`, date: new Date() });
-        } else if (!m.connected) {
-          alerts.push({ type: 'warning', title: 'Módulo Desconectado', description: `Módulo ${m.serial} está online mas sem comunicação RS485.`, date: new Date() });
-        }
+        if (!m.online)    realAlerts.push({ type:'error',   title:'Módulo Offline',       description:`Módulo ${m.serial} perdeu conexão com o gateway DSE.`, date:new Date() });
+        else if (!m.connected) realAlerts.push({ type:'warning', title:'Módulo Desconectado', description:`Módulo ${m.serial} online mas sem comunicação RS485.`,   date:new Date() });
       });
 
-      // Gera alertas a partir das leituras reais
+      // 3. Alertas das leituras DSE reais
       const temp = dash?.temperatura_resfriamento?.valor;
-      if (temp !== null && temp !== undefined) {
-        if (temp > 90) alerts.push({ type: 'error',   title: 'Temperatura Crítica',        description: `Temperatura de resfriamento em ${temp}°C — acima do limite máximo.`, date: new Date(dash.temperatura_resfriamento.timestamp) });
-        else if (temp > 80) alerts.push({ type: 'warning', title: 'Temperatura Elevada',   description: `Temperatura de resfriamento em ${temp}°C — atenção recomendada.`,     date: new Date(dash.temperatura_resfriamento.timestamp) });
-      }
+      if (temp > 90) realAlerts.push({ type:'error',   title:'Temperatura Crítica',     description:`Temperatura em ${temp}°C — acima do limite máximo.`, date:new Date(dash.temperatura_resfriamento.timestamp) });
       const fuel = dash?.nivel_combustivel?.valor;
-      if (fuel !== null && fuel !== undefined && fuel < 10) {
-        alerts.push({ type: 'warning', title: 'Nível de Combustível Baixo', description: `Nível em ${fuel}% — abastecimento necessário em breve.`, date: new Date(dash.nivel_combustivel.timestamp) });
-      }
+      if (fuel !== null && fuel !== undefined && fuel < 10) realAlerts.push({ type:'warning', title:'Nível de Combustível Baixo', description:`Nível em ${fuel}% — abastecimento necessário.`, date:new Date(dash.nivel_combustivel.timestamp) });
 
-      // Se não há dados ainda, exibe alertas placeholder no padrão da v1
-      if (!alerts.length) {
-        const placeholders = [
-          { type: 'info',    title: 'Sistema Iniciado',            description: 'Monitoramento DSE ativo. Aguardando leituras dos módulos.',  date: new Date() },
-          { type: 'success', title: 'Conexão Estabelecida',        description: 'Gateway DSE conectado e transmitindo dados.',                 date: new Date() },
-        ];
-        placeholders.forEach(p => alerts.push(p));
-      }
+      // Monta os 5 cards fixos da v1, preenchendo com dados reais quando existem
+      const cards = _alertTemplates.map(tmpl => {
+        const match = realAlerts.find(r => r.title === tmpl.title);
+        return {
+          type:        match ? match.type        : tmpl.type,
+          icon:        tmpl.icon,
+          title:       tmpl.title,
+          description: match ? match.description : tmpl.descFallback,
+          date:        match ? match.date        : null,
+          hasOccurrence: !!match,
+        };
+      });
 
-      const typeColors = { error:'error', warning:'warning', info:'info', success:'success' };
-      const typeIcons  = { error:'x-circle', warning:'alert', info:'info', success:'check' };
-
-      container.innerHTML = alerts.slice(0, 5).map(alert => `
-        <div class="card" style="margin-bottom: var(--space-3); ${alert.type === 'error' || alert.type === 'warning' ? 'border-left: 3px solid var(--color-accent);' : ''}">
+      container.innerHTML = cards.map(c => `
+        <div class="card" style="margin-bottom: var(--space-3); border-left: 3px solid ${c.hasOccurrence ? _borderByType[c.type] : 'transparent'}; opacity: ${c.hasOccurrence ? '1' : '0.6'};">
           <div style="display: flex; gap: var(--space-3);">
-            <div class="stat-icon ${typeColors[alert.type]}">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon(typeIcons[alert.type])}</svg>
+            <div class="stat-icon ${_typeColors[c.type]}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon(c.icon)}</svg>
             </div>
             <div style="flex: 1;">
-              <div style="font-weight: var(--font-medium);">${alert.title}</div>
-              <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1);">${alert.description}</div>
-              <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2);">${Utils.timeAgo ? Utils.timeAgo(alert.date) : alert.date.toLocaleTimeString('pt-BR')}</div>
+              <div style="font-weight: var(--font-medium); display:flex; align-items:center; gap: var(--space-2);">
+                ${c.title}
+                ${!c.hasOccurrence ? '<span style="font-size:var(--text-xs);background:var(--bg-input);color:var(--text-muted);padding:1px 6px;border-radius:var(--radius-full);">Sem ocorrência</span>' : ''}
+              </div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1);">${c.description}</div>
+              ${c.date ? `<div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2);">${formatTimeAgo(c.date)}</div>` : ''}
             </div>
           </div>
         </div>`).join('');
@@ -460,20 +502,36 @@
       renderStats(data, allGenerators);
       renderGenerators(allGenerators);
       renderModules(data.modules ?? []);
-      renderAlerts(data.modules ?? [], _latestDash);
+      renderAlerts(data.modules ?? [], _latestDash, null);
     }
 
-    // ── Carregar geradores ─────────────────────────────────────────────────
+    // ── Carregar geradores + stats de clientes/manutenções ──────────────
+    let _summaryStats = null;
+
     async function loadDashboard() {
       try {
         const svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
-        const res = await svc.getGenerators();
-        const raw = res?.data ?? res;
+
+        // Busca geradores e summary em paralelo
+        const [genRes, summaryRes] = await Promise.allSettled([
+          svc.getGenerators(),
+          svc.getDashboardSummary ? svc.getDashboardSummary() : Promise.resolve(null),
+        ]);
+
+        // Geradores
+        const raw = (genRes.status === 'fulfilled' ? (genRes.value?.data ?? genRes.value) : []);
         allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({ ...g, clientName: g.clients?.name || 'Sem cliente' }));
 
-        renderStatsInitial(allGenerators);
+        // Stats de clientes/manutenções
+        const summary = summaryRes.status === 'fulfilled' ? summaryRes.value : null;
+        _summaryStats = summary?.data?.stats ?? summary?.stats ?? null;
+
+        renderStatsInitial(allGenerators, _summaryStats);
         renderGenerators(allGenerators);
-        renderAlerts([], _latestDash);
+
+        // Alertas reais do summary se disponíveis
+        const summaryAlerts = summary?.data?.recentAlerts ?? summary?.recentAlerts ?? null;
+        renderAlerts([], _latestDash, summaryAlerts);
 
         if (window.CONFIG?.FEATURES?.DSE_INTEGRATION && window.DSEService) {
           const first = allGenerators.find(g => g.serial?.trim());
