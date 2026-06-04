@@ -89,6 +89,7 @@
   --navbar-height:        60px;
   --navbar-height-mobile: 56px;
   --sidebar-width:        260px;
+  --sidebar-collapsed-width: 64px;
  
   /* Border Radius */
   --radius-sm:   0.375rem;
@@ -1422,21 +1423,33 @@ a:hover {
   .main-content {
     padding-top: var(--navbar-height);
     padding-bottom: 0;
-    padding-left: var(--sidebar-width);
+    padding-left: var(--sidebar-collapsed-width);
+    transition: padding-left 0.25s ease;
   }
  
   /* FIX: .main-wrapper em desktop também deve compensar sidebar */
   .main-wrapper {
     padding-top: var(--navbar-height);
-    padding-left: var(--sidebar-width);
+    padding-left: var(--sidebar-collapsed-width);
     padding-bottom: 0;
+    transition: padding-left 0.25s ease;
   }
  
   .sidebar {
     top: var(--navbar-height);
     transform: translateX(0);
+    /* Colapsada por padrão: só ícones */
+    width: var(--sidebar-collapsed-width);
+    overflow: hidden;
+    transition: width 0.25s ease;
   }
- 
+
+  /* Expande ao hover */
+  .sidebar:hover {
+    width: var(--sidebar-width);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+  }
+
   .sidebar-overlay,
   .menu-toggle,
   .bottom-nav {
@@ -1521,4 +1534,78 @@ a:hover {
 #btnNovo:active,
 .btn-cta:active {
   transform: scale(0.95);
+}
+
+
+/* ============================================
+   SIDEBAR COLAPSADA — Desktop
+   Oculta texto, mostra ao hover
+   ============================================ */
+
+/* Centraliza ícone quando colapsado */
+@media (min-width: 768px) {
+  .sidebar-menu {
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .sidebar-menu-link {
+    justify-content: center;
+    padding: var(--space-3) var(--space-2);
+    gap: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* Texto oculto quando colapsado */
+  .sidebar-menu-link span {
+    display: none;
+    opacity: 0;
+    width: 0;
+    transition: opacity 0.2s ease, width 0.2s ease;
+  }
+
+  /* Tooltip: nome aparece ao lado do ícone quando colapsado */
+  .sidebar-menu-link::after {
+    content: attr(data-label);
+    position: absolute;
+    left: calc(var(--sidebar-collapsed-width) + 8px);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 1100;
+  }
+
+  .sidebar-menu-link:hover::after {
+    opacity: 1;
+  }
+
+  /* Quando sidebar está expandida (hover), mostra texto e oculta tooltip */
+  .sidebar:hover .sidebar-menu-link {
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .sidebar:hover .sidebar-menu-link span {
+    display: inline;
+    opacity: 1;
+    width: auto;
+  }
+
+  .sidebar:hover .sidebar-menu-link::after {
+    display: none;
+  }
+
+  /* Ícone fixo mínimo para não encolher */
+  .sidebar-menu-link svg {
+    flex-shrink: 0;
+    min-width: 20px;
+  }
 }
