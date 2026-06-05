@@ -20,7 +20,7 @@
       <div class="navbar-brand-icon">
         <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
       </div>
-      <span class="navbar-brand-text"><span></span></span>
+      <span class="navbar-brand-text"><span>App</span></span>
     </a>
     <div class="navbar-actions">
       <div id="dseStatusBadge" class="dse-badge">
@@ -149,6 +149,17 @@
       </div>
     </section>
 
+    <!-- IDs legados ocultos — necessários para o script de realtime -->
+    <div style="display:none;">
+      <span id="readingsTimestamp"></span>
+      <div id="readingsGrid"></div>
+      <div id="generatorStatusCard">
+        <span id="generatorStatusText"></span>
+        <span id="generatorStatusSub"></span>
+        <span id="generatorStatusDot"></span>
+      </div>
+    </div>
+
   </main>
 
   <!-- Scripts — versão atual, todos preservados -->
@@ -268,7 +279,7 @@
         </div>`).join('');
     }
 
-    // ── Cards de Geradores (padrão EXATO da v1 com dados DSE reais) ────────
+    // ── Cards de Geradores com leituras em tempo real integradas ────────
     function renderGenerators(list) {
       const container = document.getElementById('generatorsGrid');
       if (!container) return;
@@ -276,22 +287,25 @@
         container.innerHTML = '<p style="color: var(--text-muted);">Nenhum gerador cadastrado.</p>';
         return;
       }
-      container.innerHTML = list.slice(0, 6).map(g => {
-        const dash  = _latestDash;
-        const temp  = dash.temperatura_resfriamento?.valor ?? null;
-        const fuel  = dash.nivel_combustivel?.valor ?? null;
-        const watts = dash.gerador_watts_total?.valor ?? null;
-        const volt  = dash.gerador_tensao_l1n?.valor ?? null;
 
-        // Cor da temperatura (padrão v1)
+      container.className = 'grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3';
+      container.style.cssText = '';
+
+      container.innerHTML = list.slice(0, 6).map((g, idx) => {
+        const dash      = _latestDash;
+        const temp      = dash.temperatura_resfriamento?.valor ?? null;
+        const fuel      = dash.nivel_combustivel?.valor ?? null;
+        const watts     = dash.gerador_watts_total?.valor ?? null;
+        const volt      = dash.gerador_tensao_l1n?.valor ?? null;
         const tempColor = temp === null ? 'info' : temp > 90 ? 'error' : temp > 80 ? 'warning' : 'success';
         const fuelPct   = fuel !== null ? Math.min(100, Math.max(0, fuel)) : null;
         const fuelColor = fuelPct === null ? '#3b82f6' : fuelPct < 10 ? 'var(--color-error)' : fuelPct < 30 ? 'var(--color-warning)' : fuelPct < 60 ? '#3b82f6' : 'var(--color-success)';
-
         const badgeClass = g.status === 'Online' ? 'badge-online' : g.status === 'Offline' ? 'badge-offline' : 'badge-warning';
+        const gId = `dash-gen-${idx}`;
 
         return `
           <div class="card">
+            <!-- Identificação -->
             <div class="card-header">
               <div>
                 <div class="card-title">${g.serial || g.name || '—'}</div>
@@ -299,7 +313,9 @@
               </div>
               <span class="badge ${badgeClass}">${g.status || 'Aguardando'}</span>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
+
+            <!-- Resumo: temperatura + potência -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin-bottom: var(--space-3);">
               <div class="stat-card">
                 <div class="stat-icon ${tempColor}">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('thermo')}</svg>
@@ -311,21 +327,25 @@
                 <div class="stat-icon info">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('zap')}</svg>
                 </div>
-                <div class="stat-value" style="font-size: var(--text-xl);">${watts !== null ? Math.round(watts) + 'W' : volt !== null ? Math.round(volt) + 'V' : '—'}</div>
+                <div class="stat-value" style="font-size: var(--text-xl);">${watts !== null ? Math.round(watts)+'W' : volt !== null ? Math.round(volt)+'V' : '—'}</div>
                 <div class="stat-label">${watts !== null ? 'Potência' : 'Tensão L1'}</div>
               </div>
             </div>
-            <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3);">
+
+            <!-- Combustível -->
+            <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3); margin-bottom: var(--space-3);">
               <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
-                <span>Combustível</span>
-                <span>${fuelPct !== null ? fuelPct + '%' : '—'}</span>
+                <span>Combustível</span><span>${fuelPct !== null ? fuelPct + '%' : '—'}</span>
               </div>
               <div style="height: 8px; background: var(--color-gray-700); border-radius: var(--radius-full); overflow: hidden;">
                 <div style="width: ${fuelPct !== null ? fuelPct : 0}%; height: 100%; background: ${fuelColor}; border-radius: var(--radius-full); transition: width 0.3s;"></div>
               </div>
             </div>
+
           </div>`;
       }).join('');
+    }
+
     }
 
     // ── Alertas Recentes — sempre exibe os 5 tipos, com dados reais quando disponíveis ──
@@ -484,6 +504,7 @@
         // Geradores
         const raw = (genRes.status === 'fulfilled' ? (genRes.value?.data ?? genRes.value) : []);
         allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({ ...g, clientName: g.clients?.name || 'Sem cliente' }));
+        window._allGenerators = allGenerators;  // expõe para re-render após leituras chegarem
 
         // Clientes — busca direta com getClients() usa select=* e campo correto (status)
         const cliRaw = cliRes.status === 'fulfilled' ? (cliRes.value?.data ?? cliRes.value) : null;
@@ -541,13 +562,183 @@
   })();
   </script>
 
-  <!-- Leituras Realtime movidas para monitoramento.html -->
+  <!-- Leituras Realtime (100% preservado da versão atual) -->
   <script>
-  // _latestDash mantido para compatibilidade com renderGenerators e renderAlerts
-  let _latestDash = {};
-  let _debounceTimer = null;
   let _realtimeInitialized = false;
-  function _debounceReload() { /* no-op — realtime agora no monitoramento */ }
+  let _debounceTimer = null;
+  let _latestDash = {};  // escopo global — compartilhado entre IIFE e script de leituras
+  function _debounceReload() { clearTimeout(_debounceTimer); _debounceTimer = setTimeout(() => loadReadingsDashboard(), 200); }
+
+  const _camposPrioritarios = [
+    'velocidade_motor','pressao_oleo','temperatura_resfriamento',
+    'nivel_combustivel','tensao_bateria','frequencia_gerador',
+    'gerador_tensao_l1n','gerador_watts_total',
+  ];
+
+  const _readingIcons = {
+    velocidade_motor:          'velocidade',
+    pressao_oleo:              'pressao',
+    temperatura_resfriamento:  'thermo',
+    nivel_combustivel:         'fuel',
+    tensao_bateria:            'bateria',
+    frequencia_gerador:        'frequencia',
+    gerador_tensao_l1n:        'tensao',
+    gerador_watts_total:       'potencia',
+  };
+
+  function getIcon(name) {
+    const icons = {
+      fuel:       '<path d="M3 22h12V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v18z"></path><path d="M15 8h2a2 2 0 0 1 2 2v3a1 1 0 0 0 1 1h1v5a1 1 0 0 1-1 1h-1"></path><line x1="7" y1="22" x2="7" y2="11"></line><line x1="3" y1="11" x2="15" y2="11"></line>',
+      velocidade: '<circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path><path d="M7.5 7.5l1.5 1.5M16.5 7.5l-1.5 1.5M6 12h2M16 12h2"></path>',
+      pressao:    '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>',
+      thermo:     '<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>',
+      bateria:    '<rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line><line x1="10" y1="10" x2="10" y2="14"></line>',
+      frequencia: '<path d="M2 12h3l3-8 4 16 3-8h3"></path>',
+      tensao:     '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>',
+      potencia:   '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line>',
+      zap:        '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>',
+      alert:      '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>',
+      users:      '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+      tool:       '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>',
+      wifi:       '<path d="M1.42 9a16 16 0 0 1 21.16 0M5 12.55a11 11 0 0 1 14.08 0M10.5 16.05a5 5 0 0 1 3 0M12 20h.01"></path>',
+      terminal:   '<path d="M1 6l5 6-5 6M8 6h13M8 12h13M8 18h13"></path>',
+      'x-circle': '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>',
+      info:       '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>',
+      check:      '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>',
+      activity:   '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
+    };
+    return icons[name] || icons.activity;
+  }
+
+  function atualizarCardDiretoDashboard(record) {
+    const svc = window.GeneratorReadingsService;
+    if (!svc || !record) return;
+    let algum = false;
+    for (const campo of _camposPrioritarios) {
+      if (record[campo] === null || record[campo] === undefined) continue;
+      const cardEl = document.querySelector(`[data-campo="${campo}"]`);
+      if (!cardEl) continue;
+      const cfg    = svc.CAMPOS[campo];
+      const valor  = parseFloat(record[campo]);
+      const alerta = svc.getAlerta(campo, valor);
+      const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+      const elV = cardEl.querySelector('.card-valor-dash');
+      const elT = cardEl.querySelector('.card-ts-dash');
+      cardEl.style.borderTopColor = cor;
+      if (elV) { elV.style.color = cor; elV.textContent = svc.formatarValor(valor, '', cfg.decimais); }
+      if (elT) elT.textContent = svc.formatarTimestamp(record.reading_timestamp);
+      cardEl.classList.remove('card-pulse'); void cardEl.offsetWidth; cardEl.classList.add('card-pulse');
+      algum = true;
+    }
+    if (record.velocidade_motor !== null && record.velocidade_motor !== undefined) {
+      const rpm = parseFloat(record.velocidade_motor) || 0;
+      const sc = document.getElementById('generatorStatusCard');
+      if (sc) {
+        sc.style.display = 'block';
+        const et = document.getElementById('generatorStatusText');
+        const es = document.getElementById('generatorStatusSub');
+        const ed = document.getElementById('generatorStatusDot');
+        if (et) et.textContent = rpm > 0 ? 'Gerador Online' : 'Gerador em Standby';
+        if (es) es.textContent = `Velocidade: ${rpm} RPM · ${window.GeneratorReadingsService.formatarTimestamp(record.reading_timestamp)}`;
+        if (ed) ed.style.background = rpm > 0 ? '#10b981' : '#f59e0b';
+      }
+    }
+    if (algum) { const ts = document.getElementById('readingsTimestamp'); if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR'); }
+    _debounceReload();
+  }
+
+  async function loadReadingsDashboard() {
+    if (!window.GeneratorReadingsService) return;
+    const svc = window.GeneratorReadingsService;
+    try {
+      const [status, dash] = await Promise.all([svc.getStatus(), svc.getDashboard()]);
+      _latestDash = dash;  // atualiza escopo global para renderGenerators e renderAlerts
+
+      // Re-renderizar cards de geradores com dados reais (agora que _latestDash está preenchido)
+      if (window._allGenerators && window._allGenerators.length) {
+        renderGenerators(window._allGenerators);
+      }
+
+      const sc = document.getElementById('generatorStatusCard');
+      if (sc) {
+        sc.style.display = 'block';
+        const et = document.getElementById('generatorStatusText');
+        const es = document.getElementById('generatorStatusSub');
+        const ed = document.getElementById('generatorStatusDot');
+        if (et) et.textContent = status.online ? 'Gerador Online' : status.standby ? 'Gerador em Standby' : 'Gerador Offline';
+        if (es) es.textContent = status.ultimaLeitura
+          ? `Velocidade: ${status.velocidade} RPM · Última leitura: ${svc.formatarTimestamp(status.ultimaLeitura)} · Atraso: ${status.atrasoMin} min`
+          : 'Sem leituras disponíveis';
+        if (ed) ed.style.background = status.online ? '#10b981' : status.standby ? '#f59e0b' : '#ef4444';
+      }
+
+      const grid = document.getElementById('readingsGrid');
+      if (!grid) return;
+      const jaTemCards = grid.querySelectorAll('[data-campo]').length > 0;
+
+      if (!jaTemCards) {
+        grid.innerHTML = _camposPrioritarios.map(campo => {
+          const cfg   = svc.CAMPOS[campo];
+          const dado  = dash[campo];
+          const valor = dado?.valor ?? null;
+          const stale = dado?.stale ?? false;
+          const ageMin= dado?.ageMin ?? null;
+          const alerta= svc.getAlerta(campo, valor);
+          const cor   = stale ? '#d97706' : alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+          const staleTag = stale && ageMin !== null ? `<div style="font-size:9px;color:#d97706;margin-top:var(--space-1);">⏱ ${ageMin>=60?Math.round(ageMin/60)+'h atrás':ageMin+'min atrás'}</div>` : '';
+          return `
+            <div class="card stat-card" data-campo="${campo}" style="border-top: 2px solid ${cor};${stale?'opacity:.85;':''}">
+              <div class="stat-icon info" style="margin-bottom: var(--space-2);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon(_readingIcons[campo]||'activity')}</svg>
+              </div>
+              <div class="card-valor-dash stat-value" style="font-size:var(--text-xl);color:${cor};">${svc.formatarValor(valor,'',cfg.decimais)}</div>
+              <div class="stat-label">${cfg.label}</div>
+              <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:var(--space-1);">${cfg.unidade}</div>
+              <div class="card-ts-dash" style="font-size:9px;color:var(--text-muted);margin-top:var(--space-1);">${dado?.timestamp?svc.formatarTimestamp(dado.timestamp):''}</div>
+              ${staleTag}
+            </div>`;
+        }).join('');
+      } else {
+        for (const campo of _camposPrioritarios) {
+          const cardEl = grid.querySelector(`[data-campo="${campo}"]`);
+          if (!cardEl) continue;
+          const cfg   = svc.CAMPOS[campo];
+          const dado  = dash[campo];
+          const valor = dado?.valor ?? null;
+          const stale = dado?.stale ?? false;
+          const alerta= svc.getAlerta(campo, valor);
+          const cor   = stale ? '#d97706' : alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+          const elV = cardEl.querySelector('.card-valor-dash');
+          const elT = cardEl.querySelector('.card-ts-dash');
+          cardEl.style.borderTopColor = cor;
+          cardEl.style.opacity = stale ? '0.85' : '1';
+          if (elV) { elV.style.color = cor; elV.textContent = svc.formatarValor(valor,'',cfg.decimais); }
+          if (elT && dado?.timestamp) elT.textContent = svc.formatarTimestamp(dado.timestamp);
+        }
+      }
+
+      const ts = document.getElementById('readingsTimestamp');
+      if (ts) ts.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+
+    } catch(err) { console.error('[Dashboard Leituras]', err); }
+  }
+
+  function iniciarRealtime() {
+    if (_realtimeInitialized) return;
+    const svc = window.GeneratorReadingsService;
+    if (!svc) return;
+    if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) svc.unsubscribeRealtime();
+    svc.subscribeRealtime(record => atualizarCardDiretoDashboard(record));
+    _realtimeInitialized = true;
+  }
+
+  loadReadingsDashboard();
+  iniciarRealtime();
+  const _dashFallback = setInterval(loadReadingsDashboard, 30000);
+  window.addEventListener('beforeunload', () => {
+    clearTimeout(_debounceTimer); clearInterval(_dashFallback);
+    if (window.GeneratorReadingsService) window.GeneratorReadingsService.unsubscribeRealtime();
+  });
   </script>
 
 </body>
