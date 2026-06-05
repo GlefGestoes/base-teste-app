@@ -377,7 +377,8 @@
       };
 
       try {
-        const dash = await svc.getDashboard();
+        // Usa _latestDash já preenchido (evita terceira chamada a getDashboard)
+        const dash = Object.keys(_latestDash).length ? _latestDash : await svc.getDashboard();
         const todos = [...grupos.motor, ...grupos.gerador, ...grupos.rede];
         const mapa  = {};
         todos.forEach(c => {
@@ -449,10 +450,22 @@
     // ── Carregar geradores ────────────────────────────────────────────────
     async function loadGenerators() {
       try {
-        const svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
-        const res = await svc.getGenerators();
-        const raw = res?.data ?? res;
+        const apiSvc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
+
+        // Busca geradores e leituras em paralelo — evita dupla espera
+        const [genRes, dashRes] = await Promise.allSettled([
+          apiSvc.getGenerators(),
+          window.GeneratorReadingsService ? window.GeneratorReadingsService.getDashboard() : Promise.resolve(null),
+        ]);
+
+        // Geradores
+        const raw = genRes.status === 'fulfilled' ? (genRes.value?.data ?? genRes.value) : [];
         allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({ ...g, clientName: g.clients?.name || 'Sem cliente' }));
+
+        // Preenche _latestDash ANTES de renderizar — cards já mostram os valores
+        if (dashRes.status === 'fulfilled' && dashRes.value) {
+          _latestDash = dashRes.value;
+        }
 
         const clients = [...new Map(allGenerators.map(g => [g.client_id, g.clientName])).entries()];
         const selCli  = document.getElementById('filterClient');
