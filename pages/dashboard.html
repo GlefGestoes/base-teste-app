@@ -465,9 +465,17 @@
       });
 
       renderStats(data, allGenerators);
-      renderGenerators(allGenerators);
       renderModules(data.modules ?? []);
       renderAlerts(data.modules ?? [], _latestDash, null);
+
+      // Busca leituras atualizadas e re-renderiza cards de gerador com dados frescos
+      if (window.GeneratorReadingsService) {
+        window.GeneratorReadingsService.getDashboard()
+          .then(dash => { _latestDash = dash; renderGenerators(allGenerators); })
+          .catch(() => renderGenerators(allGenerators));
+      } else {
+        renderGenerators(allGenerators);
+      }
     }
 
     // ── Carregar geradores + stats de clientes/manutenções ──────────────
@@ -477,16 +485,22 @@
       try {
         const svc = window.CONFIG?.isDev() ? window.MockService : window.ApiService;
 
-        // Busca geradores, clientes e summary em paralelo
-        const [genRes, cliRes, summaryRes] = await Promise.allSettled([
+        // Busca geradores, clientes, summary e leituras em paralelo
+        const [genRes, cliRes, summaryRes, dashRes] = await Promise.allSettled([
           svc.getGenerators(),
           svc.getClients ? svc.getClients() : Promise.resolve(null),
           svc.getDashboardSummary ? svc.getDashboardSummary() : Promise.resolve(null),
+          window.GeneratorReadingsService ? window.GeneratorReadingsService.getDashboard() : Promise.resolve(null),
         ]);
 
         // Geradores
         const raw = (genRes.status === 'fulfilled' ? (genRes.value?.data ?? genRes.value) : []);
         allGenerators = (Array.isArray(raw) ? raw : []).map(g => ({ ...g, clientName: g.clients?.name || 'Sem cliente' }));
+
+        // Leituras DSE — popula _latestDash para renderGenerators usar temp/fuel/watts
+        if (dashRes.status === 'fulfilled' && dashRes.value) {
+          _latestDash = dashRes.value;
+        }
 
         // Clientes — busca direta com getClients() usa select=* e campo correto (status)
         const cliRaw = cliRes.status === 'fulfilled' ? (cliRes.value?.data ?? cliRes.value) : null;
@@ -541,6 +555,18 @@
     window.addEventListener('beforeunload', () => { if (window.DSEService) window.DSEService.destroy(); });
 
     loadDashboard();
+
+    // Atualiza leituras dos cards de gerador a cada 30s (temperatura, combustível, potência)
+    async function refreshDashReadings() {
+      if (!window.GeneratorReadingsService) return;
+      try {
+        _latestDash = await window.GeneratorReadingsService.getDashboard();
+        renderGenerators(allGenerators);
+        renderAlerts([], _latestDash, null);
+      } catch(e) { /* silencia — não é crítico */ }
+    }
+    const _dashReadingsFallback = setInterval(refreshDashReadings, 30000);
+    window.addEventListener('beforeunload', () => clearInterval(_dashReadingsFallback), { once: true });
   })();
   </script>
 
