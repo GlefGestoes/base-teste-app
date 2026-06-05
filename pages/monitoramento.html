@@ -160,6 +160,18 @@
   const _ultimosValores    = {};
   let _latestDash          = {};  // escopo global — compartilhado entre IIFE e funções externas
 
+  // Campos das Leituras em Tempo Real (escopo global para uso no IIFE e em loadMonitoramentoReadings)
+  const _rtCampos = [
+    { campo: 'velocidade_motor',         icon: 'velocidade', label: 'Velocidade Motor',     unidade: 'RPM' },
+    { campo: 'pressao_oleo',             icon: 'pressao',    label: 'Pressão do Óleo',      unidade: 'bar' },
+    { campo: 'temperatura_resfriamento', icon: 'thermo',     label: 'Temp. Resfriamento',   unidade: '°C'  },
+    { campo: 'nivel_combustivel',        icon: 'fuel',       label: 'Nível de Combustível', unidade: '%'   },
+    { campo: 'tensao_bateria',           icon: 'bateria',    label: 'Tensão da Bateria',    unidade: 'V'   },
+    { campo: 'frequencia_gerador',       icon: 'frequencia', label: 'Frequência Gerador',   unidade: 'Hz'  },
+    { campo: 'gerador_tensao_l1n',       icon: 'tensao',     label: 'Gerador Tensão L1-N',  unidade: 'V'   },
+    { campo: 'gerador_watts_total',      icon: 'potencia',   label: 'Potência Total',       unidade: 'W'   },
+  ];
+
   function _debounceReloadMonit() {
     clearTimeout(_debounceTimerMonit);
     _debounceTimerMonit = setTimeout(() => loadMonitoramentoReadings(), 200);
@@ -315,6 +327,20 @@
               ${mod?.latitude ? ` · <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}` : ''}
             </div>
 
+            <!-- Leituras em Tempo Real -->
+            <div style="border-top: 1px solid var(--glass-border); padding-top: var(--space-3); margin-bottom: var(--space-3);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+                <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: var(--space-1);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg>
+                  Leituras em Tempo Real
+                </div>
+                <span id="rtTimestamp-${gId}" style="font-size: 10px; color: var(--text-muted);"></span>
+              </div>
+              <div id="rtGrid-${gId}" class="grid grid-cols-2 grid-cols-md-4" style="gap: var(--space-2);">
+                <!-- Preenchido via JS: loadLeiturasRealtime() -->
+              </div>
+            </div>
+
             <!-- Divisor: instrumentos DSE -->
             <div style="border-top: 1px solid var(--glass-border); padding-top: var(--space-3);">
 
@@ -362,7 +388,48 @@
           </div>`;
       }).join('');
 
-      list.forEach((g, idx) => loadInstrumentosMonitor(g, `mon-gen-${idx}`));
+      list.forEach((g, idx) => {
+        loadInstrumentosMonitor(g, `mon-gen-${idx}`);
+        loadLeiturasRealtime(`mon-gen-${idx}`);
+      });
+    }
+
+    // ── Leituras em Tempo Real (8 campos prioritários) ────────────────────
+    async function loadLeiturasRealtime(gId) {
+      const svc = window.GeneratorReadingsService;
+      if (!svc) return;
+      const grid = document.getElementById(`rtGrid-${gId}`);
+      const tsEl = document.getElementById(`rtTimestamp-${gId}`);
+      if (!grid) return;
+      try {
+        const dash = await svc.getDashboard();
+        grid.innerHTML = _rtCampos.map(({ campo, icon, label, unidade }) => {
+          const cfg    = svc.CAMPOS[campo] || { decimais: 1 };
+          const dado   = dash[campo];
+          const valor  = dado?.valor ?? null;
+          const stale  = dado?.stale ?? false;
+          const ageMin = dado?.ageMin ?? null;
+          const alerta = svc.getAlerta(campo, valor);
+          const cor    = stale ? '#d97706' : alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+          const staleTag = stale && ageMin !== null
+            ? `<span style="font-size:9px;background:#d97706;color:#fff;border-radius:3px;padding:0 3px;margin-left:3px;">⏱${ageMin>=60?Math.round(ageMin/60)+'h':ageMin+'m'}</span>`
+            : '';
+          const valTxt = valor !== null ? svc.formatarValor(valor, '', cfg.decimais) : '—';
+          return `
+            <div class="card rt-card" data-campo="${campo}" data-gen="${gId}"
+              style="padding: var(--space-2) var(--space-3); border-left: 3px solid ${cor}; display: flex; align-items: center; gap: var(--space-2); min-height: 60px; ${stale ? 'opacity:.85;' : ''}">
+              <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-lg); background: var(--bg-input); display: flex; align-items: center; justify-content: center; color: ${cor};">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon(icon)}</svg>
+              </div>
+              <div style="min-width: 0; flex: 1;">
+                <div style="font-size: 10px; color: var(--text-muted); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${label}${staleTag}</div>
+                <div class="rt-valor" style="font-size: var(--text-base); font-weight: var(--font-semibold); color: ${cor}; line-height: 1.2;">${valTxt}</div>
+                <div style="font-size: 10px; color: var(--text-muted); white-space: nowrap;">${unidade}</div>
+              </div>
+            </div>`;
+        }).join('');
+        if (tsEl) tsEl.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+      } catch(err) { console.error(`[Monitoramento] RT ${gId}:`, err); }
     }
 
     // ── Instrumentos DSE por gerador ──────────────────────────────────────
@@ -521,7 +588,8 @@
       }
     }
     if (!atualizado) return;
-    const cardEl = document.querySelector(`[data-campo="${atualizado}"]`);
+    // Atualiza cards DSE (instrumentos detalhados)
+    const cardEl = document.querySelector(`[data-campo="${atualizado}"]:not(.rt-card)`);
     if (cardEl) {
       const cfg    = svc.CAMPOS[atualizado];
       const valor  = parseFloat(record[atualizado]);
@@ -534,6 +602,21 @@
       if (elT) elT.textContent = svc.formatarTimestamp(record.reading_timestamp);
       cardEl.classList.remove('card-pulse'); void cardEl.offsetWidth; cardEl.classList.add('card-pulse');
     }
+    // Atualiza cards Leituras Realtime
+    const rtCards = document.querySelectorAll(`.rt-card[data-campo="${atualizado}"]`);
+    rtCards.forEach(rtCard => {
+      const cfg    = svc.CAMPOS[atualizado];
+      const valor  = parseFloat(record[atualizado]);
+      const alerta = svc.getAlerta(atualizado, valor);
+      const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+      const elV    = rtCard.querySelector('.rt-valor');
+      rtCard.style.borderLeftColor = cor;
+      if (elV) { elV.style.color = cor; elV.textContent = svc.formatarValor(valor, '', cfg.decimais); }
+      const gId    = rtCard.dataset.gen;
+      const tsEl   = gId ? document.getElementById(`rtTimestamp-${gId}`) : null;
+      if (tsEl) tsEl.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+      rtCard.classList.remove('card-pulse'); void rtCard.offsetWidth; rtCard.classList.add('card-pulse');
+    });
     if (atualizado === 'velocidade_motor') {
       const vel  = parseFloat(record.velocidade_motor);
       const on   = vel > 0;
@@ -615,6 +698,27 @@
     renderGrupo('motorGrid',   grupos.motor);
     renderGrupo('geradorGrid', grupos.gerador);
     renderGrupo('redeGrid',    grupos.rede);
+
+    // Atualiza grids de Leituras Realtime de todos os geradores visíveis
+    document.querySelectorAll('[id^="rtGrid-"]').forEach(el => {
+      const gId = el.id.replace('rtGrid-', '');
+      _rtCampos && _rtCampos.forEach(({ campo, icon, label, unidade }) => {
+        const rtCard = el.querySelector(`[data-campo="${campo}"]`);
+        if (!rtCard) return;
+        const cfg    = svc.CAMPOS[campo] || { decimais: 1 };
+        const dado   = dash[campo];
+        const valor  = dado?.valor ?? null;
+        const stale  = dado?.stale ?? false;
+        const alerta = svc.getAlerta(campo, valor);
+        const cor    = stale ? '#d97706' : alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : 'var(--color-accent)';
+        const elV    = rtCard.querySelector('.rt-valor');
+        rtCard.style.borderLeftColor = cor;
+        rtCard.style.opacity = stale ? '0.85' : '1';
+        if (elV) { elV.style.color = cor; elV.textContent = valor !== null ? svc.formatarValor(valor, '', cfg.decimais) : '—'; }
+      });
+      const tsEl = document.getElementById(`rtTimestamp-${gId}`);
+      if (tsEl) tsEl.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+    });
 
     const historico = await svc.getHistorico('velocidade_motor', 2, 30);
     const histEl    = document.getElementById('historicoVelocidade');
