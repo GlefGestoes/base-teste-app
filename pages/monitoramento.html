@@ -18,7 +18,7 @@
       <div class="navbar-brand-icon">
         <img src="../assets/icons/logoamz.png" alt="Logo AMZ" class="navbar-logo">
       </div>
-      <span class="navbar-brand-text"><span></span></span>
+      <span class="navbar-brand-text"><span>App</span></span>
     </a>
     <div class="navbar-actions">
       <div id="dseStatusBadge" class="dse-badge">
@@ -123,43 +123,21 @@
         </div>
       </div>
 
-      <!-- Painel Instrumentos DSE -->
-      <div id="monitorReadingsPanel" style="margin-bottom: var(--space-6);">
-        <div class="card" style="margin-bottom: var(--space-4);">
-          <div class="card-header">
-            <div class="card-title">Instrumentos do Gerador</div>
-            <div style="display: flex; align-items: center; gap: var(--space-2);">
-              <span id="monitorStatusDot" class="status-dot"></span>
-              <span id="monitorStatusText" style="font-size: var(--text-xs); color: var(--text-muted);">Carregando...</span>
-            </div>
-          </div>
-          <div style="margin-bottom: var(--space-4);">
-            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Motor</div>
-            <div class="grid grid-cols-2 grid-cols-md-4" id="motorGrid"></div>
-          </div>
-          <div style="margin-bottom: var(--space-4);">
-            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Gerador Elétrico</div>
-            <div class="grid grid-cols-2 grid-cols-md-4" id="geradorGrid"></div>
-          </div>
-          <div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Rede</div>
-            <div class="grid grid-cols-2 grid-cols-md-4" id="redeGrid"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Velocidade Motor — Últimas 2h</div>
-            <span id="historicoCount" style="font-size: var(--text-xs); color: var(--text-muted);"></span>
-          </div>
-          <div id="historicoVelocidade" style="font-size: var(--text-sm); color: var(--text-muted); overflow-x: auto; white-space: nowrap; padding: var(--space-1) 0;">
-            Carregando...
-          </div>
-        </div>
+      <!-- Grid de Geradores + Painel de Instrumentos por gerador -->
+      <!-- Cada gerador renderizado pelo JS já inclui seu próprio painel de instrumentos abaixo -->
+      <div id="generatorsGrid">
+        <!-- preenchido via JS — cada item inclui card do gerador + instrumentos -->
       </div>
 
-      <!-- Grid de Geradores — layout EXATO da v1 (stat-card temperatura/potência + barra combustível + botões) -->
-      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3" id="generatorsGrid">
-        <!-- preenchido via JS -->
+      <!-- Painéis legados (mantidos para compatibilidade com realtime) — ocultos visualmente -->
+      <div style="display:none;">
+        <span id="monitorStatusDot"></span>
+        <span id="monitorStatusText"></span>
+        <div id="motorGrid"></div>
+        <div id="geradorGrid"></div>
+        <div id="redeGrid"></div>
+        <div id="historicoVelocidade"></div>
+        <span id="historicoCount"></span>
       </div>
 
     </div>
@@ -277,80 +255,197 @@
         container.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Nenhum gerador encontrado.</p>';
         return;
       }
-      container.innerHTML = list.map(g => {
-        const mod  = dseData?.modules?.find(m => m.serial?.toUpperCase() === g.module_id?.toUpperCase());
-        const isOn = g.status === 'Online';
 
-        // Dados de leitura reais (quando disponíveis)
-        const temp   = _latestDash.temperatura_resfriamento?.valor ?? null;
-        const fuel   = _latestDash.nivel_combustivel?.valor ?? null;
-        const watts  = _latestDash.gerador_watts_total?.valor ?? null;
+      // Cada gerador = container unificado: card de identificação + painel de instrumentos
+      container.innerHTML = list.map((g, idx) => {
+        const mod       = dseData?.modules?.find(m => m.serial?.toUpperCase() === g.module_id?.toUpperCase());
+        const temp      = _latestDash.temperatura_resfriamento?.valor ?? null;
+        const fuel      = _latestDash.nivel_combustivel?.valor ?? null;
+        const watts     = _latestDash.gerador_watts_total?.valor ?? null;
         const tempColor = temp === null ? 'success' : temp > 90 ? 'error' : temp > 80 ? 'warning' : 'success';
         const fuelPct   = fuel !== null ? Math.min(100, Math.max(0, fuel)) : null;
         const fuelColor = fuelPct === null ? '#3b82f6' : fuelPct < 10 ? 'var(--color-error)' : fuelPct < 30 ? 'var(--color-warning)' : fuelPct < 60 ? '#3b82f6' : 'var(--color-success)';
         const badgeClass = statusClass(g.status);
+        const gId = `mon-gen-${idx}`;
 
         return `
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">${g.serial || '—'}</div>
-                <div style="font-size: var(--text-xs); color: var(--text-muted);">${g.clientName || 'Sem cliente'}</div>
-              </div>
-              <span class="badge ${badgeClass}">${g.status || 'Aguardando'}</span>
-            </div>
+          <!-- ══ Gerador ${g.serial || idx+1} ══════════════════════════════ -->
+          <div style="border: 1px solid var(--glass-border); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: var(--space-4);">
 
-            <!-- Stat cards: Temperatura + Potência (padrão v1 exato) -->
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
-              <div class="stat-card">
-                <div class="stat-icon ${tempColor}">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('thermo')}</svg>
+            <!-- Cabeçalho identificador do gerador -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--bg-input); border-bottom: 1px solid var(--glass-border);">
+              <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <div>
+                  <div style="font-weight: var(--font-semibold); font-size: var(--text-base);">${g.serial || '—'}</div>
+                  <div style="font-size: var(--text-xs); color: var(--text-muted);">${g.clientName || 'Sem cliente'} ${g.local ? '· ' + g.local : ''}</div>
                 </div>
-                <div class="stat-value" style="font-size: var(--text-xl);">${temp !== null ? temp + '°C' : '—'}</div>
-                <div class="stat-label">Temperatura</div>
               </div>
-              <div class="stat-card">
-                <div class="stat-icon info">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('zap')}</svg>
+              <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <div style="display: flex; align-items: center; gap: var(--space-2);">
+                  <span id="monStatusDot-${gId}" class="status-dot"></span>
+                  <span id="monStatusText-${gId}" style="font-size: var(--text-xs); color: var(--text-muted);">—</span>
                 </div>
-                <div class="stat-value" style="font-size: var(--text-xl);">${watts !== null ? Math.round(watts) + 'W' : '—'}</div>
-                <div class="stat-label">Potência</div>
+                <span class="badge ${badgeClass}">${g.status || 'Aguardando'}</span>
               </div>
             </div>
 
-            <!-- Barra de Combustível (padrão v1 exato) -->
-            <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3);">
-              <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
-                <span>Combustível</span>
-                <span>${fuelPct !== null ? fuelPct + '%' : '—'}</span>
+            <!-- Corpo: resumo + instrumentos lado a lado -->
+            <div style="display: flex; flex-wrap: wrap; align-items: stretch;">
+
+              <!-- Coluna esquerda: resumo visual do gerador -->
+              <div class="card" style="flex: 0 0 240px; min-width: 220px; margin: 0; border-radius: 0; border: none; border-right: 1px solid var(--glass-border);">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin-bottom: var(--space-3);">
+                  <div class="stat-card">
+                    <div class="stat-icon ${tempColor}">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('thermo')}</svg>
+                    </div>
+                    <div class="stat-value" style="font-size: var(--text-xl);">${temp !== null ? temp + '°C' : '—'}</div>
+                    <div class="stat-label">Temperatura</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-icon info">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${getIcon('zap')}</svg>
+                    </div>
+                    <div class="stat-value" style="font-size: var(--text-xl);">${watts !== null ? Math.round(watts) + 'W' : '—'}</div>
+                    <div class="stat-label">Potência</div>
+                  </div>
+                </div>
+                <div style="background: var(--bg-input); border-radius: var(--radius-lg); padding: var(--space-3);">
+                  <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">
+                    <span>Combustível</span><span>${fuelPct !== null ? fuelPct + '%' : '—'}</span>
+                  </div>
+                  <div style="height: 8px; background: var(--color-gray-700); border-radius: var(--radius-full); overflow: hidden;">
+                    <div style="width: ${fuelPct !== null ? fuelPct : 0}%; height: 100%; background: ${fuelColor}; border-radius: var(--radius-full); transition: width 0.3s;"></div>
+                  </div>
+                </div>
+                <div style="margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted);">
+                  Módulo: <strong style="color: var(--text-primary);">${g.module_id || '—'}</strong>
+                  · ${g.protocol || mod?.protocol || 'RS485'}
+                  ${g.firmware || mod?.firmware ? ' · FW: ' + (g.firmware || mod?.firmware) : ''}
+                </div>
+                ${mod?.latitude ? `
+                <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
+                </div>` : ''}
+                <div style="display: flex; gap: var(--space-2); margin-top: var(--space-4);">
+                  <a href="../pages/geradores.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Detalhes</a>
+                  <a href="../pages/relatorios.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Histórico</a>
+                </div>
               </div>
-              <div style="height: 8px; background: var(--color-gray-700); border-radius: var(--radius-full); overflow: hidden;">
-                <div style="width: ${fuelPct !== null ? fuelPct : 0}%; height: 100%; background: ${fuelColor}; border-radius: var(--radius-full); transition: width 0.3s;"></div>
+
+              <!-- Coluna direita: instrumentos DSE deste gerador -->
+              <div style="flex: 1; min-width: 0; padding: var(--space-4); background: var(--bg-secondary);">
+                <!-- Motor -->
+                <div style="margin-bottom: var(--space-3);">
+                  <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Motor</div>
+                  <div class="grid grid-cols-2 grid-cols-md-4" id="motorGrid-${gId}"></div>
+                </div>
+                <!-- Gerador Elétrico -->
+                <div style="margin-bottom: var(--space-3);">
+                  <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Gerador Elétrico</div>
+                  <div class="grid grid-cols-2 grid-cols-md-4" id="geradorGrid-${gId}"></div>
+                </div>
+                <!-- Rede -->
+                <div style="margin-bottom: var(--space-3);">
+                  <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Rede</div>
+                  <div class="grid grid-cols-2 grid-cols-md-4" id="redeGrid-${gId}"></div>
+                </div>
+                <!-- Histórico -->
+                <div style="border-top: 1px solid var(--glass-border); padding-top: var(--space-3);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+                    <span style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Velocidade — Últimas 2h</span>
+                    <span id="histCount-${gId}" style="font-size: var(--text-xs); color: var(--text-muted);"></span>
+                  </div>
+                  <div id="histVel-${gId}" style="font-size: var(--text-sm); color: var(--text-muted); overflow-x: auto; white-space: nowrap;">Carregando...</div>
+                </div>
               </div>
-            </div>
 
-            <!-- Info extra (módulo, protocolo, local) -->
-            <div style="margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); display: flex; flex-wrap: wrap; gap: var(--space-2);">
-              <span>Módulo: <strong style="color: var(--text-primary);">${g.module_id || '—'}</strong></span>
-              <span>·</span>
-              <span>${g.protocol || mod?.protocol || 'RS485'}</span>
-              ${g.firmware || mod?.firmware ? `<span>· FW: ${g.firmware || mod?.firmware}</span>` : ''}
-              ${g.local ? `<span>· ${g.local}</span>` : ''}
-            </div>
-
-            ${mod?.latitude ? `
-            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              ${mod.latitude.toFixed(4)}, ${mod.longitude.toFixed(4)}
-            </div>` : ''}
-
-            <!-- Botões (padrão v1 exato) -->
-            <div style="display: flex; gap: var(--space-2); margin-top: var(--space-4);">
-              <a href="../pages/geradores.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Detalhes</a>
-              <a href="../pages/relatorios.html" class="btn btn-secondary" style="flex: 1; text-align: center;">Histórico</a>
             </div>
           </div>`;
       }).join('');
+
+      // Carregar instrumentos de cada gerador após renderizar
+      list.forEach((g, idx) => loadInstrumentosMonitor(g, `mon-gen-${idx}`));
+    }
+
+    // ── Instrumentos DSE por gerador ──────────────────────────────────────
+    async function loadInstrumentosMonitor(g, gId) {
+      const svc = window.GeneratorReadingsService;
+      if (!svc) return;
+
+      const grupos = {
+        motor:   ['velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo','nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor'],
+        gerador: ['frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n','gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total'],
+        rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
+      };
+
+      try {
+        const dash = await svc.getDashboard();
+        const todos = [...grupos.motor, ...grupos.gerador, ...grupos.rede];
+        const mapa  = {};
+        todos.forEach(c => {
+          const d = dash[c];
+          mapa[c] = d && d.valor !== null ? { [c]: d.valor, reading_timestamp: d.timestamp, stale: d.stale, ageMin: d.ageMin } : null;
+        });
+
+        // Status velocidade
+        const velDado = mapa['velocidade_motor'];
+        const vel     = velDado ? parseFloat(velDado.velocidade_motor) : null;
+        const velStale= velDado?.stale ?? false;
+        const online  = vel !== null && vel > 0 && !velStale;
+        const dot  = document.getElementById(`monStatusDot-${gId}`);
+        const txt  = document.getElementById(`monStatusText-${gId}`);
+        if (dot) dot.style.background = online ? '#10b981' : velStale ? '#f59e0b' : '#6b7280';
+        if (txt) txt.textContent = velDado
+          ? (velStale ? `Dado antigo (${velDado.ageMin}min) · ${vel} RPM`
+             : online ? `Online · ${vel} RPM · ${svc.formatarTimestamp(velDado.reading_timestamp)}`
+                      : `Parado · ${svc.formatarTimestamp(velDado.reading_timestamp)}`)
+          : 'Sem dados';
+
+        // Renderizar grupos
+        ['motor','gerador','rede'].forEach(grupo => {
+          const el = document.getElementById(`${grupo}Grid-${gId}`);
+          if (!el) return;
+          el.innerHTML = grupos[grupo].map(campo => {
+            const cfg    = svc.CAMPOS[campo];
+            const dado   = mapa[campo];
+            const valor  = dado ? parseFloat(dado[campo]) : null;
+            const stale  = dado?.stale ?? false;
+            const ageMin = dado?.ageMin ?? null;
+            const alerta = svc.getAlerta(campo, valor);
+            const cor    = stale ? '#d97706' : alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
+            const staleLabel = stale && ageMin !== null
+              ? `<span style="font-size:9px;background:#d97706;color:#fff;border-radius:3px;padding:0 4px;margin-left:3px;">⏱ ${ageMin>=60?Math.round(ageMin/60)+'h':ageMin+'min'}</span>`
+              : '';
+            return `
+              <div class="card" data-campo="${campo}" data-gen="${gId}" style="padding:var(--space-3);border-left:2px solid ${cor};${stale?'opacity:.85;':''}">
+                <div style="font-size:var(--text-xs);color:var(--text-muted);display:flex;align-items:center;gap:3px;">${cfg.label}${staleLabel}</div>
+                <div class="card-valor" style="font-size:var(--text-xl);font-weight:var(--font-semibold);color:${cor};margin:var(--space-1) 0;">${svc.formatarValor(valor,cfg.unidade,cfg.decimais)}</div>
+                <div class="card-ts" style="font-size:var(--text-xs);color:var(--text-muted);">${dado?svc.formatarTimestamp(dado.reading_timestamp):'—'}</div>
+              </div>`;
+          }).join('');
+        });
+
+        // Histórico
+        const historico = await svc.getHistorico('velocidade_motor', 2, 30);
+        const histEl    = document.getElementById(`histVel-${gId}`);
+        const histCount = document.getElementById(`histCount-${gId}`);
+        if (histEl && historico.length) {
+          if (histCount) histCount.textContent = `${historico.length} leituras`;
+          histEl.innerHTML = historico.map(r => {
+            const v   = parseFloat(r.velocidade_motor);
+            const cor = v > 0 ? '#10b981' : '#6b7280';
+            const t   = new Date(r.reading_timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+            return `<span style="display:inline-block;margin-right:var(--space-3);color:${cor};">${t}: <strong>${v}</strong> RPM</span>`;
+          }).join('');
+        } else if (histEl) {
+          histEl.textContent = 'Sem leituras nas últimas 2h.';
+        }
+
+      } catch(err) {
+        console.error(`[Monitoramento] Instrumentos ${gId}:`, err);
+      }
     }
 
     // ── Carregar geradores ────────────────────────────────────────────────
@@ -397,7 +492,6 @@
     });
 
     loadGenerators();
-    loadMonitoramentoReadings();
     iniciarRealtime();
   })();
 
