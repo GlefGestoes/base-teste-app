@@ -570,9 +570,9 @@ const GeneratorReadingsService = {
     gerador_corrente_l3:      { label: 'Corrente L3',             unidade: 'A',   decimais: 1, alertaMax: 200,  alertaMin: 0 },
     gerador_watts_total:      { label: 'Potência Total',          unidade: 'kW',  decimais: 1, alertaMax: null, alertaMin: 0 },
     frequencia_rede:          { label: 'Frequência da Rede',      unidade: 'Hz',  decimais: 1, alertaMax: 61,   alertaMin: 59 },
-    // Bug #3 corrigido: XML do DSE exporta redeTensaoL1L2 (fase-fase ~220V), nao L-N.
-    // Renomeado label e alertas ajustados para faixa de tensao fase-fase (195-240V).
-    rede_tensao_l1n:          { label: 'Rede Tensão L1-L2',       unidade: 'V',   decimais: 1, alertaMax: 240,  alertaMin: 195 },
+    // Confirmado: DSE exporta redeTensãoL1N (fase-neutro ~127V) para este módulo.
+    // Valor real observado: 129.5V — faixa correta 100-140V (L-N de rede 220V trifásica).
+    rede_tensao_l1n:          { label: 'Rede Tensão L1-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
     rede_tensao_l2n:          { label: 'Rede Tensão L2-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
     rede_tensao_l3n:          { label: 'Rede Tensão L3-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
     tempo_funcionamento_motor:{ label: 'Horas de Funcionamento',  unidade: 'h',   decimais: 1, alertaMax: null, alertaMin: 0 },
