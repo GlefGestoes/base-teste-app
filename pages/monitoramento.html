@@ -562,7 +562,7 @@
     for (const c of todosCampos) {
       if (record[c] !== null && record[c] !== undefined) {
         _ultimosValores[c] = { valor: record[c], timestamp: record.reading_timestamp };
-        atualizado = c; break;
+        atualizado = atualizado || c; // Bug #4 corrigido: sem break — processa todos os campos do record
       }
     }
     if (!atualizado) return;
