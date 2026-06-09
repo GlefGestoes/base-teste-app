@@ -108,6 +108,7 @@ const GeneratorReadingsService = {
       'tensao_carga_alternador','frequencia_gerador','gerador_tensao_l1n',
       'gerador_tensao_l2n','gerador_tensao_l3n','frequencia_rede',
       'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+      'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3', // Bug #5 corrigido: l2 e l3 estavam ausentes
       'gerador_watts_total','tempo_funcionamento_motor','numero_partidas',
     ];
 
@@ -531,6 +532,17 @@ const GeneratorReadingsService = {
     } catch (_) { return iso; }
   },
 
+  // Bug #6 corrigido: horasDeFuncionamentoDoMotor chega do DSE como string "HH:MM:SS".
+  // parseFloat("01:46:25") retornaria 1 (truncando minutos e segundos).
+  // Esta função converte corretamente para horas decimais antes de persistir/exibir.
+  hhmmssToHoras(str) {
+    if (!str || typeof str !== 'string') return null;
+    const partes = str.split(':').map(Number);
+    if (partes.length !== 3 || partes.some(isNaN)) return null;
+    const [h, m, s] = partes;
+    return h + m / 60 + s / 3600;
+  },
+
   formatarValor(valor, unidade = '', decimais = 1) {
     if (valor === null || valor === undefined) return '—';
     const n = parseFloat(valor);
@@ -548,18 +560,22 @@ const GeneratorReadingsService = {
     tensao_bateria:           { label: 'Tensão da Bateria',       unidade: 'V',   decimais: 1, alertaMax: 30,   alertaMin: 22 },
     tensao_carga_alternador:  { label: 'Tensão Alternador',       unidade: 'V',   decimais: 1, alertaMax: 30,   alertaMin: 0 },
     frequencia_gerador:       { label: 'Frequência Gerador',      unidade: 'Hz',  decimais: 1, alertaMax: 61,   alertaMin: 59 },
-    gerador_tensao_l1n:       { label: 'Gerador Tensão L1-N',     unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
-    gerador_tensao_l2n:       { label: 'Gerador Tensão L2-N',     unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
-    gerador_tensao_l3n:       { label: 'Gerador Tensão L3-N',     unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
+    // Bug #1 corrigido: alertaMin null — rampa de partida sobe de ~36V ate 127V (~30s),
+    // alertaMin: 100 disparava falso alarme toda vez que o gerador ligava.
+    gerador_tensao_l1n:       { label: 'Gerador Tensão L1-N',     unidade: 'V',   decimais: 1, alertaMax: 135,  alertaMin: null },
+    gerador_tensao_l2n:       { label: 'Gerador Tensão L2-N',     unidade: 'V',   decimais: 1, alertaMax: 135,  alertaMin: null },
+    gerador_tensao_l3n:       { label: 'Gerador Tensão L3-N',     unidade: 'V',   decimais: 1, alertaMax: 135,  alertaMin: null },
     gerador_corrente_l1:      { label: 'Corrente L1',             unidade: 'A',   decimais: 1, alertaMax: 200,  alertaMin: 0 },
     gerador_corrente_l2:      { label: 'Corrente L2',             unidade: 'A',   decimais: 1, alertaMax: 200,  alertaMin: 0 },
     gerador_corrente_l3:      { label: 'Corrente L3',             unidade: 'A',   decimais: 1, alertaMax: 200,  alertaMin: 0 },
-    gerador_watts_total:      { label: 'Potência Total',          unidade: 'W',   decimais: 0, alertaMax: null, alertaMin: 0 },
+    gerador_watts_total:      { label: 'Potência Total',          unidade: 'kW',  decimais: 1, alertaMax: null, alertaMin: 0 },
     frequencia_rede:          { label: 'Frequência da Rede',      unidade: 'Hz',  decimais: 1, alertaMax: 61,   alertaMin: 59 },
-    rede_tensao_l1n:          { label: 'Rede Tensão L1-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
+    // Bug #3 corrigido: XML do DSE exporta redeTensaoL1L2 (fase-fase ~220V), nao L-N.
+    // Renomeado label e alertas ajustados para faixa de tensao fase-fase (195-240V).
+    rede_tensao_l1n:          { label: 'Rede Tensão L1-L2',       unidade: 'V',   decimais: 1, alertaMax: 240,  alertaMin: 195 },
     rede_tensao_l2n:          { label: 'Rede Tensão L2-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
     rede_tensao_l3n:          { label: 'Rede Tensão L3-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
-    tempo_funcionamento_motor:{ label: 'Horas de Funcionamento',  unidade: 'h',   decimais: 0, alertaMax: null, alertaMin: 0 },
+    tempo_funcionamento_motor:{ label: 'Horas de Funcionamento',  unidade: 'h',   decimais: 1, alertaMax: null, alertaMin: 0 },
     numero_partidas:          { label: 'Número de Partidas',      unidade: '',    decimais: 0, alertaMax: null, alertaMin: 0 },
   },
 
