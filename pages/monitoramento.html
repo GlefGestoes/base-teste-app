@@ -372,9 +372,24 @@
       if (!svc) return;
 
       const grupos = {
-        motor:   ['velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo','nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor'],
-        gerador: ['frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n','gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total'],
-        rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
+        motor:   [
+          'velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo',
+          'nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor',
+        ],
+        gerador: [
+          'frequencia_gerador',
+          'gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n',
+          'gerador_tensao_l1l2','gerador_tensao_l2l3','gerador_tensao_l3l1',
+          'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
+          'gerador_watts_total','gerador_va_total','gerador_var_total',
+          'gerador_fator_potencia',
+          'gerador_energia_kwh',
+        ],
+        rede:    [
+          'frequencia_rede',
+          'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+          'rede_tensao_l1l2',
+        ],
       };
 
       try {
@@ -437,6 +452,14 @@
               rede_tensao_l1n:          '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>',
               rede_tensao_l2n:          '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>',
               rede_tensao_l3n:          '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>',
+              rede_tensao_l1l2:         '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>',
+              gerador_tensao_l1l2:      '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>',
+              gerador_tensao_l2l3:      '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>',
+              gerador_tensao_l3l1:      '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>',
+              gerador_va_total:         '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line>',
+              gerador_var_total:        '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
+              gerador_fator_potencia:   '<circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path>',
+              gerador_energia_kwh:      '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline><circle cx="12" cy="12" r="2"></circle>',
             };
             const iconSvg = iconMap[campo] || '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>';
             return `
@@ -545,64 +568,130 @@
     if (!svc) return;
     if (typeof svc.unsubscribeRealtime === 'function' && svc._ws) svc.unsubscribeRealtime();
     if (typeof svc.subscribeRealtime === 'function') {
-      svc.subscribeRealtime(record => { atualizarCardDireto(record); _debounceReloadMonit(); });
+      svc.subscribeRealtime(record => { atualizarCardDireto(record); });
     }
     _realtimeInitialized = true;
   }
 
+  // ── atualizarCardDireto v2 ───────────────────────────────────────────────
+  // CORREÇÕES:
+  //   Bug #4 real: atualizado = atualizado || c gravava só o 1º campo e só
+  //     atualizava 1 card, mesmo que o record viesse com 20 campos preenchidos
+  //     (comportamento da v9 da edge function).
+  //   → CORRIGIDO: itera todosCampos, atualiza TODOS os cards de uma vez.
+  //
+  //   Bug #5: todosCampos estava desatualizado — sem os 21 campos novos
+  //     (gerador_tensao_l1l2, rede_tensao_l1l2, gerador_va_*, etc.)
+  //   → CORRIGIDO: lista completa sincronizada com getDashboard().
+  //
+  //   Bug #6: _debounceReloadMonit() disparava getDashboard() (41 queries)
+  //     200ms após cada INSERT. Com a v9 cada INSERT já tem todos os campos,
+  //     o card direto é suficiente. O fallback de 30s do setInterval cobre
+  //     qualquer campo que o realtime perdeu.
+  //   → CORRIGIDO: _debounceReloadMonit removido do callback realtime.
+  //     O reload completo continua acontecendo pelo setInterval a cada 30s.
   function atualizarCardDireto(record) {
     const svc = window.GeneratorReadingsService;
     if (!svc || !record) return;
+
     const todosCampos = [
+      // Motor
       'velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo',
       'nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor',
-      'frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n',
-      'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total',
-      'frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+      'numero_partidas',
+      // Gerador
+      'frequencia_gerador',
+      'gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n',
+      'gerador_tensao_l1l2','gerador_tensao_l2l3','gerador_tensao_l3l1',
+      'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
+      'gerador_watts_total','gerador_watts_l1','gerador_watts_l2','gerador_watts_l3',
+      'gerador_va_total','gerador_va_l1','gerador_va_l2','gerador_va_l3',
+      'gerador_var_total','gerador_var_l1','gerador_var_l2','gerador_var_l3',
+      'gerador_fator_potencia','gerador_fator_potencia_l1','gerador_fator_potencia_l2','gerador_fator_potencia_l3',
+      'gerador_energia_kwh','gerador_energia_kva','gerador_energia_kvar',
+      // Rede
+      'frequencia_rede',
+      'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+      'rede_tensao_l1l2',
     ];
-    let atualizado = null;
+
+    const ts = record.reading_timestamp;
+    let algumAtualizado = false;
+
     for (const c of todosCampos) {
-      if (record[c] !== null && record[c] !== undefined) {
-        _ultimosValores[c] = { valor: record[c], timestamp: record.reading_timestamp };
-        atualizado = atualizado || c; // Bug #4 corrigido: sem break — processa todos os campos do record
-      }
-    }
-    if (!atualizado) return;
-    const cardEl = document.querySelector(`[data-campo="${atualizado}"]`);
-    if (cardEl) {
-      const cfg    = svc.CAMPOS[atualizado];
-      const valor  = parseFloat(record[atualizado]);
-      const alerta = svc.getAlerta(atualizado, valor);
+      if (record[c] === null || record[c] === undefined) continue;
+
+      // Salva no cache local
+      _ultimosValores[c] = { valor: record[c], timestamp: ts };
+      algumAtualizado = true;
+
+      // Atualiza o card deste campo diretamente no DOM — todos os campos do record
+      const cardEl = document.querySelector(`[data-campo="${c}"]`);
+      if (!cardEl) continue;
+      const cfg    = svc.CAMPOS[c];
+      if (!cfg) continue;
+      const valor  = parseFloat(record[c]);
+      const alerta = svc.getAlerta(c, valor);
       const cor    = alerta === 'critico' ? '#ef4444' : alerta === 'atencao' ? '#f59e0b' : '#10b981';
       const elV    = cardEl.querySelector('.card-valor');
       const elT    = cardEl.querySelector('.card-ts');
       cardEl.style.borderLeftColor = cor;
       if (elV) { elV.style.color = cor; elV.textContent = svc.formatarValor(valor, cfg.unidade, cfg.decimais); }
-      if (elT) elT.textContent = svc.formatarTimestamp(record.reading_timestamp);
+      if (elT) elT.textContent = svc.formatarTimestamp(ts);
       cardEl.classList.remove('card-pulse'); void cardEl.offsetWidth; cardEl.classList.add('card-pulse');
     }
-    if (atualizado === 'velocidade_motor') {
-      const vel  = parseFloat(record.velocidade_motor);
-      const on   = vel > 0;
-      const dot  = document.getElementById('monitorStatusDot');
-      const txt  = document.getElementById('monitorStatusText');
+
+    if (!algumAtualizado) return;
+
+    // Atualiza badge de status se RPM veio no record
+    if (record.velocidade_motor !== null && record.velocidade_motor !== undefined) {
+      const vel = parseFloat(record.velocidade_motor);
+      const on  = vel > 0;
+
+      // Status do painel legado
+      const dot = document.getElementById('monitorStatusDot');
+      const txt = document.getElementById('monitorStatusText');
       if (dot) dot.style.background = on ? '#10b981' : '#ef4444';
       if (txt) txt.textContent = on
-        ? `Online · ${vel} RPM · ${svc.formatarTimestamp(record.reading_timestamp)}`
-        : `Parado · ${svc.formatarTimestamp(record.reading_timestamp)}`;
+        ? `Online · ${vel} RPM · ${svc.formatarTimestamp(ts)}`
+        : `Parado · ${svc.formatarTimestamp(ts)}`;
 
+      // Status dos painéis por gerador
+      document.querySelectorAll('[id^="monStatusDot-"]').forEach(dotEl => {
+        const gId = dotEl.id.replace('monStatusDot-', '');
+        dotEl.style.background = on ? '#10b981' : '#ef4444';
+        const txtEl = document.getElementById(`monStatusText-${gId}`);
+        if (txtEl) txtEl.textContent = on
+          ? `Online · ${vel} RPM · ${svc.formatarTimestamp(ts)}`
+          : `Parado · ${svc.formatarTimestamp(ts)}`;
+      });
+
+      // Histórico de velocidade
       const histEl    = document.getElementById('historicoVelocidade');
       const histCount = document.getElementById('historicoCount');
       if (histEl) {
-        const t   = new Date(record.reading_timestamp).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        const cor = vel > 0 ? '#10b981' : '#6b7280';
-        const sp  = document.createElement('span');
-        sp.style.cssText = `display:inline-block;margin-right:var(--space-3);color:${cor};`;
+        const t  = new Date(ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        const co = vel > 0 ? '#10b981' : '#6b7280';
+        const sp = document.createElement('span');
+        sp.style.cssText = `display:inline-block;margin-right:var(--space-3);color:${co};`;
         sp.innerHTML = `${t}: <strong>${vel}</strong> RPM`;
         histEl.appendChild(sp);
         histEl.scrollLeft = histEl.scrollWidth;
         if (histCount) histCount.textContent = `${(parseInt(histCount.textContent)||0)+1} leituras`;
       }
+
+      // Históricos por gerador
+      document.querySelectorAll('[id^="histVel-"]').forEach(hEl => {
+        const t  = new Date(ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        const co = vel > 0 ? '#10b981' : '#6b7280';
+        const sp = document.createElement('span');
+        sp.style.cssText = `display:inline-block;margin-right:var(--space-3);color:${co};`;
+        sp.innerHTML = `${t}: <strong>${vel}</strong> RPM`;
+        hEl.appendChild(sp);
+        hEl.scrollLeft = hEl.scrollWidth;
+        const hCount = document.getElementById(hEl.id.replace('histVel-','histCount-'));
+        if (hCount) hCount.textContent = `${(parseInt(hCount.textContent)||0)+1} leituras`;
+      });
     }
   }
 
@@ -610,9 +699,24 @@
     if (!window.GeneratorReadingsService) return;
     const svc = window.GeneratorReadingsService;
     const grupos = {
-      motor:   ['velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo','nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor'],
-      gerador: ['frequencia_gerador','gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n','gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3','gerador_watts_total'],
-      rede:    ['frequencia_rede','rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n'],
+      motor:   [
+        'velocidade_motor','pressao_oleo','temperatura_resfriamento','temperatura_oleo',
+        'nivel_combustivel','tensao_bateria','tensao_carga_alternador','tempo_funcionamento_motor',
+      ],
+      gerador: [
+        'frequencia_gerador',
+        'gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n',
+        'gerador_tensao_l1l2','gerador_tensao_l2l3','gerador_tensao_l3l1',
+        'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
+        'gerador_watts_total','gerador_va_total','gerador_var_total',
+        'gerador_fator_potencia',
+        'gerador_energia_kwh',
+      ],
+      rede:    [
+        'frequencia_rede',
+        'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
+        'rede_tensao_l1l2',
+      ],
     };
     const dash = await svc.getDashboard();
     _latestDash = dash;  // atualiza escopo global para renderGenerators
