@@ -103,13 +103,24 @@ const GeneratorReadingsService = {
   async getDashboard() {
     this._init();
     const campos = [
+      // Motor
       'velocidade_motor','pressao_oleo','temperatura_resfriamento',
       'temperatura_oleo','nivel_combustivel','tensao_bateria',
-      'tensao_carga_alternador','frequencia_gerador','gerador_tensao_l1n',
-      'gerador_tensao_l2n','gerador_tensao_l3n','frequencia_rede',
+      'tensao_carga_alternador','tempo_funcionamento_motor','numero_partidas',
+      // Gerador elétrico
+      'frequencia_gerador',
+      'gerador_tensao_l1n','gerador_tensao_l2n','gerador_tensao_l3n',
+      'gerador_tensao_l1l2','gerador_tensao_l2l3','gerador_tensao_l3l1',
+      'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3',
+      'gerador_watts_total','gerador_watts_l1','gerador_watts_l2','gerador_watts_l3',
+      'gerador_va_total','gerador_va_l1','gerador_va_l2','gerador_va_l3',
+      'gerador_var_total','gerador_var_l1','gerador_var_l2','gerador_var_l3',
+      'gerador_fator_potencia','gerador_fator_potencia_l1','gerador_fator_potencia_l2','gerador_fator_potencia_l3',
+      'gerador_energia_kwh','gerador_energia_kva','gerador_energia_kvar',
+      // Rede elétrica
+      'frequencia_rede',
       'rede_tensao_l1n','rede_tensao_l2n','rede_tensao_l3n',
-      'gerador_corrente_l1','gerador_corrente_l2','gerador_corrente_l3', // Bug #5 corrigido: l2 e l3 estavam ausentes
-      'gerador_watts_total','tempo_funcionamento_motor','numero_partidas',
+      'rede_tensao_l1l2',
     ];
 
     // Campos onde valor=0 é fisicamente impossível quando gerador está ativo
@@ -238,13 +249,19 @@ const GeneratorReadingsService = {
     this._init();
     try {
       let url = `${this._supabaseUrl}/rest/v1/generator_readings`
-        + `?select=reading_timestamp,xml_source,velocidade_motor,pressao_oleo`
-        + `,temperatura_resfriamento,nivel_combustivel,tensao_bateria`
-        + `,tensao_carga_alternador,frequencia_gerador,gerador_tensao_l1n`
-        + `,gerador_tensao_l2n,gerador_tensao_l3n,gerador_corrente_l1`
-        + `,gerador_watts_total,frequencia_rede,rede_tensao_l1n`
-        + `,rede_tensao_l2n,rede_tensao_l3n,tempo_funcionamento_motor`
-        + `,numero_partidas`
+        + `?select=reading_timestamp,velocidade_motor,pressao_oleo`
+        + `,temperatura_resfriamento,temperatura_oleo,nivel_combustivel`
+        + `,tensao_bateria,tensao_carga_alternador,tempo_funcionamento_motor,numero_partidas`
+        + `,frequencia_gerador`
+        + `,gerador_tensao_l1n,gerador_tensao_l2n,gerador_tensao_l3n`
+        + `,gerador_tensao_l1l2,gerador_tensao_l2l3,gerador_tensao_l3l1`
+        + `,gerador_corrente_l1,gerador_corrente_l2,gerador_corrente_l3`
+        + `,gerador_watts_total,gerador_watts_l1,gerador_watts_l2,gerador_watts_l3`
+        + `,gerador_va_total,gerador_va_l1,gerador_va_l2,gerador_va_l3`
+        + `,gerador_var_total,gerador_var_l1,gerador_var_l2,gerador_var_l3`
+        + `,gerador_fator_potencia,gerador_fator_potencia_l1,gerador_fator_potencia_l2,gerador_fator_potencia_l3`
+        + `,gerador_energia_kwh,gerador_energia_kva,gerador_energia_kvar`
+        + `,frequencia_rede,rede_tensao_l1n,rede_tensao_l2n,rede_tensao_l3n,rede_tensao_l1l2`
         + `&order=reading_timestamp.desc`
         + `&limit=${limite}`;
 
@@ -575,8 +592,36 @@ const GeneratorReadingsService = {
     rede_tensao_l1n:          { label: 'Rede Tensão L1-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
     rede_tensao_l2n:          { label: 'Rede Tensão L2-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
     rede_tensao_l3n:          { label: 'Rede Tensão L3-N',        unidade: 'V',   decimais: 1, alertaMax: 140,  alertaMin: 100 },
+    rede_tensao_l1l2:         { label: 'Rede Tensão L1-L2',       unidade: 'V',   decimais: 1, alertaMax: 250,  alertaMin: 190 },
     tempo_funcionamento_motor:{ label: 'Horas de Funcionamento',  unidade: 'h',   decimais: 1, alertaMax: null, alertaMin: 0 },
     numero_partidas:          { label: 'Número de Partidas',      unidade: '',    decimais: 0, alertaMax: null, alertaMin: 0 },
+    // Gerador — tensões fase-fase
+    gerador_tensao_l1l2:      { label: 'Gerador Tensão L1-L2',    unidade: 'V',   decimais: 1, alertaMax: 235,  alertaMin: null },
+    gerador_tensao_l2l3:      { label: 'Gerador Tensão L2-L3',    unidade: 'V',   decimais: 1, alertaMax: 235,  alertaMin: null },
+    gerador_tensao_l3l1:      { label: 'Gerador Tensão L3-L1',    unidade: 'V',   decimais: 1, alertaMax: 235,  alertaMin: null },
+    // Gerador — potência por fase
+    gerador_watts_l1:         { label: 'Potência L1',             unidade: 'kW',  decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_watts_l2:         { label: 'Potência L2',             unidade: 'kW',  decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_watts_l3:         { label: 'Potência L3',             unidade: 'kW',  decimais: 1, alertaMax: null, alertaMin: 0 },
+    // Gerador — VA
+    gerador_va_total:         { label: 'Potência Aparente Total', unidade: 'kVA', decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_va_l1:            { label: 'Potência Aparente L1',    unidade: 'kVA', decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_va_l2:            { label: 'Potência Aparente L2',    unidade: 'kVA', decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_va_l3:            { label: 'Potência Aparente L3',    unidade: 'kVA', decimais: 1, alertaMax: null, alertaMin: 0 },
+    // Gerador — VAR
+    gerador_var_total:        { label: 'Potência Reativa Total',  unidade: 'kVAr',decimais: 1, alertaMax: null, alertaMin: null },
+    gerador_var_l1:           { label: 'Potência Reativa L1',     unidade: 'kVAr',decimais: 1, alertaMax: null, alertaMin: null },
+    gerador_var_l2:           { label: 'Potência Reativa L2',     unidade: 'kVAr',decimais: 1, alertaMax: null, alertaMin: null },
+    gerador_var_l3:           { label: 'Potência Reativa L3',     unidade: 'kVAr',decimais: 1, alertaMax: null, alertaMin: null },
+    // Gerador — fator de potência
+    gerador_fator_potencia:   { label: 'Fator de Potência',       unidade: '',    decimais: 2, alertaMax: 1,    alertaMin: null },
+    gerador_fator_potencia_l1:{ label: 'Fator Potência L1',       unidade: '',    decimais: 2, alertaMax: 1,    alertaMin: null },
+    gerador_fator_potencia_l2:{ label: 'Fator Potência L2',       unidade: '',    decimais: 2, alertaMax: 1,    alertaMin: null },
+    gerador_fator_potencia_l3:{ label: 'Fator Potência L3',       unidade: '',    decimais: 2, alertaMax: 1,    alertaMin: null },
+    // Gerador — energia acumulada
+    gerador_energia_kwh:      { label: 'Energia (kWh)',            unidade: 'kWh', decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_energia_kva:      { label: 'Energia (kVAh)',           unidade: 'kVAh',decimais: 1, alertaMax: null, alertaMin: 0 },
+    gerador_energia_kvar:     { label: 'Energia (kVArh)',          unidade: 'kVArh',decimais: 1,alertaMax: null, alertaMin: 0 },
   },
 
   getAlerta(campo, valor) {
