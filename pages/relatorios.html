@@ -435,14 +435,18 @@
           </div>`;
       }).join('');
   
-      const headers = ['Timestamp','Instrumento','RPM','Pressão','Temp°C','Combust%','Bateria V','Freq Hz','Tensão L1N','Watts'];
+      const headers = ['Timestamp','RPM','Pressão','Temp°C','Combust%','Bateria V','Alternador V','Freq Hz','Tensão L1N','Tensão L2N','Tensão L3N','Tensão L1L2','Rede L1L2','Watts','VA','VAR','kWh'];
+      const fmt = v => (v !== null && v !== undefined) ? v : '—';
       const rows    = dados.slice(0,200).map(r => [
         svc.formatarTimestamp(r.reading_timestamp),
-        r.xml_source||'—',
-        r.velocidade_motor??'—', r.pressao_oleo??'—',
-        r.temperatura_resfriamento??'—', r.nivel_combustivel??'—',
-        r.tensao_bateria??'—', r.frequencia_gerador??'—',
-        r.gerador_tensao_l1n??'—', r.gerador_watts_total??'—',
+        fmt(r.velocidade_motor), fmt(r.pressao_oleo),
+        fmt(r.temperatura_resfriamento), fmt(r.nivel_combustivel),
+        fmt(r.tensao_bateria), fmt(r.tensao_carga_alternador),
+        fmt(r.frequencia_gerador),
+        fmt(r.gerador_tensao_l1n), fmt(r.gerador_tensao_l2n), fmt(r.gerador_tensao_l3n),
+        fmt(r.gerador_tensao_l1l2), fmt(r.rede_tensao_l1l2),
+        fmt(r.gerador_watts_total), fmt(r.gerador_va_total), fmt(r.gerador_var_total),
+        fmt(r.gerador_energia_kwh),
       ]);
   
       content.innerHTML = `
