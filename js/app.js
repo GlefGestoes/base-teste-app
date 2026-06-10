@@ -34,20 +34,41 @@ const App = {
   },
  
   /**
-   * Inicializa Service Worker com path dinâmico
+   * Inicializa Service Worker com path fixo baseado no repositório GitHub Pages
+   * Correção: path dinâmico causava 404 quando a URL não continha nome de arquivo
+   * (ex: /base-teste-app/ → pathParts.pop() removia o subdiretório inteiro,
+   *  fazendo o SW ser registrado em '/' onde o arquivo não existe)
    */
   initServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener("load", () => {
-        const pathParts = window.location.pathname.split('/').filter(Boolean);
-        pathParts.pop();
-        const knownSubdirs = ['pages', 'js', 'css', 'assets'];
-        if (knownSubdirs.includes(pathParts[pathParts.length - 1])) {
-          pathParts.pop();
-        }
-        const basePath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
-        const swPath = basePath + 'service-worker.js';
- 
+        // Detecta o basePath de forma segura a partir da tag <base> ou da URL
+        // Sempre aponta para a raiz do app, nunca para a raiz do domínio
+        const getBasePath = () => {
+          // 1. Tenta usar a tag <base href="..."> se existir
+          const baseTag = document.querySelector('base[href]');
+          if (baseTag) {
+            const href = baseTag.getAttribute('href');
+            if (href && href !== '/') return href.endsWith('/') ? href : href + '/';
+          }
+
+          // 2. Caminha pela pathname removendo apenas o arquivo final (se houver)
+          const parts = window.location.pathname.split('/').filter(Boolean);
+          const lastPart = parts[parts.length - 1] || '';
+          // Remove o arquivo se tiver extensão (ex: index.html, dashboard.html)
+          if (lastPart.includes('.')) parts.pop();
+          // Remove subdiretórios conhecidos do app (pages, js, css, assets)
+          const knownSubdirs = ['pages', 'js', 'css', 'assets'];
+          if (knownSubdirs.includes(parts[parts.length - 1])) parts.pop();
+
+          return parts.length > 0 ? '/' + parts.join('/') + '/' : '/';
+        };
+
+        const basePath = getBasePath();
+        const swPath   = basePath + 'service-worker.js';
+
+        console.log('[SW] Registrando em:', swPath, '| scope:', basePath);
+
         navigator.serviceWorker.register(swPath, { scope: basePath })
           .then(reg => {
             console.log("[SW] Registrado:", reg.scope);
