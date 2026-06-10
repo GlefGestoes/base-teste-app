@@ -23,7 +23,23 @@ const AuthService = {
   async login(email, password) {
     try {
       const service = this.getService();
+
+      // Supabase Edge Functions podem demorar no cold start (plano gratuito).
+      // Exibe aviso ao usuário se a resposta demorar mais de 5 segundos.
+      let slowTimer = null;
+      const slowWarning = () => {
+        const el = document.getElementById('loginSlowMsg');
+        if (el) {
+          el.textContent = '⏳ O servidor está iniciando, aguarde alguns segundos...';
+          el.style.display = 'block';
+        }
+      };
+      slowTimer = setTimeout(slowWarning, 5000);
+
       const response = await service.login(email, password);
+      clearTimeout(slowTimer);
+      const el = document.getElementById('loginSlowMsg');
+      if (el) el.style.display = 'none';
 
       if (response.success && response.data) {
         const { user, token, refreshToken, expiresIn } = response.data;
